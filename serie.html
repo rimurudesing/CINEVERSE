@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVerse — Detalle de Serie</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hojas de Estilo -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/hero.css">
+  <link rel="stylesheet" href="css/carousel.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Transición de página roja -->
+  <div class="page-transition-overlay out"></div>
+
+  <!-- Hero Spotlight de Detalle (60vh) -->
+  <section class="hero hero--detail" id="serie-hero-root">
+    <div class="hero__overlay"></div>
+    <div class="hero__grain"></div>
+  </section>
+
+  <!-- Contenedor Detalles -->
+  <main class="container" id="serie-detail-root" style="margin-top: -150px; position: relative; z-index: 10; margin-bottom: 5rem; min-height: 400px;"></main>
+
+  <!-- Pestañas Adicionales Bottom -->
+  <section class="container" style="margin-bottom: 5rem;">
+    <!-- Selector Pestañas -->
+    <div class="flex flex--wrap flex--gap-sm" style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
+      <button class="pill pill--active tab-btn" data-tab="seasons">Temporadas</button>
+      <button class="pill tab-btn" data-tab="trailers">Trailer y Videos</button>
+      <button class="pill tab-btn" data-tab="reviews">Reseñas y Críticas</button>
+      <button class="pill tab-btn" data-tab="similar">Series Similares</button>
+      <button class="pill tab-btn" data-tab="recommended">Recomendaciones</button>
+    </div>
+
+    <!-- Contenedor Pestañas -->
+    <div>
+      <!-- Tab 1: Temporadas -->
+      <div class="tab-content active" id="tab-seasons" style="display: none;">
+        <!-- Se inyecta la lista de acordeones de temporadas -->
+      </div>
+
+      <!-- Tab 2: Trailers -->
+      <div class="tab-content" id="tab-trailers" style="display: none;">
+        <div id="tab-trailers-root" style="max-width: 900px; margin: 0 auto;">Cargando videos...</div>
+      </div>
+
+      <!-- Tab 3: Reseñas -->
+      <div class="tab-content" id="tab-reviews" style="display: none;">
+        <div class="grid grid--details" style="gap: 3rem;">
+          <!-- Lista Reseñas -->
+          <div id="reviews-list">Cargando reseñas...</div>
+          <!-- Escribir Reseña -->
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Escribe una Reseña</h3>
+            <form id="review-form" class="flex flex--col flex--gap-sm" style="background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-md);">
+              <div class="form-group">
+                <label class="form-label">Valoración</label>
+                <select id="review-rating-select" class="form-select">
+                  <option value="10">10★ Excelente</option>
+                  <option value="9">9★ Muy buena</option>
+                  <option value="8">8★ Buena</option>
+                  <option value="7">7★ Notable</option>
+                  <option value="6">6★ Aprobado</option>
+                  <option value="5">5★ Mediocre</option>
+                  <option value="4">4★ Mala</option>
+                  <option value="3">3★ Muy mala</option>
+                  <option value="2">2★ Pésima</option>
+                  <option value="1">1★ Desastre</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tu reseña</label>
+                <textarea id="review-text" class="form-textarea" placeholder="¿Qué te pareció la serie? Escribe tus opiniones aquí..." rows="6"></textarea>
+              </div>
+              <button type="submit" class="btn btn--primary" style="align-self: flex-end;">Publicar Reseña</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Similares -->
+      <div class="tab-content" id="tab-similar" style="display: none;">
+        <div id="tab-similar-root"></div>
+      </div>
+
+      <!-- Tab 5: Recomendadas -->
+      <div class="tab-content" id="tab-recommended" style="display: none;">
+        <div id="tab-recommended-root"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background-color: var(--bg-void); border-top: 1px solid var(--border-subtle); padding: 4rem 0 2rem 0; font-family: var(--font-ui);">
+    <div class="container text-center" style="color: var(--text-muted); font-size: 0.85rem;">
+      <p>© 2025 CINEVERSE. Datos de TMDB. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- Botón Flotante Trailer -->
+  <button class="btn btn--primary btn--icon btn--floating" id="floating-trailer-btn" data-tooltip="Ver Trailer" style="width: 50px; height: 50px; border-radius: 50%; font-size: 1.25rem; display: none;">
+    ▶
+  </button>
+
+  <!-- MODAL: Valoración del Usuario -->
+  <div class="modal" id="rating-modal">
+    <div class="modal__backdrop"></div>
+    <div class="modal__container">
+      <div class="modal__header">
+        <h3 class="modal__title">Valorar esta Serie</h3>
+        <button class="modal__close">✕</button>
+      </div>
+      <div class="modal__body" style="text-align: center;">
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">Selecciona una nota del 1 al 10 en base a tu experiencia personal.</p>
+        <div class="rating-picker">
+          <!-- Estrellas cargadas por JS -->
+        </div>
+        <div class="rating-picker__value">Selecciona una nota</div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--secondary" id="cancel-rating-btn">Cancelar</button>
+        <button class="btn btn--primary" id="save-rating-btn">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+
+  <script type="module" src="js/pages/serie.js"></script>
+</body>
+</html>

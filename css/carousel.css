@@ -1,0 +1,121 @@
+/* ═══ cineverse/css/carousel.css ═══ */
+
+.carousel-section {
+  position: relative;
+  margin-bottom: 4rem;
+}
+
+.carousel-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.carousel-section__title-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.carousel-section__title {
+  font-family: var(--font-ui);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Controles de navegación */
+.carousel-section__nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.carousel-section__btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-void);
+  border: 1px solid var(--border-red);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.carousel-section__btn:hover {
+  background-color: var(--accent-red);
+  border-color: var(--accent-red);
+  box-shadow: 0 0 15px var(--glow-red-intense);
+  transform: scale(1.1);
+}
+
+.carousel-section__btn:active {
+  transform: scale(0.95);
+}
+
+.carousel-section__btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: var(--border-subtle);
+  background-color: transparent;
+}
+
+/* Track / Contenedor de las Cards */
+.carousel-section__viewport {
+  width: 100%;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+}
+
+.carousel-section__viewport::-webkit-scrollbar {
+  display: none; /* Safari, Chrome */
+}
+
+.carousel-section__track {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+/* Elementos del carrusel */
+.carousel-section__item {
+  flex: 0 0 calc(16.666% - 1.25rem); /* Default: 6 items in wide view */
+  min-width: 200px;
+  transition: transform var(--transition-med);
+}
+
+@media (max-width: 1440px) {
+  .carousel-section__item {
+    flex: 0 0 calc(20% - 1.2rem); /* 5 items */
+  }
+}
+
+@media (max-width: 1024px) {
+  .carousel-section__item {
+    flex: 0 0 calc(25% - 1.125rem); /* 4 items */
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-section__item {
+    flex: 0 0 calc(33.333% - 1rem); /* 3 items */
+  }
+  .carousel-section__title {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-section__item {
+    flex: 0 0 calc(50% - 0.75rem); /* 2 items */
+    min-width: 140px;
+  }
+  .carousel-section {
+    margin-bottom: 2.5rem;
+  }
+}

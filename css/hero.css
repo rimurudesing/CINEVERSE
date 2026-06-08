@@ -1,0 +1,262 @@
+/* ═══ cineverse/css/hero.css ═══ */
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-void);
+}
+
+.hero__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-slow) ease-in-out, visibility var(--transition-slow) ease-in-out;
+  z-index: 1;
+}
+
+.hero__slide.active {
+  opacity: 1;
+  visibility: visible;
+  z-index: 2;
+}
+
+/* Imagen backdrop fullscreen con parallax */
+.hero__backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.05);
+  transition: transform var(--transition-slow) ease-out;
+}
+
+.hero__slide.active .hero__backdrop {
+  transform: scale(1);
+}
+
+/* Capa de Gradientes de superposición */
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(to right, rgba(5, 5, 5, 0.95) 15%, rgba(5, 5, 5, 0.7) 40%, rgba(5, 5, 5, 0) 70%),
+    linear-gradient(to top, rgba(5, 5, 5, 1) 5%, rgba(5, 5, 5, 0) 40%);
+  z-index: 3;
+}
+
+/* Diagonal Red Overlay */
+.hero__overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(229, 9, 20, 0.15) 0%, rgba(5, 5, 5, 0) 60%);
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* Capa de textura de grano SVG */
+.hero__grain {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  opacity: 0.04;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Contenedor del contenido */
+.hero__container {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.hero__content {
+  max-width: 800px;
+  pointer-events: auto;
+  padding-top: 100px; /* navbar spacing */
+}
+
+/* Elementos del Contenido con Animaciones Staggered */
+.hero__slide.active .hero__badge,
+.hero__slide.active .hero__title,
+.hero__slide.active .hero__tagline,
+.hero__slide.active .hero__meta,
+.hero__slide.active .hero__overview,
+.hero__slide.active .hero__actions {
+  animation: fadeUp var(--transition-med) forwards;
+}
+
+.hero__badge {
+  opacity: 0;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.hero__title {
+  opacity: 0;
+  font-family: var(--font-display);
+  font-size: 6rem;
+  line-height: 0.95;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 25px rgba(229, 9, 20, 0.4);
+  animation-delay: 100ms !important;
+}
+
+.hero__tagline {
+  opacity: 0;
+  font-family: var(--font-body);
+  font-size: 1.5rem;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  animation-delay: 200ms !important;
+}
+
+.hero__meta {
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+  animation-delay: 300ms !important;
+}
+
+.hero__meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.hero__meta-rating {
+  color: var(--gold);
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.hero__meta-genres {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.hero__overview {
+  opacity: 0;
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  max-width: 650px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  animation-delay: 400ms !important;
+}
+
+.hero__actions {
+  opacity: 0;
+  display: flex;
+  gap: 1rem;
+  animation-delay: 500ms !important;
+}
+
+/* Indicadores / Slider Dots */
+.hero__indicators {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  gap: 1rem;
+}
+
+.hero__dot {
+  position: relative;
+  width: 40px;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+}
+
+.hero__dot::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  background-color: var(--accent-red);
+  border-radius: var(--radius-full);
+}
+
+.hero__slide-timer .hero__dot.active::after {
+  animation: heroDotProgress 7s linear forwards;
+}
+
+@keyframes heroDotProgress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+/* Hero en páginas de detalle */
+.hero--detail {
+  height: 60vh;
+}
+
+.hero--detail .hero__overlay {
+  background: 
+    linear-gradient(to top, rgba(10, 10, 10, 1) 0%, rgba(10, 10, 10, 0.5) 50%, rgba(10, 10, 10, 0.2) 100%),
+    linear-gradient(to right, rgba(10, 10, 10, 0.8) 0%, rgba(10, 10, 10, 0) 100%);
+}
+
+/* Adaptación responsive */
+@media (max-width: 1024px) {
+  .hero__title {
+    font-size: 4.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero__overlay {
+    background: 
+      linear-gradient(to top, rgba(5, 5, 5, 1) 20%, rgba(5, 5, 5, 0.6) 60%, rgba(5, 5, 5, 0.2) 100%);
+  }
+  .hero__container {
+    align-items: flex-end;
+    padding-bottom: 5rem;
+  }
+  .hero__content {
+    text-align: center;
+  }
+  .hero__title {
+    font-size: 3rem;
+  }
+  .hero__tagline {
+    font-size: 1.25rem;
+  }
+  .hero__meta {
+    justify-content: center;
+  }
+  .hero__overview {
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1rem;
+  }
+  .hero__actions {
+    justify-content: center;
+  }
+}

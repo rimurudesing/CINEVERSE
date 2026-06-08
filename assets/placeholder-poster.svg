@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 750" width="500" height="750">
+  <rect width="500" height="750" fill="#111111" stroke="#1e1e1e" stroke-width="4"/>
+  <rect width="480" height="730" x="10" y="10" fill="#0a0a0a" rx="10"/>
+  <!-- Film Roll Icon in center -->
+  <path d="M250,320 C220,320 200,340 200,370 C200,400 220,420 250,420 C280,420 300,400 300,370 C300,340 280,320 250,320 Z" fill="#E50914" opacity="0.3"/>
+  <path d="M250,340 C235,340 220,352 220,370 C220,388 235,400 250,400 C265,400 280,388 280,370 C280,352 265,340 250,340 Z" fill="#E50914"/>
+  <text x="250" y="470" font-family="'Outfit', sans-serif" font-size="22" font-weight="600" fill="#555555" text-anchor="middle">IMAGEN NO DISPONIBLE</text>
+  <text x="250" y="510" font-family="'Bebas Neue', sans-serif" font-size="36" font-weight="bold" fill="#E50914" text-anchor="middle" letter-spacing="2">CINEVERSE</text>
+</svg>

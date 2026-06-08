@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVerse — Reproductor y Canales</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hojas de Estilo -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/hero.css">
+  <link rel="stylesheet" href="css/carousel.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="padding-top: 100px;"> <!-- Navbar margin -->
+
+  <!-- Transición de página roja -->
+  <div class="page-transition-overlay out"></div>
+
+  <!-- Contenedor del Reproductor Dividido -->
+  <main class="container">
+    
+    <div class="grid grid--details" style="gap: 2.5rem; align-items: flex-start;">
+      
+      <!-- Columna Principal: Player -->
+      <section style="flex: 1; min-width: 0;">
+        <div id="player-area-root">
+          <div class="spinner" style="margin: 5rem auto;"></div>
+        </div>
+
+        <!-- Meta información corta debajo del player -->
+        <div style="margin-top: 2rem; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 2rem; border-radius: var(--radius-lg);">
+          <div class="flex flex--align-center flex--justify-between flex--wrap" style="margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem; gap: 1rem;">
+            <div>
+              <h1 id="watch-meta-title" style="font-size: 2rem; font-weight: 700;">Título del Recurso</h1>
+              <span id="watch-meta-year" style="font-size: 0.95rem; color: var(--text-secondary); font-family: var(--font-mono);">2024</span>
+            </div>
+            <span id="watch-meta-rating" style="font-family: var(--font-display); font-size: 1.5rem; color: var(--gold);">★ 0.0</span>
+          </div>
+
+          <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Sinopsis corta</h3>
+          <p id="watch-meta-overview" style="font-family: var(--font-body); font-size: 1.1rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;"></p>
+        </div>
+      </section>
+
+      <!-- Columna Lateral (Sidebar): Clips, Canales y Streaming -->
+      <aside style="width: 100%; display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Lista de videos / trailers -->
+        <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-lg);">
+          <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--accent-red);">Clips y Trailers</h3>
+          <div id="watch-videos-list" style="max-height: 250px; overflow-y: auto; padding-right: 0.25rem;">
+            Cargando clips...
+          </div>
+        </div>
+
+        <!-- ¿Dónde ver en Streaming? -->
+        <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-lg);">
+          <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--accent-red);">Plataformas Streaming</h3>
+          <div id="watch-providers-container">
+            Cargando plataformas...
+          </div>
+        </div>
+
+        <!-- Reparto Rápido -->
+        <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-lg);">
+          <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--accent-red);">Reparto Principal</h3>
+          <div id="watch-cast-list">
+            Cargando reparto...
+          </div>
+        </div>
+
+      </aside>
+
+    </div>
+
+  </main>
+
+  <footer style="background-color: var(--bg-void); border-top: 1px solid var(--border-subtle); padding: 4rem 0 2rem 0; margin-top: 5rem; font-family: var(--font-ui);">
+    <div class="container text-center" style="color: var(--text-muted); font-size: 0.85rem;">
+      <p>© 2025 CINEVERSE. Datos de TMDB. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/pages/watch.js"></script>
+</body>
+</html>

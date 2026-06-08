@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVerse — Mi Perfil de Usuario</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hojas de Estilo -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/hero.css">
+  <link rel="stylesheet" href="css/carousel.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="padding-top: 80px;">
+
+  <!-- Transición de página roja -->
+  <div class="page-transition-overlay out"></div>
+
+  <!-- Héroe del Perfil (Fondo Gradiente Rojo y Negro) -->
+  <section style="background: linear-gradient(135deg, var(--accent-dark-red) 0%, var(--bg-primary) 80%); border-bottom: 1px solid var(--border-subtle); padding: 4rem 0 3rem 0; font-family: var(--font-ui);">
+    <div class="container flex profile-hero" style="align-items: center; gap: 2rem;">
+      
+      <!-- Avatar circular (Uploader) -->
+      <div class="profile-hero__avatar-container" style="position: relative; cursor: pointer; flex-shrink: 0; margin-right: 1rem;">
+        <img id="profile-avatar" src="" alt="Avatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-red); box-shadow: 0 0 25px var(--glow-red);">
+        <div style="position: absolute; bottom: 0; right: 0; background-color: var(--accent-red); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; border: 2px solid var(--bg-primary); color: #fff;">
+          📷
+        </div>
+        <!-- Input File oculto -->
+        <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
+      </div>
+
+      <!-- Datos del usuario -->
+      <div style="flex: 1;">
+        <h2 id="profile-name" class="profile-hero__name" style="font-size: 2.25rem; font-weight: 700; margin-bottom: 0.25rem; cursor: pointer;" data-tooltip="Haz click para editar">Cargando usuario...</h2>
+        <p id="profile-bio" class="profile-hero__bio" style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; cursor: pointer;" data-tooltip="Haz click para editar"></p>
+        
+        <!-- Stats -->
+        <div class="flex flex--wrap flex--gap-md" style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+          <span>❤️ <strong id="stat-favorites" style="color: var(--text-primary);">0</strong> Favoritos</span>
+          <span>•</span>
+          <span>🕐 <strong id="stat-watchlist" style="color: var(--text-primary);">0</strong> Pendientes</span>
+          <span>•</span>
+          <span>👁️ <strong id="stat-history" style="color: var(--text-primary);">0</strong> Vistos</span>
+          <span>•</span>
+          <span>📝 <strong id="stat-reviews" style="color: var(--text-primary);">0</strong> Reseñas</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Pestañas de Navegación del Perfil -->
+  <section class="container" style="margin-top: 3rem; margin-bottom: 5rem;">
+    
+    <!-- Pestañas (Tabs) -->
+    <div class="flex flex--wrap flex--gap-sm profile-tabs" style="margin-bottom: 2.5rem; justify-content: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
+      <button class="pill pill--active profile-tabs__btn" data-tab="favorites">❤️ Favoritos</button>
+      <button class="pill profile-tabs__btn" data-tab="watchlist">🕐 Quiero Ver</button>
+      <button class="pill profile-tabs__btn" data-tab="history">👁️ Historial</button>
+      <button class="pill profile-tabs__btn" data-tab="ratings">⭐ Mis Notas</button>
+      <button class="pill profile-tabs__btn" data-tab="reviews">📝 Mis Reseñas</button>
+      <button class="pill profile-tabs__btn" data-tab="settings">⚙️ Ajustes</button>
+    </div>
+
+    <!-- Contenedor Pestañas -->
+    <div>
+      
+      <!-- Pestaña 1: Favoritos -->
+      <div class="profile-tab-section active" id="profile-section-favorites">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-primary);">Películas y Series Favoritas</h3>
+        <div class="grid grid--4" id="profile-favorites-grid"></div>
+      </div>
+
+      <!-- Pestaña 2: Watchlist -->
+      <div class="profile-tab-section" id="profile-section-watchlist">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-primary);">Lista de Seguimiento ("Quiero Ver")</h3>
+        <div class="grid grid--4" id="profile-watchlist-grid"></div>
+      </div>
+
+      <!-- Pestaña 3: Historial -->
+      <div class="profile-tab-section" id="profile-section-history">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-primary);">Historial de Reproducción</h3>
+        <div id="profile-history-list" style="max-width: 800px; margin: 0 auto;"></div>
+      </div>
+
+      <!-- Pestaña 4: Valoraciones -->
+      <div class="profile-tab-section" id="profile-section-ratings">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-primary);">Mis Puntuaciones Personales</h3>
+        <div class="grid grid--4" id="profile-ratings-grid"></div>
+      </div>
+
+      <!-- Pestaña 5: Reseñas -->
+      <div class="profile-tab-section" id="profile-section-reviews">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-primary);">Mis Reseñas Escritas</h3>
+        <div id="profile-reviews-list" style="max-width: 800px; margin: 0 auto;"></div>
+      </div>
+
+      <!-- Pestaña 6: Ajustes / Configuración -->
+      <div class="profile-tab-section" id="profile-section-settings">
+        <div style="max-width: 600px; margin: 0 auto; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 2.5rem; border-radius: var(--radius-lg);">
+          <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">Configuración de Cuenta</h3>
+          
+          <form class="flex flex--col flex--gap-md">
+            <div class="form-group">
+              <label class="form-label" for="settings-username">Nombre de Usuario</label>
+              <input type="text" id="settings-username" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="settings-email">Correo Electrónico (Solo Lectura)</label>
+              <input type="email" id="settings-email" class="form-input" readonly style="opacity: 0.5; cursor: not-allowed;">
+            </div>
+
+            <button type="submit" class="btn btn--primary" id="save-settings-btn" style="align-self: flex-start; margin-top: 1rem;">Guardar Cambios</button>
+          </form>
+
+          <!-- Zona Peligrosa -->
+          <div style="margin-top: 4rem; border-top: 1px solid var(--border-subtle); padding-top: 2rem;">
+            <h4 style="font-weight: 700; color: var(--accent-ember); margin-bottom: 1rem; text-transform: uppercase; font-size: 0.9rem;">Zona de Peligro</h4>
+            <div class="flex flex--align-center flex--justify-between flex--wrap" style="gap: 1rem;">
+              <p style="font-size: 0.9rem; color: var(--text-secondary); max-width: 380px;">Al eliminar tu cuenta se borrarán permanentemente todos tus datos de favoritos, calificaciones, historial y reseñas. Esta acción no se puede deshacer.</p>
+              <button class="btn btn--outline-red" id="delete-account-btn">Eliminar Cuenta</button>
+            </div>
+          </div>
+
+          <!-- Botón de deslogueo alternativo -->
+          <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+            <button class="btn btn--secondary" id="settings-logout-btn">🚪 Cerrar Sesión</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background-color: var(--bg-void); border-top: 1px solid var(--border-subtle); padding: 4rem 0 2rem 0; font-family: var(--font-ui);">
+    <div class="container text-center" style="color: var(--text-muted); font-size: 0.85rem;">
+      <p>© 2025 CINEVERSE. Datos de TMDB. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <style>
+    .profile-tab-section { display: none; }
+    .profile-tab-section.active { display: block; }
+  </style>
+
+  <script type="module" src="js/pages/profile.js"></script>
+</body>
+</html>

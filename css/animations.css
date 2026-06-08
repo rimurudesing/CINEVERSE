@@ -1,0 +1,173 @@
+/* ═══ cineverse/css/animations.css ═══ */
+
+/* Fade y Slide Up */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp var(--transition-med) forwards;
+}
+
+/* Fade In simple */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--transition-med) forwards;
+}
+
+/* Fade Out simple */
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animate-fade-out {
+  animation: fadeOut var(--transition-med) forwards;
+}
+
+/* Slide desde la izquierda */
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft var(--transition-med) forwards;
+}
+
+/* Slide desde la derecha */
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight var(--transition-med) forwards;
+}
+
+/* Pulso Glow */
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 10px rgba(229, 9, 20, 0.4); }
+  50% { box-shadow: 0 0 25px rgba(229, 9, 20, 0.8); }
+  100% { box-shadow: 0 0 10px rgba(229, 9, 20, 0.4); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+/* Spinner Rotate */
+@keyframes rotateSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.05);
+  border-top-color: var(--accent-red);
+  border-radius: var(--radius-full);
+  animation: rotateSpin 0.8s linear infinite;
+}
+
+/* Dibujar Círculo de Rating (SVG Dashoffset) */
+@keyframes drawCircle {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Efecto Ripple al hacer click */
+@keyframes ripple {
+  from {
+    opacity: 1;
+    transform: scale(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(3);
+  }
+}
+
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.4);
+  width: 100px;
+  height: 100px;
+  margin-top: -50px;
+  margin-left: -50px;
+  animation: ripple 0.6s linear;
+  pointer-events: none;
+}
+
+/* Despliegue de menú */
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+/* Poster Flotante en Detalles */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Transición de Página Roja */
+@keyframes pageTransitionIn {
+  from { transform: scaleX(0); transform-origin: left; }
+  to { transform: scaleX(1); transform-origin: left; }
+}
+
+@keyframes pageTransitionOut {
+  from { transform: scaleX(1); transform-origin: right; }
+  to { transform: scaleX(0); transform-origin: right; }
+}
+
+.page-transition-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--accent-red);
+  z-index: 99999;
+  transform: scaleX(0);
+  pointer-events: none;
+}
+
+.page-transition-overlay.in {
+  animation: pageTransitionIn 0.4s cubic-bezier(0.8, 0, 0.2, 1) forwards;
+}
+
+.page-transition-overlay.out {
+  animation: pageTransitionOut 0.4s cubic-bezier(0.8, 0, 0.2, 1) forwards;
+}
+
+/* Staggered reveals con delay en cards del grid */
+.grid > *:nth-child(1) { animation-delay: 0ms; }
+.grid > *:nth-child(2) { animation-delay: 80ms; }
+.grid > *:nth-child(3) { animation-delay: 160ms; }
+.grid > *:nth-child(4) { animation-delay: 240ms; }
+.grid > *:nth-child(5) { animation-delay: 320ms; }
+.grid > *:nth-child(6) { animation-delay: 400ms; }
+.grid > *:nth-child(7) { animation-delay: 480ms; }
+.grid > *:nth-child(8) { animation-delay: 560ms; }
+.grid > *:nth-child(9) { animation-delay: 640ms; }
+.grid > *:nth-child(10) { animation-delay: 720ms; }
+.grid > *:nth-child(11) { animation-delay: 800ms; }
+.grid > *:nth-child(12) { animation-delay: 880ms; }

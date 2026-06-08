@@ -1,0 +1,107 @@
+/* ═══ cineverse/css/responsive.css ═══ */
+
+/* Mobile-First Responsive Adjustments */
+
+/* Mobile (< 640px) */
+@media (max-width: 640px) {
+  /* Héroe en Mobile */
+  .hero__title {
+    font-size: 2.75rem;
+    line-height: 1.1;
+  }
+  
+  .hero__tagline {
+    font-size: 1.1rem;
+  }
+  
+  .hero__overview {
+    font-size: 0.95rem;
+    -webkit-line-clamp: 2;
+  }
+
+  /* Cartelera y carrusel en Mobile */
+  .movie-card__hover-content {
+    display: none !important; /* Desactivar hover complejo en mobile */
+  }
+
+  .movie-card:hover {
+    transform: scale(1.02);
+  }
+
+  /* Barra lateral de filtros en Search */
+  .search-page {
+    flex-direction: column;
+  }
+
+  .search-sidebar {
+    width: 100% !important;
+    position: relative;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 !important;
+    border: none !important;
+    transition: max-height var(--transition-med) ease;
+  }
+
+  .search-sidebar.active {
+    max-height: 1000px;
+    padding: 1.5rem !important;
+    border: 1px solid var(--border-subtle) !important;
+    margin-bottom: 1.5rem;
+  }
+
+  .search-filter-toggle {
+    display: flex !important; /* Mostrar botón de toggle filtros */
+  }
+
+  /* Perfil en Mobile */
+  .profile-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 0.5rem;
+    justify-content: flex-start !important;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .profile-tabs__btn {
+    padding: 0.5rem 1rem !important;
+  }
+
+  .profile-hero {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+    padding: 2rem 1rem !important;
+  }
+
+  .profile-hero__avatar-container {
+    margin-right: 0 !important;
+  }
+}
+
+/* Tablet (640px - 1024px) */
+@media (min-width: 640px) and (max-width: 1024px) {
+  .hero__title {
+    font-size: 4rem;
+  }
+  
+  .search-sidebar {
+    width: 250px;
+  }
+}
+
+/* Desktop (1024px - 1440px) */
+@media (min-width: 1024px) {
+  .search-filter-toggle {
+    display: none !important;
+  }
+}
+
+/* Wide Screens (> 1440px) */
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1600px;
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}

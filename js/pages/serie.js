@@ -1,0 +1,822 @@
+/* ═══ cineverse/js/pages/serie.js ═══ */
+
+import { api } from '../api.js';
+import { supabase, isSupabaseConfigured } from '../supabase.js';
+import { getCurrentUser } from '../auth.js';
+import { 
+  initPageTransition,
+  buildTMDBImageURL, 
+  formatYear, 
+  formatRating, 
+  formatDate,
+  getYoutubeKey, 
+  navigateTo, 
+  showToast 
+} from '../utils.js';
+import { initCustomCursor } from '../cursor.js';
+import '../components/navbar.js';
+import { RatingRing } from '../components/ratingRing.js';
+import { Carousel } from '../components/carousel.js';
+import { skeleton } from '../components/skeleton.js';
+
+class TVPageController {
+  constructor() {
+    this.serieId = null;
+    this.serieDetails = null;
+    this.currentUser = null;
+    
+    // Estados base de datos
+    this.isFav = false;
+    this.isWatchlist = false;
+    this.userRating = 0;
+    this.watchHistoryTitles = []; // Títulos de episodios vistos en DB
+  }
+
+  async init() {
+    initPageTransition();
+    initCustomCursor();
+
+    const params = new URLSearchParams(window.location.search);
+    this.serieId = parseInt(params.get('id'));
+
+    if (!this.serieId) {
+      navigateTo('index.html');
+      return;
+    }
+
+    this.showInitialLoader();
+
+    // 1. Validar sesión
+    this.currentUser = await getCurrentUser();
+
+    try {
+      // 2. Cargar detalles
+      this.serieDetails = await api.getTVDetails(this.serieId);
+      if (!this.serieDetails) {
+        document.getElementById('serie-detail-root').innerHTML = `<div style="text-align: center; padding: 5rem;">Error al cargar los detalles de la serie.</div>`;
+        return;
+      }
+
+      // 3. Consultar base de datos
+      await this.loadDatabaseStates();
+
+      // 4. Renderizar UI
+      this.renderHeroSection();
+      this.renderMainContent();
+      this.renderNetworks();
+      this.renderTabsSection();
+      
+      // 5. Configurar Eventos
+      this.bindActions();
+
+    } catch (err) {
+      console.error("Error en TVPageController:", err);
+    }
+  }
+
+  showInitialLoader() {
+    document.getElementById('serie-detail-root').innerHTML = skeleton.details();
+  }
+
+  async loadDatabaseStates() {
+    if (!isSupabaseConfigured || !this.currentUser) return;
+
+    try {
+      const userId = this.currentUser.id;
+
+      // 1. Favorito
+      const { data: fav } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('tmdb_id', this.serieId)
+        .eq('media_type', 'tv')
+        .maybeSingle();
+      this.isFav = !!fav;
+
+      // 2. Watchlist
+      const { data: watch } = await supabase
+        .from('watchlist')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('tmdb_id', this.serieId)
+        .eq('media_type', 'tv')
+        .maybeSingle();
+      this.isWatchlist = !!watch;
+
+      // 3. Rating
+      const { data: ratingObj } = await supabase
+        .from('user_ratings')
+        .select('rating')
+        .eq('user_id', userId)
+        .eq('tmdb_id', this.serieId)
+        .eq('media_type', 'tv')
+        .maybeSingle();
+      this.userRating = ratingObj ? ratingObj.rating : 0;
+
+      // 4. Historial (Episodios ya vistos)
+      const { data: watchedHistory } = await supabase
+        .from('watch_history')
+        .select('title')
+        .eq('user_id', userId)
+        .eq('tmdb_id', this.serieId)
+        .eq('media_type', 'tv');
+      
+      this.watchHistoryTitles = watchedHistory ? watchedHistory.map(h => h.title) : [];
+
+    } catch (err) {
+      console.error("Error al cargar estados de base de datos:", err);
+    }
+  }
+
+  renderHeroSection() {
+    const backdrop = buildTMDBImageURL(this.serieDetails.backdrop_path, 'original');
+    const heroRoot = document.getElementById('serie-hero-root');
+    if (!heroRoot) return;
+
+    heroRoot.style.backgroundImage = `url(${backdrop})`;
+    heroRoot.style.backgroundSize = 'cover';
+    heroRoot.style.backgroundPosition = 'center';
+  }
+
+  renderMainContent() {
+    const root = document.getElementById('serie-detail-root');
+    if (!root) return;
+
+    const details = this.serieDetails;
+    const title = details.name;
+    const tagline = details.tagline ? `"${details.tagline}"` : '';
+    const year = formatYear(details.first_air_date);
+    const seasonsCount = details.number_of_seasons;
+    const episodesCount = details.number_of_episodes;
+    const poster = buildTMDBImageURL(details.poster_path, 'w500');
+    const overview = details.overview || 'Sin sinopsis disponible.';
+
+    // Estado Badge (En Emisión / Finalizada / Cancelada)
+    let statusHTML = '';
+    const tmdbStatus = details.status.toLowerCase();
+    if (tmdbStatus === 'returning series' || tmdbStatus === 'in production') {
+      statusHTML = `<span class="badge badge--green">En Emisión</span>`;
+    } else if (tmdbStatus === 'ended') {
+      statusHTML = `<span class="badge badge--gray">Finalizada</span>`;
+    } else if (tmdbStatus === 'canceled') {
+      statusHTML = `<span class="badge badge--yellow">Cancelada</span>`;
+    } else {
+      statusHTML = `<span class="badge badge--gray">${details.status}</span>`;
+    }
+
+    // Géneros pills
+    const genresHTML = details.genres.map(g => 
+      `<a href="search.html?genre=${g.id}" class="pill">${g.name}</a>`
+    ).join('');
+
+    root.innerHTML = `
+      <div class="grid grid--details">
+        <!-- Columna Izquierda -->
+        <div class="flex flex--col flex--gap-md">
+          <div class="animate-float">
+            <img class="detail-poster" src="${poster}" alt="${title}" style="border-radius: var(--radius-md); border: 1px solid var(--border-red); box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 100%;">
+          </div>
+
+          <!-- Rating SVG Ring -->
+          <div class="flex flex--align-center flex--justify-center flex--gap-md" style="background-color: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div id="rating-ring-container"></div>
+            <div>
+              <h4 style="font-size: 0.95rem; font-weight: 700;">Score TMDB</h4>
+              <p style="font-size: 0.8rem; color: var(--text-secondary);">${details.vote_count} valoraciones</p>
+            </div>
+          </div>
+
+          <!-- Acciones de Usuario -->
+          <div class="flex flex--col flex--gap-sm" id="user-actions-container">
+            <!-- Cargado por JS -->
+          </div>
+
+          <!-- Broadcast Networks (Redes de Emisión) -->
+          <div id="networks-section" class="flex flex--col flex--gap-sm" style="background-color: var(--bg-secondary); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--text-secondary);">Redes de Emisión</h4>
+            <div class="flex flex--wrap flex--gap-sm" id="networks-logos">Cargando...</div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha -->
+        <div class="flex flex--col flex--gap-md">
+          <div>
+            <h1 style="font-family: var(--font-display); font-size: 4.5rem; line-height: 0.95; margin-bottom: 0.5rem;">${title}</h1>
+            ${tagline ? `<p style="font-family: var(--font-body); font-style: italic; color: var(--accent-red); font-size: 1.5rem; margin-bottom: 1rem;">${tagline}</p>` : ''}
+            
+            <div class="flex flex--wrap flex--gap-md" style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+              <span>Año: <strong>${year}</strong></span>
+              <span>•</span>
+              <span>Temporadas: <strong>${seasonsCount}</strong></span>
+              <span>•</span>
+              <span>Episodios: <strong>${episodesCount}</strong></span>
+              <span>•</span>
+              <span>Estado: ${statusHTML}</span>
+            </div>
+
+            <div class="flex flex--wrap flex--gap-sm" style="margin-bottom: 2rem;">
+              ${genresHTML}
+            </div>
+          </div>
+
+          <div>
+            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">Sinopsis</h3>
+            <p style="font-family: var(--font-body); font-size: 1.25rem; color: var(--text-secondary); line-height: 1.6;">${overview}</p>
+          </div>
+
+          <!-- Creadores -->
+          <div id="creators-section" style="margin-top: 1rem;">
+            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">Creadores</h3>
+            <div class="flex flex--wrap flex--gap-lg" id="creators-list">Cargando creadores...</div>
+          </div>
+
+          <!-- Reparto -->
+          <div id="cast-section" style="margin-top: 1rem;">
+            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">Reparto Principal</h3>
+            <div class="flex" style="overflow-x: auto; gap: 1.5rem; padding-bottom: 1rem;" id="cast-track">Cargando reparto...</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Renderizar círculo de progreso SVG
+    new RatingRing('#rating-ring-container', details.vote_average);
+
+    // Pintar los botones según sesión de usuario
+    this.renderUserActionButtons();
+
+    // Cargar reparto y creadores
+    this.loadCreditsAndCreators();
+  }
+
+  renderUserActionButtons() {
+    const container = document.getElementById('user-actions-container');
+    if (!container) return;
+
+    if (!this.currentUser) {
+      container.innerHTML = `
+        <a href="login.html" class="btn btn--outline-red" style="width: 100%; text-align: center;">Inicia sesión para guardar</a>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="grid grid--2" style="gap: 0.5rem;">
+        <button class="btn ${this.isFav ? 'btn--primary' : 'btn--secondary'} btn--icon" id="btn-fav" data-tooltip="${this.isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}" style="width: 100%;">
+          ${this.isFav ? '❤️ Favorito' : '🤍 Favorito'}
+        </button>
+        <button class="btn ${this.isWatchlist ? 'btn--primary' : 'btn--secondary'} btn--icon" id="btn-watchlist" data-tooltip="${this.isWatchlist ? 'Quitar de la lista' : 'Añadir a lista'}" style="width: 100%;">
+          ${this.isWatchlist ? '✓ Guardada' : '+ Watchlist'}
+        </button>
+      </div>
+      <button class="btn btn--outline-red" id="btn-rate" style="width: 100%;">
+        ${this.userRating > 0 ? `★ Valorada: ${this.userRating}/10` : '★ Valorar serie'}
+      </button>
+    `;
+  }
+
+  async loadCreditsAndCreators() {
+    const details = this.serieDetails;
+
+    // Creadores
+    const creatorsList = document.getElementById('creators-list');
+    if (creatorsList) {
+      if (!details.created_by || details.created_by.length === 0) {
+        creatorsList.innerHTML = '<span style="color: var(--text-muted);">No hay información de creadores.</span>';
+      } else {
+        creatorsList.innerHTML = details.created_by.map(c => `
+          <div>
+            <h4 style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">Creador</h4>
+            <p style="font-weight: 700;">${c.name}</p>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Reparto
+    try {
+      const credits = await api.getTVCredits(this.serieId);
+      const castTrack = document.getElementById('cast-track');
+      if (castTrack) {
+        if (!credits.cast || credits.cast.length === 0) {
+          castTrack.innerHTML = '<p>No hay información de reparto disponible.</p>';
+        } else {
+          castTrack.innerHTML = credits.cast.slice(0, 10).map(actor => {
+            const avatar = actor.profile_path 
+              ? buildTMDBImageURL(actor.profile_path, 'w185') 
+              : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(actor.name)}`;
+            return `
+              <a href="search.html?q=${encodeURIComponent(actor.name)}" class="flex flex--col flex--align-center text-center" style="flex: 0 0 100px; gap: 0.5rem;">
+                <img src="${avatar}" alt="${actor.name}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-subtle);">
+                <span style="font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${actor.name}</span>
+                <span style="font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${actor.character}</span>
+              </a>
+            `;
+          }).join('');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  renderNetworks() {
+    const container = document.getElementById('networks-logos');
+    if (!container) return;
+
+    const networks = this.serieDetails.networks;
+    if (!networks || networks.length === 0) {
+      container.innerHTML = `<span style="font-size: 0.85rem; color: var(--text-muted);">Sin información de emisión.</span>`;
+      return;
+    }
+
+    container.innerHTML = networks.slice(0, 4).map(n => `
+      <img src="${buildTMDBImageURL(n.logo_path, 'w92')}" alt="${n.name}" data-tooltip="${n.name}" style="height: 25px; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.8;">
+    `).join('');
+  }
+
+  async renderTabsSection() {
+    // Cargar similares y recomendadas
+    const similar = await api.getTVSimilar(this.serieId, 1);
+    const recommended = await api.getTVRecommendations(this.serieId, 1);
+
+    new Carousel('#tab-similar-root', similar, 'Series Similares');
+    new Carousel('#tab-recommended-root', recommended, 'Series Recomendadas');
+
+    // Trailers y videos
+    const videos = await api.getTVVideos(this.serieId);
+    const videoKey = getYoutubeKey(videos);
+
+    const trailerRoot = document.getElementById('tab-trailers-root');
+    if (trailerRoot) {
+      if (videoKey) {
+        trailerRoot.innerHTML = `
+          <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: var(--radius-md);">
+            <iframe 
+              style="position: absolute; top:0; left: 0; width: 100%; height: 100%; border: 0;" 
+              src="https://www.youtube.com/embed/${videoKey}" 
+              title="Official Trailer" 
+              allowfullscreen
+              loading="lazy">
+            </iframe>
+          </div>
+        `;
+        // Habilitar botón flotante Ver Trailer
+        const floatBtn = document.getElementById('floating-trailer-btn');
+        if (floatBtn) {
+          floatBtn.style.display = 'flex';
+          floatBtn.addEventListener('click', () => {
+            trailerRoot.scrollIntoView({ behavior: 'smooth' });
+          });
+        }
+      } else {
+        trailerRoot.innerHTML = '<p style="padding: 2rem; text-align: center; color: var(--text-muted);">No hay trailers de YouTube disponibles.</p>';
+      }
+    }
+
+    // Pestaña de Temporadas
+    this.renderSeasonsSection();
+
+    // Reseñas
+    this.loadReviews();
+  }
+
+  renderSeasonsSection() {
+    const root = document.getElementById('tab-seasons');
+    if (!root) return;
+
+    const seasons = this.serieDetails.seasons || [];
+
+    if (seasons.length === 0) {
+      root.innerHTML = '<p>No hay información de temporadas.</p>';
+      return;
+    }
+
+    let seasonsHTML = `
+      <div class="seasons-accordion" style="display: flex; flex-direction: column; gap: 1rem;">
+    `;
+
+    seasons.forEach(season => {
+      const poster = buildTMDBImageURL(season.poster_path, 'w185');
+      const year = season.air_date ? formatYear(season.air_date) : 'N/A';
+      const episodesCount = season.episode_count;
+      const overview = season.overview || 'Sin descripción para esta temporada.';
+
+      seasonsHTML += `
+        <div class="season-panel" style="background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden;">
+          <div class="season-panel__header" data-season-number="${season.season_number}" style="padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+            <div class="flex flex--align-center flex--gap-md">
+              <h4 style="font-size: 1.15rem; font-weight: 700;">${season.name}</h4>
+              <span style="font-size: 0.85rem; color: var(--text-secondary);">${year} | ${episodesCount} Episodios</span>
+            </div>
+            <span class="season-arrow" style="font-size: 1.25rem; transition: transform var(--transition-fast);">▼</span>
+          </div>
+          
+          <div class="season-panel__content" id="season-content-${season.season_number}" style="max-height: 0; overflow: hidden; transition: max-height var(--transition-med) ease-out;">
+            <div class="grid" style="grid-template-columns: 120px 1fr; gap: 1.5rem; padding: 1.5rem; border-top: 1px solid var(--border-subtle);">
+              <img src="${poster}" alt="${season.name}" style="border-radius: var(--radius-sm); width: 100%;">
+              <div>
+                <p style="font-family: var(--font-body); color: var(--text-secondary); font-size: 1rem; margin-bottom: 1.5rem; line-height: 1.5;">${overview}</p>
+                <div class="episodes-list" id="episodes-list-${season.season_number}">
+                  <div class="spinner" style="width: 25px; height: 25px; margin: 1rem auto;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    seasonsHTML += `</div>`;
+    root.innerHTML = seasonsHTML;
+
+    // Configurar acordeón dinámico
+    const panels = root.querySelectorAll('.season-panel__header');
+    panels.forEach(headerPanel => {
+      headerPanel.addEventListener('click', () => {
+        const seasonNum = parseInt(headerPanel.getAttribute('data-season-number'));
+        const content = root.querySelector(`#season-content-${seasonNum}`);
+        const arrow = headerPanel.querySelector('.season-arrow');
+
+        if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+          content.style.maxHeight = '0px';
+          arrow.style.transform = 'rotate(0deg)';
+        } else {
+          // Colapsar todos los demás paneles
+          root.querySelectorAll('.season-panel__content').forEach(c => c.style.maxHeight = '0px');
+          root.querySelectorAll('.season-arrow').forEach(a => a.style.transform = 'rotate(0deg)');
+
+          // Cargar episodios dinámicamente si es la primera vez que se expande
+          this.loadEpisodesIfNeeded(seasonNum);
+          
+          // Expandir este
+          content.style.maxHeight = '1500px'; // Altura máxima holgada para scroll interno
+          arrow.style.transform = 'rotate(180deg)';
+        }
+      });
+    });
+  }
+
+  async loadEpisodesIfNeeded(seasonNum) {
+    const listContainer = document.getElementById(`episodes-list-${seasonNum}`);
+    if (!listContainer || listContainer.getAttribute('data-loaded') === 'true') return;
+
+    try {
+      const data = await api.getTVSeason(this.serieId, seasonNum);
+      if (!data || !data.episodes || data.episodes.length === 0) {
+        listContainer.innerHTML = '<p>No se encontraron episodios.</p>';
+        return;
+      }
+
+      listContainer.innerHTML = '';
+      listContainer.setAttribute('data-loaded', 'true');
+
+      let listHTML = `
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
+              <th style="padding: 0.5rem 0;">Ep.</th>
+              <th style="padding: 0.5rem;">Título</th>
+              <th style="padding: 0.5rem;">Lanzamiento</th>
+              <th style="padding: 0.5rem; text-align: right;">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      data.episodes.forEach(ep => {
+        const titleKey = `${this.serieDetails.name} - S${String(seasonNum).padStart(2, '0')}E${String(ep.episode_number).padStart(2, '0')}`;
+        const isEpWatched = this.watchHistoryTitles.includes(titleKey);
+
+        listHTML += `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.02); height: 45px;">
+            <td style="font-family: var(--font-mono); font-weight: 700; width: 40px; color: var(--accent-red);">${ep.episode_number}</td>
+            <td style="font-weight: 600; padding: 0.5rem;">${ep.name}</td>
+            <td style="color: var(--text-secondary); padding: 0.5rem;">${ep.air_date ? formatDate(ep.air_date) : 'N/A'}</td>
+            <td style="text-align: right; padding: 0.5rem;">
+              <button class="btn-ep-watch" data-title-key="${titleKey}" style="cursor: pointer; background: none; border: none; font-size: 0.85rem; font-weight: 700; color: ${isEpWatched ? 'var(--accent-red)' : 'var(--text-muted)'};">
+                ${isEpWatched ? '✓ Visto' : '👁️ Marcar'}
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      listHTML += `
+          </tbody>
+        </table>
+      `;
+
+      listContainer.innerHTML = listHTML;
+
+      // Eventos de click en "Marcar Visto"
+      listContainer.querySelectorAll('.btn-ep-watch').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const titleKey = btn.getAttribute('data-title-key');
+          await this.toggleEpisodeWatched(titleKey, btn);
+        });
+      });
+
+    } catch (err) {
+      console.error("Error al cargar episodios:", err);
+      listContainer.innerHTML = '<p>Error al cargar episodios.</p>';
+    }
+  }
+
+  async toggleEpisodeWatched(titleKey, btn) {
+    if (!isSupabaseConfigured) {
+      showToast("Supabase no está configurado", "error");
+      return;
+    }
+    if (!this.currentUser) {
+      showToast("Inicia sesión para registrar tu progreso", "info");
+      return;
+    }
+
+    try {
+      const isWatched = this.watchHistoryTitles.includes(titleKey);
+
+      if (isWatched) {
+        // Eliminar de base de datos
+        const { error } = await supabase
+          .from('watch_history')
+          .delete()
+          .eq('user_id', this.currentUser.id)
+          .eq('tmdb_id', this.serieId)
+          .eq('media_type', 'tv')
+          .eq('title', titleKey);
+        
+        if (error) throw error;
+        
+        this.watchHistoryTitles = this.watchHistoryTitles.filter(t => t !== titleKey);
+        btn.textContent = '👁️ Marcar';
+        btn.style.color = 'var(--text-muted)';
+        showToast(`Marcado como pendiente: ${titleKey}`, "info");
+      } else {
+        // Agregar a base de datos
+        const { error } = await supabase
+          .from('watch_history')
+          .insert({
+            user_id: this.currentUser.id,
+            tmdb_id: this.serieId,
+            media_type: 'tv',
+            title: titleKey,
+            poster_path: this.serieDetails.poster_path
+          });
+        
+        if (error) throw error;
+
+        this.watchHistoryTitles.push(titleKey);
+        btn.textContent = '✓ Visto';
+        btn.style.color = 'var(--accent-red)';
+        showToast(`Visto: ${titleKey}`, "success");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Error al guardar en el historial", "error");
+    }
+  }
+
+  async loadReviews() {
+    const list = document.getElementById('reviews-list');
+    if (!list) return;
+
+    list.innerHTML = 'Cargando reseñas...';
+
+    try {
+      let mergedReviews = [];
+
+      // 1. Reseñas TMDB
+      const tmdbData = await api.fetch(`/tv/${this.serieId}/reviews`);
+      if (tmdbData && tmdbData.results) {
+        tmdbData.results.slice(0, 3).forEach(r => {
+          mergedReviews.push({
+            author: r.author,
+            avatar: r.author_details?.avatar_path 
+              ? buildTMDBImageURL(r.author_details.avatar_path, 'w92') 
+              : `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(r.author)}`,
+            rating: r.author_details?.rating || null,
+            content: r.content,
+            created_at: r.created_at
+          });
+        });
+      }
+
+      // 2. Reseñas Supabase
+      if (isSupabaseConfigured) {
+        const { data: dbReviews } = await supabase
+          .from('reviews')
+          .select('*, profiles(username, display_name, avatar_url)')
+          .eq('tmdb_id', this.serieId)
+          .eq('media_type', 'tv')
+          .order('created_at', { ascending: false });
+
+        if (dbReviews) {
+          dbReviews.forEach(r => {
+            const authorName = r.profiles?.display_name || r.profiles?.username || 'Usuario Cineverse';
+            mergedReviews.unshift({
+              author: authorName,
+              avatar: r.profiles?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(authorName)}`,
+              rating: r.rating,
+              content: r.content,
+              created_at: r.created_at
+            });
+          });
+        }
+      }
+
+      if (mergedReviews.length === 0) {
+        list.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">Aún no hay reseñas. ¡Sé el primero en dejar una!</p>';
+        return;
+      }
+
+      list.innerHTML = mergedReviews.map(r => `
+        <div class="review-card" style="background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 1rem; display: flex; gap: 1rem;">
+          <img src="${r.avatar}" alt="${r.author}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-subtle); flex-shrink:0;">
+          <div>
+            <div class="flex flex--align-center flex--gap-sm" style="margin-bottom: 0.5rem;">
+              <h4 style="font-weight: 700;">${r.author}</h4>
+              ${r.rating ? `<span class="badge badge--yellow" style="font-size: 0.75rem;">★ ${r.rating}/10</span>` : ''}
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${formatDate(r.created_at)}</span>
+            </div>
+            <p style="font-family: var(--font-body); font-size: 1rem; color: var(--text-secondary); line-height: 1.5; white-space: pre-line;">${r.content}</p>
+          </div>
+        </div>
+      `).join('');
+
+    } catch (err) {
+      console.error(err);
+      list.innerHTML = '<p>Error al cargar las reseñas.</p>';
+    }
+  }
+
+  bindActions() {
+    const root = document.getElementById('serie-detail-root');
+    if (!root) return;
+
+    // --- ACCIÓN TABS ---
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabId = btn.getAttribute('data-tab');
+        
+        tabBtns.forEach(b => b.classList.remove('pill--active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        
+        btn.classList.add('pill--active');
+        const content = document.getElementById(`tab-${tabId}`);
+        if (content) content.classList.add('active');
+      });
+    });
+
+    // --- ACCIÓN FORMULARIO DE RESEÑAS ---
+    const reviewForm = document.getElementById('review-form');
+    if (reviewForm) {
+      if (!this.currentUser) {
+        reviewForm.innerHTML = `<div style="padding: 1.5rem; text-align: center; border: 1px dashed var(--border-subtle); border-radius: var(--radius-md); color: var(--text-muted);">Inicia sesión para escribir una reseña.</div>`;
+      } else {
+        reviewForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const content = document.getElementById('review-text').value.trim();
+          const ratingVal = parseInt(document.getElementById('review-rating-select').value);
+
+          if (!content) {
+            showToast("La reseña no puede estar vacía", "error");
+            return;
+          }
+
+          try {
+            const { error } = await supabase
+              .from('reviews')
+              .insert({
+                user_id: this.currentUser.id,
+                tmdb_id: this.serieId,
+                media_type: 'tv',
+                title: this.serieDetails.name,
+                content: content,
+                rating: ratingVal
+              });
+
+            if (error) throw error;
+
+            showToast("Reseña guardada con éxito", "success");
+            document.getElementById('review-text').value = '';
+            this.loadReviews(); // Recargar lista
+
+          } catch (err) {
+            console.error("Error al guardar reseña:", err);
+            showToast("No se pudo publicar la reseña", "error");
+          }
+        });
+      }
+    }
+
+    // --- ACCIÓN BOTONES DE BASE DE DATOS ---
+    root.addEventListener('click', async (e) => {
+      const target = e.target;
+
+      // 1. Favorito
+      if (target.id === 'btn-fav') {
+        const { toggleFavorite } = await import('../components/movieCard.js');
+        const res = await toggleFavorite(this.serieDetails);
+        if (res) {
+          this.isFav = res === 'added';
+          this.renderUserActionButtons();
+        }
+      }
+
+      // 2. Watchlist
+      if (target.id === 'btn-watchlist') {
+        const { toggleWatchlist } = await import('../components/movieCard.js');
+        const res = await toggleWatchlist(this.serieDetails);
+        if (res) {
+          this.isWatchlist = res === 'added';
+          this.renderUserActionButtons();
+        }
+      }
+
+      // 3. Modal de Valoración
+      if (target.id === 'btn-rate') {
+        this.openRatingModal();
+      }
+    });
+  }
+
+  openRatingModal() {
+    const modal = document.getElementById('rating-modal');
+    if (!modal) return;
+
+    modal.classList.add('active');
+
+    // Pintar estrellas
+    const starPicker = modal.querySelector('.rating-picker');
+    const valueIndicator = modal.querySelector('.rating-picker__value');
+    let selectedRating = this.userRating;
+
+    const renderStars = (rating) => {
+      let starsHTML = '';
+      for (let i = 1; i <= 10; i++) {
+        const isActive = i <= rating;
+        starsHTML += `<span class="rating-picker__star ${isActive ? 'active' : ''}" data-value="${i}">★</span>`;
+      }
+      starPicker.innerHTML = starsHTML;
+      valueIndicator.textContent = rating > 0 ? `${rating} / 10` : 'Selecciona una nota';
+    };
+
+    renderStars(selectedRating);
+
+    starPicker.addEventListener('click', (e) => {
+      if (e.target.classList.contains('rating-picker__star')) {
+        selectedRating = parseInt(e.target.getAttribute('data-value'));
+        renderStars(selectedRating);
+      }
+    });
+
+    const closeBtn = modal.querySelector('.modal__close');
+    const cancelBtn = document.getElementById('cancel-rating-btn');
+    const saveBtn = document.getElementById('save-rating-btn');
+
+    const closeModal = () => modal.classList.remove('active');
+
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+
+    saveBtn.onclick = async () => {
+      if (selectedRating === 0) {
+        showToast("Por favor, selecciona una puntuación", "error");
+        return;
+      }
+
+      try {
+        const { error } = await supabase
+          .from('user_ratings')
+          .upsert({
+            user_id: this.currentUser.id,
+            tmdb_id: this.serieId,
+            media_type: 'tv',
+            rating: selectedRating,
+            rated_at: new Date().toISOString()
+          }, { onConflict: 'user_id,tmdb_id,media_type' });
+
+        if (error) throw error;
+
+        this.userRating = selectedRating;
+        showToast(`Valorado con un ${selectedRating}/10`, "success");
+        this.renderUserActionButtons();
+        closeModal();
+
+      } catch (err) {
+        console.error(err);
+        showToast("Error al guardar la valoración", "error");
+      }
+    };
+  }
+}
+
+// Inicializar controlador
+const controller = new TVPageController();
+document.addEventListener('DOMContentLoaded', () => controller.init());

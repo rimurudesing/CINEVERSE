@@ -1,0 +1,368 @@
+/* ═══ cineverse/css/components.css ═══ */
+
+/* Botones */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  transition: var(--transition-med);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn--primary {
+  background-color: var(--accent-red);
+  color: var(--text-primary);
+  box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);
+}
+
+.btn--primary:hover {
+  background-color: var(--accent-crimson);
+  box-shadow: 0 6px 20px rgba(229, 9, 20, 0.5);
+  transform: translateY(-2px);
+}
+
+.btn--primary:active {
+  background-color: var(--accent-dark-red);
+  transform: translateY(0);
+}
+
+.btn--outline {
+  border: 2px solid var(--text-primary);
+  color: var(--text-primary);
+  background-color: transparent;
+}
+
+.btn--outline:hover {
+  background-color: var(--text-primary);
+  color: var(--bg-void);
+  transform: translateY(-2px);
+}
+
+.btn--outline-red {
+  border: 2px solid var(--accent-red);
+  color: var(--accent-red);
+  background-color: transparent;
+}
+
+.btn--outline-red:hover {
+  background-color: var(--accent-red);
+  color: var(--text-primary);
+  box-shadow: 0 0 15px var(--glow-red);
+  transform: translateY(-2px);
+}
+
+.btn--secondary {
+  background-color: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.btn--secondary:hover {
+  background-color: var(--bg-overlay);
+  color: var(--text-primary);
+}
+
+.btn--icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn--floating {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+/* Badges / Etiquetas */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.badge--red {
+  background-color: var(--accent-red);
+  color: var(--text-primary);
+}
+
+.badge--green {
+  background-color: #2e7d32;
+  color: var(--text-primary);
+}
+
+.badge--yellow {
+  background-color: #f57f17;
+  color: var(--bg-void);
+}
+
+.badge--gray {
+  background-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+/* Pills de Género y Categoría */
+.pill {
+  display: inline-flex;
+  padding: 0.4rem 1rem;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-family: var(--font-ui);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.pill:hover, .pill--active {
+  border-color: var(--accent-red);
+  color: var(--text-primary);
+  background-color: rgba(229, 9, 20, 0.1);
+  box-shadow: 0 0 10px rgba(229, 9, 20, 0.2);
+}
+
+/* Tarjetas de Película / Serie (MovieCard) */
+.movie-card {
+  position: relative;
+  aspect-ratio: 2/3;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: transform var(--transition-med), box-shadow var(--transition-med), border-color var(--transition-med);
+}
+
+.movie-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.movie-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(5, 5, 5, 0.95) 20%, rgba(5, 5, 5, 0.4) 60%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.25rem;
+  opacity: 1;
+  transition: var(--transition-med);
+}
+
+.movie-card__info {
+  width: 100%;
+}
+
+.movie-card__rating {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 10;
+  background-color: var(--accent-red);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.movie-card__title {
+  font-family: var(--font-ui);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.movie-card__meta {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Efecto hover interactivo de Tarjeta */
+.movie-card__hover-content {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(10, 10, 10, 0.95);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.25rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity var(--transition-med), transform var(--transition-med);
+  z-index: 20;
+}
+
+.movie-card:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 30px var(--glow-red-intense);
+  border-color: var(--accent-red);
+}
+
+.movie-card:hover .movie-card__hover-content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.movie-card__hover-title {
+  font-family: var(--font-ui);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.movie-card__hover-overview {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  margin-bottom: 1rem;
+}
+
+.movie-card__hover-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.movie-card__hover-genre-pill {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+}
+
+.movie-card__hover-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.movie-card__hover-btn {
+  flex: 1;
+  font-size: 0.8rem;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 9999;
+  max-width: 380px;
+}
+
+.toast {
+  background-color: var(--bg-elevated);
+  border-left: 4px solid var(--accent-red);
+  color: var(--text-primary);
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transform: translateX(-120%);
+  animation: slideInLeft var(--transition-med) forwards;
+  font-family: var(--font-ui);
+}
+
+.toast--error {
+  border-left-color: var(--accent-crimson);
+}
+
+.toast--success {
+  border-left-color: #2e7d32;
+}
+
+.toast--info {
+  border-left-color: var(--gold);
+}
+
+.toast__icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.toast__message {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.toast.toast--remove {
+  animation: fadeOut var(--transition-med) forwards;
+}
+
+/* Tooltips */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: var(--transition-fast);
+  z-index: 100;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
