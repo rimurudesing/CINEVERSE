@@ -52,6 +52,7 @@ export function renderNavbar() {
         <a href="peliculas.html" class="navbar__link" data-link="movie">Películas</a>
         <a href="series.html" class="navbar__link" data-link="tv">Series</a>
         <a href="estrenos.html" class="navbar__link" data-link="upcoming">Estrenos</a>
+        <a href="perfil.html" class="navbar__link" data-link="profile" id="navbar-profile-link" style="display: none;">Mi Perfil</a>
       </nav>
       
       <div class="navbar__actions">
@@ -79,6 +80,7 @@ export function renderNavbar() {
       <a href="peliculas.html" class="navbar__mobile-link" data-link="movie">Películas</a>
       <a href="series.html" class="navbar__mobile-link" data-link="tv">Series</a>
       <a href="estrenos.html" class="navbar__mobile-link" data-link="upcoming">Estrenos</a>
+      <a href="perfil.html" class="navbar__mobile-link" data-link="profile" id="navbar-mobile-profile-link" style="display: none;">Mi Perfil</a>
       <div id="navbar-mobile-auth-container" style="display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; padding: 0 2rem;"></div>
     </div>
   `;
@@ -222,7 +224,14 @@ export function renderNavbar() {
   const mobileAuthContainer = header.querySelector('#navbar-mobile-auth-container');
 
   onAuthStateChange((event, session, profile) => {
+    const desktopProfileLink = header.querySelector('#navbar-profile-link');
+    const mobileProfileLink = header.querySelector('#navbar-mobile-profile-link');
+
     if (session && session.user) {
+      // Mostrar enlaces de perfil en los menús
+      if (desktopProfileLink) desktopProfileLink.style.display = 'inline-block';
+      if (mobileProfileLink) mobileProfileLink.style.display = 'block';
+
       // Hay sesión de usuario activa
       const user = session.user;
       const name = profile?.display_name || profile?.username || user.email.split('@')[0];
@@ -233,9 +242,9 @@ export function renderNavbar() {
         <div class="navbar__user-menu">
           <img class="navbar__avatar" src="${avatarSrc}" alt="${name}">
           <div class="navbar__profile-dropdown">
-            <a href="profile.html" class="navbar__dropdown-item">👤 Ver Perfil</a>
-            <a href="profile.html?tab=favorites" class="navbar__dropdown-item">❤️ Favoritos</a>
-            <a href="profile.html?tab=watchlist" class="navbar__dropdown-item">🕐 Quiero Ver</a>
+            <a href="perfil.html" class="navbar__dropdown-item">👤 Ver Perfil</a>
+            <a href="perfil.html?tab=favorites" class="navbar__dropdown-item">❤️ Favoritos</a>
+            <a href="perfil.html?tab=watchlist" class="navbar__dropdown-item">🕐 Quiero Ver</a>
             <button class="navbar__dropdown-item navbar__dropdown-item--logout" id="navbar-logout-btn">
               🚪 Cerrar Sesión
             </button>
@@ -249,7 +258,7 @@ export function renderNavbar() {
           <img class="navbar__avatar" src="${avatarSrc}" alt="${name}" style="width: 50px; height: 50px;">
           <span style="font-weight: 700; font-size: 1.1rem;">${name}</span>
         </div>
-        <a href="profile.html" class="btn btn--outline" style="width: 100%;">Mi Perfil</a>
+        <a href="perfil.html" class="btn btn--outline" style="width: 100%;">Mi Perfil</a>
         <button class="btn btn--primary" id="navbar-mobile-logout-btn" style="width: 100%;">Cerrar Sesión</button>
       `;
 
@@ -284,6 +293,10 @@ export function renderNavbar() {
         if (dropdown) dropdown.classList.remove('active');
       });
     } else {
+      // Ocultar enlaces de perfil en los menús
+      if (desktopProfileLink) desktopProfileLink.style.display = 'none';
+      if (mobileProfileLink) mobileProfileLink.style.display = 'none';
+
       // Sesión inactiva
       authContainer.innerHTML = `
         <a href="login.html" class="btn btn--outline-red" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Entrar</a>
@@ -318,7 +331,7 @@ function highlightActiveLink() {
     activeTab = 'movie';
   } else if (currentPath.includes('serie.html')) {
     activeTab = 'tv';
-  } else if (currentPath.includes('profile.html')) {
+  } else if (currentPath.includes('perfil.html')) {
     activeTab = 'profile';
   } else if (currentPath.includes('login.html')) {
     activeTab = 'login';
