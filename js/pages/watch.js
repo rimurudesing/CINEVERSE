@@ -19,9 +19,9 @@ const VIMEUS_VIEW_KEY = 'paNMzGDcjFQkzwBV45K7XHyO3J18REy411nA7F4McKk';
 
 function getVimeusURL(mediaType, tmdbId, season = null, episode = null) {
   if (mediaType === 'movie') {
-    return `https://vimeus.com/e/movie?tmdb=${tmdbId}&view_key=${VIMEUS_VIEW_KEY}`;
+    return `https://vimeus.com/e/movie?imdb=${tmdbId}&view_key=${VIMEUS_VIEW_KEY}`;
   } else {
-    let url = `https://vimeus.com/e/serie?tmdb=${tmdbId}&view_key=${VIMEUS_VIEW_KEY}`;
+    let url = `https://vimeus.com/e/serie?imdb=${tmdbId}&view_key=${VIMEUS_VIEW_KEY}`;
     if (season)  url += `&se=${season}`;
     if (episode) url += `&ep=${episode}`;
     return url;

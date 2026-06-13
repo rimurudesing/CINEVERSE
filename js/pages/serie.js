@@ -177,7 +177,7 @@ class TVPageController {
       <div class="grid grid--details">
         <!-- Columna Izquierda -->
         <div class="flex flex--col flex--gap-md">
-          <div class="animate-float">
+          <div>
             <img class="detail-poster" src="${poster}" alt="${title}" style="border-radius: var(--radius-md); border: 1px solid var(--border-red); box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 100%;">
           </div>
 
@@ -185,7 +185,7 @@ class TVPageController {
           <div class="flex flex--align-center flex--justify-center flex--gap-md" style="background-color: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
             <div id="rating-ring-container"></div>
             <div>
-              <h4 style="font-size: 0.95rem; font-weight: 700;">Score TMDB</h4>
+              <h4 style="font-size: 0.95rem; font-weight: 700;">Valoración CineVerse</h4>
               <p style="font-size: 0.8rem; color: var(--text-secondary);">${details.vote_count} valoraciones</p>
             </div>
           </div>
@@ -265,6 +265,12 @@ class TVPageController {
     }
 
     container.innerHTML = `
+      <button class="btn btn--primary" id="btn-watch-serie" style="width: 100%; font-size: 1.05rem; padding: 0.85rem 1rem; letter-spacing: 0.04em;">
+        ▶ Ver Serie
+      </button>
+      <button class="btn btn--secondary" id="btn-watch-trailer" style="width: 100%;">
+        🎬 Ver Trailer
+      </button>
       <div class="grid grid--2" style="gap: 0.5rem;">
         <button class="btn ${this.isFav ? 'btn--primary' : 'btn--secondary'} btn--icon" id="btn-fav" data-tooltip="${this.isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}" style="width: 100%;">
           ${this.isFav ? '❤️ Favorito' : '🤍 Favorito'}
@@ -365,14 +371,7 @@ class TVPageController {
             </iframe>
           </div>
         `;
-        // Habilitar botón flotante Ver Trailer
-        const floatBtn = document.getElementById('floating-trailer-btn');
-        if (floatBtn) {
-          floatBtn.style.display = 'flex';
-          floatBtn.addEventListener('click', () => {
-            trailerRoot.scrollIntoView({ behavior: 'smooth' });
-          });
-        }
+        // El botón de trailer está integrado en los botones de acción
       } else {
         trailerRoot.innerHTML = '<p style="padding: 2rem; text-align: center; color: var(--text-muted);">No hay trailers de YouTube disponibles.</p>';
       }
@@ -745,6 +744,20 @@ class TVPageController {
       // 3. Modal de Valoración
       if (target.id === 'btn-rate') {
         this.openRatingModal();
+      }
+
+      // 4. Ver Serie → ir al reproductor
+      if (target.id === 'btn-watch-serie') {
+        navigateTo(`watch.html?id=${this.serieId}&type=tv&season=1&episode=1`);
+      }
+
+      // 5. Ver Trailer → cambiar a pestaña de trailers
+      if (target.id === 'btn-watch-trailer') {
+        const tabBtn = document.querySelector('.tab-btn[data-tab="trailers"]');
+        if (tabBtn) {
+          tabBtn.click();
+          tabBtn.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       }
     });
   }

@@ -105,3 +105,74 @@
     padding-right: 3rem;
   }
 }
+
+/* ── Páginas de Detalle (movie.html / serie.html) ─────────────────────────── */
+
+/* El título principal escala según pantalla */
+@media (max-width: 768px) {
+  /* Título enorme escala hacia abajo en móvil */
+  h1[style*="font-size: 4.5rem"] {
+    font-size: 2.5rem !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Sinopsis: siempre visible completa, sin overflow */
+  p[style*="font-size: 1.25rem"] {
+    font-size: 1rem !important;
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+
+  /* Reparto horizontal: scroll suave, no desbordado */
+  #cast-track {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-red) transparent;
+    padding-bottom: 1rem;
+    gap: 1rem !important;
+  }
+
+  /* Margen superior negativo más pequeño en móvil */
+  #movie-detail-root,
+  #serie-detail-root {
+    margin-top: -60px !important;
+  }
+
+  /* El grid de detalle ya hace 1 columna por layout.css, asegurar padding */
+  .grid--details {
+    gap: 1.5rem !important;
+  }
+
+  /* Poster no más grande que la pantalla */
+  .detail-poster {
+    max-width: 220px !important;
+    margin: 0 auto !important;
+    display: block !important;
+  }
+
+  /* Botones de acción al 100% de ancho */
+  #user-actions-container .btn {
+    font-size: 0.95rem !important;
+  }
+
+  /* El grid 2 de botones baja a 1 columna en pantallas muy pequeñas */
+  #user-actions-container .grid--2 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  h1[style*="font-size: 4.5rem"] {
+    font-size: 2rem !important;
+  }
+
+  .detail-poster {
+    max-width: 180px !important;
+  }
+
+  #user-actions-container .grid--2 {
+    grid-template-columns: 1fr !important;
+  }
+}
