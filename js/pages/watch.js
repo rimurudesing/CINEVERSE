@@ -45,7 +45,7 @@ class WatchPageController {
 
     const params = new URLSearchParams(window.location.search);
     this.mediaId   = parseInt(params.get('id'));
-    this.mediaType = params.get('type') || 'movie';
+    this.mediaType = (params.get('type') || 'movie').toLowerCase();
     this.season    = params.get('season')  ? parseInt(params.get('season'))  : null;
     this.episode   = params.get('episode') ? parseInt(params.get('episode')) : null;
 
@@ -55,6 +55,12 @@ class WatchPageController {
     }
 
     this.currentUser = await getCurrentUser();
+
+    // Default to season 1, episode 1 if playing a show and not specified
+    if (this.mediaType === 'tv') {
+      if (!this.season) this.season = 1;
+      if (!this.episode) this.episode = 1;
+    }
 
     try {
       // 1. Cargar detalles del recurso
@@ -118,9 +124,7 @@ class WatchPageController {
         <iframe
           id="vimeus-iframe"
           src="${vimeusURL}"
-          width="100%"
-          height="100%"
-          style="border: 0; display: block;"
+          style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; display: block;"
           allowfullscreen
           allow="autoplay; fullscreen; picture-in-picture"
         ></iframe>
