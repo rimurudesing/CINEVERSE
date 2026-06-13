@@ -20,10 +20,15 @@ export async function signUp(email, password, username) {
   }
   
   const client = await getClient();
+
+  // Usar siempre la URL de producción para el redirect del correo de confirmación
+  const siteUrl = 'https://cineverse-7u5.pages.dev';
+
   const { data, error } = await client.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: `${siteUrl}/login.html`,
       data: {
         username: username,
         display_name: username
