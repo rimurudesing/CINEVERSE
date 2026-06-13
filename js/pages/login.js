@@ -1,7 +1,7 @@
 /* ═══ cineverse/js/pages/login.js ═══ */
 
 import { api } from '../api.js';
-import { signIn, signUp, resetPassword, signInWithGoogle, getCurrentUser } from '../auth.js';
+import { signIn, signUp, resetPassword, getCurrentUser } from '../auth.js';
 import { navigateTo, initPageTransition, buildTMDBImageURL, showToast } from '../utils.js';
 import { initCustomCursor } from '../cursor.js';
 
@@ -178,18 +178,7 @@ class LoginPageController {
       }
     });
 
-    // 4. Botón OAuth Google
-    const googleBtn = document.getElementById('google-auth-btn');
-    if (googleBtn) {
-      googleBtn.addEventListener('click', async () => {
-        try {
-          showToast("Redirigiendo a Google...", "info");
-          await signInWithGoogle();
-        } catch (err) {
-          showToast("Error al conectar con Google", "error");
-        }
-      });
-    }
+
   }
 }
 
