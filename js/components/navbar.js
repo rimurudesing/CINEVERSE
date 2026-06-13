@@ -63,7 +63,7 @@ export function renderNavbar() {
         </div>
         
         <div class="navbar__user-menu" id="navbar-auth-container">
-          <!-- Se inyecta por el estado de autenticación -->
+          <a href="login.html" class="btn btn--outline-red" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Entrar</a>
         </div>
         
         <button class="navbar__hamburger" aria-label="Abrir menú">
@@ -81,7 +81,9 @@ export function renderNavbar() {
       <a href="series.html" class="navbar__mobile-link" data-link="tv">Series</a>
       <a href="estrenos.html" class="navbar__mobile-link" data-link="upcoming">Estrenos</a>
       <a href="perfil.html" class="navbar__mobile-link" data-link="profile" id="navbar-mobile-profile-link" style="display: none;">Mi Perfil</a>
-      <div id="navbar-mobile-auth-container" style="display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; padding: 0 2rem;"></div>
+      <div id="navbar-mobile-auth-container" style="display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; padding: 0 2rem;">
+        <a href="login.html" class="btn btn--primary" style="width: 100%; margin-top: 1rem;">Iniciar Sesión / Registro</a>
+      </div>
     </div>
   `;
 

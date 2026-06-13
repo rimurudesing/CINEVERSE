@@ -165,7 +165,12 @@ export function onAuthStateChange(cb) {
   let isUnsubscribed = false;
   
   getClient().then(client => {
-    if (isUnsubscribed || !client) return;
+    if (isUnsubscribed) return;
+    
+    if (!client) {
+      cb('INITIAL_SESSION_VAL', null, null);
+      return;
+    }
     
     const { data: { subscription } } = client.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
