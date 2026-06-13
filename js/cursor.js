@@ -1,9 +1,14 @@
 /* ═══ cineverse/js/cursor.js ═══ */
 
 /**
- * Inicializa el cursor personalizado de color rojo que sigue al mouse con lag suave.
+ * Cursor personalizado deshabilitado por rendimiento.
  */
 export function initCustomCursor() {
+  // Deshabilitado — el cursor nativo del SO ofrece mejor rendimiento
+  return;
+
+  /* === CÓDIGO ORIGINAL DESHABILITADO ===
+export function initCustomCursor_DISABLED() {
   // Evitar inicialización en dispositivos táctiles/móviles
   if (matchMedia('(pointer: coarse)').matches) return;
 

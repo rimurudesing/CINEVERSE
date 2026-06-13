@@ -8,21 +8,35 @@ import {
   buildTMDBImageURL, 
   formatYear, 
   formatRating, 
-  getYoutubeKey, 
   navigateTo, 
   showToast 
 } from '../utils.js';
 import { initCustomCursor } from '../cursor.js';
 import '../components/navbar.js';
 
+// ── Configuración de Vimeus ──────────────────────────────────────────────────
+const VIMEUS_VIEW_KEY = 'paNMzGDcjFQkzwBV45K7XHyO3J18REy411nA7F4McKk';
+
+function getVimeusURL(mediaType, tmdbId, season = null, episode = null) {
+  if (mediaType === 'movie') {
+    return `https://vimeus.com/e/movie?tmdb=${tmdbId}&view_key=${VIMEUS_VIEW_KEY}`;
+  } else {
+    let url = `https://vimeus.com/e/serie?tmdb=${tmdbId}&view_key=${VIMEUS_VIEW_KEY}`;
+    if (season)  url += `&se=${season}`;
+    if (episode) url += `&ep=${episode}`;
+    return url;
+  }
+}
+
+// ── Controlador Principal ────────────────────────────────────────────────────
 class WatchPageController {
   constructor() {
-    this.mediaId = null;
-    this.mediaType = 'movie'; // 'movie' o 'tv'
+    this.mediaId    = null;
+    this.mediaType  = 'movie';
     this.mediaDetails = null;
-    this.currentUser = null;
-    this.videos = [];
-    this.activeVideoKey = null;
+    this.currentUser  = null;
+    this.season  = null;
+    this.episode = null;
   }
 
   async init() {
@@ -30,8 +44,10 @@ class WatchPageController {
     initCustomCursor();
 
     const params = new URLSearchParams(window.location.search);
-    this.mediaId = parseInt(params.get('id'));
+    this.mediaId   = parseInt(params.get('id'));
     this.mediaType = params.get('type') || 'movie';
+    this.season    = params.get('season')  ? parseInt(params.get('season'))  : null;
+    this.episode   = params.get('episode') ? parseInt(params.get('episode')) : null;
 
     if (!this.mediaId) {
       navigateTo('index.html');
@@ -49,153 +65,198 @@ class WatchPageController {
       }
 
       if (!this.mediaDetails) {
-        document.getElementById('player-area-root').innerHTML = `<div style="text-align: center; padding: 5rem;">Error al cargar el contenido.</div>`;
+        document.getElementById('player-area-root').innerHTML =
+          `<div style="text-align:center;padding:5rem;color:var(--text-secondary)">Error al cargar el contenido.</div>`;
         return;
       }
 
-      // 2. Cargar videos asociados
-      if (this.mediaType === 'movie') {
-        this.videos = await api.getMovieVideos(this.mediaId);
-      } else {
-        this.videos = await api.getTVVideos(this.mediaId);
-      }
-
-      this.activeVideoKey = getYoutubeKey(this.videos);
+      // 2. Actualizar título de pestaña
+      const title = this.mediaDetails.title || this.mediaDetails.name;
+      document.title = `${title} — CineVerse`;
 
       // 3. Renderizar UI
       this.renderPlayer();
+      this.renderMeta();
       this.renderSidebar();
-      
-      // 4. Guardar en Historial si está logueado
+
+      // 4. Guardar historial
       this.saveToWatchHistory();
 
     } catch (err) {
-      console.error("Error en WatchPageController:", err);
+      console.error('Error en WatchPageController:', err);
     }
   }
 
+  // ── Vimeus Player ──────────────────────────────────────────────────────────
   renderPlayer() {
     const playerRoot = document.getElementById('player-area-root');
     if (!playerRoot) return;
 
-    if (!this.activeVideoKey) {
-      playerRoot.innerHTML = `
-        <div style="aspect-ratio: 16/9; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-          <span style="font-size: 3rem; margin-bottom: 1rem;">⚠️</span>
-          <p style="color: var(--text-secondary); font-size: 1.1rem;">No hay trailers o clips de video disponibles para reproducir.</p>
-        </div>
-      `;
-      return;
-    }
+    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
 
     playerRoot.innerHTML = `
-      <div class="player-container" style="position: relative; aspect-ratio: 16/9; width: 100%; background-color: #000; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-subtle); box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
-        <!-- Poster loader overlay -->
-        <div class="player-overlay" style="position: absolute; inset: 0; background: url('${buildTMDBImageURL(this.mediaDetails.backdrop_path, 'large')}') center/cover no-repeat; z-index: 10; display: flex; align-items: center; justify-content: center; transition: opacity var(--transition-med);">
-          <div class="player-overlay__bg" style="position: absolute; inset:0; background-color: rgba(0,0,0,0.6);"></div>
-          <button class="btn btn--primary btn--icon" id="player-start-btn" style="width: 70px; height: 70px; border-radius: 50%; font-size: 1.75rem; z-index: 11; box-shadow: 0 0 30px var(--glow-red-intense);">▶</button>
-        </div>
+      <div class="vimeus-player-wrap" style="
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16/9;
+        background: #000;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(229,9,20,0.15);
+      ">
+        <!-- Glow rojo en la parte inferior del player -->
+        <div style="
+          position: absolute;
+          bottom: -20px; left: 50%;
+          transform: translateX(-50%);
+          width: 60%; height: 40px;
+          background: radial-gradient(ellipse, rgba(229,9,20,0.4) 0%, transparent 70%);
+          pointer-events: none; z-index: 0;
+        "></div>
 
-        <iframe 
-          id="player-iframe"
-          style="width: 100%; height: 100%; border: 0;" 
-          src="" 
-          allow="autoplay; encrypted-media; picture-in-picture" 
-          allowfullscreen>
-        </iframe>
-        
-        <!-- Botón Fullscreen personalizado -->
-        <button class="btn btn--secondary btn--icon" id="player-fullscreen-btn" data-tooltip="Pantalla Completa" style="position: absolute; bottom: 1rem; right: 1rem; z-index: 12; display: none;">
-          ⛶
+        <iframe
+          id="vimeus-iframe"
+          src="${vimeusURL}"
+          width="100%"
+          height="100%"
+          style="border: 0; display: block;"
+          allowfullscreen
+          allow="autoplay; fullscreen; picture-in-picture"
+          referrerpolicy="no-referrer"
+        ></iframe>
+      </div>
+
+      <!-- Barra inferior de opciones del player (solo series) -->
+      ${this.mediaType === 'tv' ? this.buildEpisodeBar() : ''}
+    `;
+
+    // Vincular eventos del selector de episodios (series)
+    if (this.mediaType === 'tv') {
+      this.bindEpisodeBarEvents();
+    }
+  }
+
+  // Barra de selección de temporada/episodio para series
+  buildEpisodeBar() {
+    const seasons = this.mediaDetails.seasons
+      ? this.mediaDetails.seasons.filter(s => s.season_number > 0)
+      : [];
+
+    if (seasons.length === 0) return '';
+
+    const currentSeason  = this.season  || 1;
+    const currentEpisode = this.episode || 1;
+    const currentSeasonData = seasons.find(s => s.season_number === currentSeason) || seasons[0];
+    const episodeCount = currentSeasonData ? currentSeasonData.episode_count : 24;
+
+    return `
+      <div class="episode-bar" style="
+        margin-top: 1rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 1rem 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+      ">
+        <span style="color: var(--accent-red); font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">Episodio:</span>
+
+        <!-- Selector de Temporada -->
+        <select id="season-select" style="
+          background: var(--bg-void); color: var(--text-primary);
+          border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
+          padding: 0.4rem 0.75rem; font-family: var(--font-ui); font-size: 0.85rem;
+        ">
+          ${seasons.map(s => `
+            <option value="${s.season_number}" ${s.season_number === currentSeason ? 'selected' : ''}>
+              Temporada ${s.season_number}
+            </option>
+          `).join('')}
+        </select>
+
+        <!-- Selector de Episodio -->
+        <select id="episode-select" style="
+          background: var(--bg-void); color: var(--text-primary);
+          border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
+          padding: 0.4rem 0.75rem; font-family: var(--font-ui); font-size: 0.85rem;
+        ">
+          ${Array.from({ length: episodeCount }, (_, i) => i + 1).map(ep => `
+            <option value="${ep}" ${ep === currentEpisode ? 'selected' : ''}>
+              Episodio ${ep}
+            </option>
+          `).join('')}
+        </select>
+
+        <button id="play-episode-btn" class="btn btn--primary" style="padding: 0.4rem 1.2rem; font-size: 0.85rem;">
+          ▶ Reproducir
         </button>
       </div>
     `;
+  }
 
-    // Asignar eventos del reproductor
-    const startBtn = playerRoot.querySelector('#player-start-btn');
-    const overlay = playerRoot.querySelector('.player-overlay');
-    const iframe = playerRoot.querySelector('#player-iframe');
-    const fullscreenBtn = playerRoot.querySelector('#player-fullscreen-btn');
+  bindEpisodeBarEvents() {
+    const seasonSelect  = document.getElementById('season-select');
+    const episodeSelect = document.getElementById('episode-select');
+    const playBtn       = document.getElementById('play-episode-btn');
 
-    startBtn.addEventListener('click', () => {
-      // Activar video e iniciar autoplay
-      iframe.src = `https://www.youtube.com/embed/${this.activeVideoKey}?autoplay=1&rel=0`;
-      overlay.style.opacity = '0';
-      overlay.style.pointerEvents = 'none';
-      fullscreenBtn.style.display = 'flex';
+    if (!seasonSelect || !episodeSelect || !playBtn) return;
+
+    // Al cambiar temporada, actualizar lista de episodios
+    seasonSelect.addEventListener('change', () => {
+      const selectedSeason = parseInt(seasonSelect.value);
+      const seasons = this.mediaDetails.seasons.filter(s => s.season_number > 0);
+      const seasonData = seasons.find(s => s.season_number === selectedSeason);
+      const episodeCount = seasonData ? seasonData.episode_count : 24;
+
+      episodeSelect.innerHTML = Array.from({ length: episodeCount }, (_, i) => i + 1)
+        .map(ep => `<option value="${ep}">Episodio ${ep}</option>`)
+        .join('');
     });
 
-    fullscreenBtn.addEventListener('click', () => {
-      const container = playerRoot.querySelector('.player-container');
-      if (container.requestFullscreen) {
-        container.requestFullscreen();
-      } else if (container.webkitRequestFullscreen) {
-        container.webkitRequestFullscreen();
-      } else if (container.msRequestFullscreen) {
-        container.msRequestFullscreen();
+    // Al pulsar Reproducir, actualizar el iframe
+    playBtn.addEventListener('click', () => {
+      const season  = parseInt(seasonSelect.value);
+      const episode = parseInt(episodeSelect.value);
+      const iframe  = document.getElementById('vimeus-iframe');
+      if (iframe) {
+        iframe.src = getVimeusURL(this.mediaType, this.mediaId, season, episode);
+        showToast(`T${season} E${episode} cargando...`, 'info');
       }
     });
   }
 
-  renderSidebar() {
-    const title = this.mediaDetails.title || this.mediaDetails.name;
-    const year = formatYear(this.mediaDetails.release_date || this.mediaDetails.first_air_date);
-    const rating = formatRating(this.mediaDetails.vote_average);
+  // ── Meta debajo del player ─────────────────────────────────────────────────
+  renderMeta() {
+    const title    = this.mediaDetails.title || this.mediaDetails.name;
+    const year     = formatYear(this.mediaDetails.release_date || this.mediaDetails.first_air_date);
+    const rating   = formatRating(this.mediaDetails.vote_average);
     const overview = this.mediaDetails.overview || 'Sin sinopsis disponible.';
 
-    // 1. Cabecera info
-    document.getElementById('watch-meta-title').textContent = title;
-    document.getElementById('watch-meta-year').textContent = year;
-    document.getElementById('watch-meta-rating').textContent = `★ ${rating}`;
-    document.getElementById('watch-meta-overview').textContent = overview;
+    const elTitle    = document.getElementById('watch-meta-title');
+    const elYear     = document.getElementById('watch-meta-year');
+    const elRating   = document.getElementById('watch-meta-rating');
+    const elOverview = document.getElementById('watch-meta-overview');
 
-    // 2. Lista de videos
-    const videosList = document.getElementById('watch-videos-list');
-    if (videosList) {
-      if (this.videos.length === 0) {
-        videosList.innerHTML = `<span style="color: var(--text-muted); font-size: 0.85rem;">No hay clips adicionales</span>`;
-      } else {
-        videosList.innerHTML = this.videos.slice(0, 6).map(v => {
-          const isActive = v.key === this.activeVideoKey;
-          return `
-            <button class="video-select-item ${isActive ? 'active' : ''}" data-key="${v.key}" style="width: 100%; text-align: left; background-color: ${isActive ? 'rgba(229, 9, 20, 0.1)' : 'var(--bg-secondary)'}; border: 1px solid ${isActive ? 'var(--accent-red)' : 'var(--border-subtle)'}; color: var(--text-primary); padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.5rem; transition: var(--transition-fast); display: flex; flex-direction: column; gap: 0.25rem;">
-              <span style="font-size: 0.85rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%;">${v.name}</span>
-              <span style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">${v.type}</span>
-            </button>
-          `;
-        }).join('');
+    if (elTitle)    elTitle.textContent    = title;
+    if (elYear)     elYear.textContent     = year;
+    if (elRating)   elRating.textContent   = `★ ${rating}`;
+    if (elOverview) elOverview.textContent = overview;
+  }
 
-        // Eventos para cambiar de video en el reproductor
-        videosList.querySelectorAll('.video-select-item').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const key = btn.getAttribute('data-key');
-            this.activeVideoKey = key;
-            this.renderPlayer();
-            
-            // Forzar inicio
-            setTimeout(() => {
-              const startBtn = document.getElementById('player-start-btn');
-              if (startBtn) startBtn.click();
-            }, 100);
-
-            // Actualizar clases activas en sidebar
-            videosList.querySelectorAll('.video-select-item').forEach(b => {
-              b.classList.remove('active');
-              b.style.backgroundColor = 'var(--bg-secondary)';
-              b.style.borderColor = 'var(--border-subtle)';
-            });
-            btn.classList.add('active');
-            btn.style.backgroundColor = 'rgba(229, 9, 20, 0.1)';
-            btn.style.borderColor = 'var(--accent-red)';
-          });
-        });
-      }
+  // ── Sidebar ────────────────────────────────────────────────────────────────
+  renderSidebar() {
+    // Eliminar el panel de "Clips y Trailers" ya que ahora Vimeus los gestiona
+    const videosPanel = document.getElementById('watch-videos-list');
+    if (videosPanel) {
+      const parentCard = videosPanel.closest('div[style]');
+      if (parentCard) parentCard.style.display = 'none';
     }
 
-    // 3. Proveedores streaming
+    // Cargar proveedores y reparto
     this.loadWatchProviders();
-
-    // 4. Reparto corto
     this.loadTopCast();
   }
 
@@ -204,29 +265,27 @@ class WatchPageController {
     if (!container) return;
 
     try {
-      const providers = await (this.mediaType === 'movie' 
-        ? api.getMovieWatchProviders(this.mediaId) 
+      const providers = await (this.mediaType === 'movie'
+        ? api.getMovieWatchProviders(this.mediaId)
         : api.getTVWatchProviders(this.mediaId));
 
       const es = providers && providers.ES ? providers.ES : null;
 
       if (!es || (!es.flatrate && !es.buy && !es.rent)) {
-        container.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted);">No hay proveedores en streaming para tu región.</p>`;
+        container.innerHTML = `<p style="font-size:0.85rem;color:var(--text-muted);">No hay proveedores disponibles para tu región.</p>`;
         return;
       }
-
-      let providersHTML = '<div class="flex flex--col flex--gap-sm">';
 
       const renderGroup = (label, list) => {
         if (!list || list.length === 0) return '';
         return `
-          <div>
-            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 0.25rem;">${label}</span>
-            <div class="flex flex--wrap flex--gap-sm">
+          <div style="margin-bottom:0.75rem">
+            <span style="font-size:0.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700;display:block;margin-bottom:0.35rem;">${label}</span>
+            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
               ${list.map(p => `
-                <div class="flex flex--align-center flex--gap-sm" style="background-color: rgba(255,255,255,0.03); padding: 0.25rem 0.6rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-                  <img src="${buildTMDBImageURL(p.logo_path, 'w92')}" alt="${p.provider_name}" style="width: 20px; height: 20px; border-radius: 4px;">
-                  <span style="font-size: 0.8rem; font-weight: 600;">${p.provider_name}</span>
+                <div style="display:flex;align-items:center;gap:0.4rem;background:rgba(255,255,255,0.04);padding:0.25rem 0.6rem;border-radius:var(--radius-sm);border:1px solid var(--border-subtle);">
+                  <img src="${buildTMDBImageURL(p.logo_path, 'w92')}" alt="${p.provider_name}" style="width:18px;height:18px;border-radius:3px;">
+                  <span style="font-size:0.78rem;font-weight:600;">${p.provider_name}</span>
                 </div>
               `).join('')}
             </div>
@@ -234,16 +293,13 @@ class WatchPageController {
         `;
       };
 
-      providersHTML += renderGroup('Suscripción', es.flatrate);
-      providersHTML += renderGroup('Alquiler', es.rent);
-      providersHTML += renderGroup('Compra', es.buy);
-      providersHTML += '</div>';
-
-      container.innerHTML = providersHTML;
+      container.innerHTML =
+        renderGroup('Suscripción', es.flatrate) +
+        renderGroup('Alquiler', es.rent) +
+        renderGroup('Compra', es.buy);
 
     } catch (err) {
-      console.error(err);
-      container.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted);">Error al cargar proveedores.</p>`;
+      container.innerHTML = `<p style="font-size:0.85rem;color:var(--text-muted);">Error al cargar proveedores.</p>`;
     }
   }
 
@@ -252,21 +308,23 @@ class WatchPageController {
     if (!list) return;
 
     try {
-      const credits = await (this.mediaType === 'movie' 
-        ? api.getMovieCredits(this.mediaId) 
+      const credits = await (this.mediaType === 'movie'
+        ? api.getMovieCredits(this.mediaId)
         : api.getTVCredits(this.mediaId));
 
       if (!credits.cast || credits.cast.length === 0) {
-        list.innerHTML = `<span style="color: var(--text-muted); font-size: 0.85rem;">Información no disponible</span>`;
+        list.innerHTML = `<span style="color:var(--text-muted);font-size:0.85rem;">Información no disponible</span>`;
         return;
       }
 
-      list.innerHTML = credits.cast.slice(0, 5).map(c => `
-        <div class="flex flex--align-center flex--gap-sm" style="margin-bottom: 0.5rem;">
-          <img src="${c.profile_path ? buildTMDBImageURL(c.profile_path, 'w92') : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.name)}`}" alt="${c.name}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
-          <div style="line-height: 1.2;">
-            <p style="font-size: 0.85rem; font-weight: 700;">${c.name}</p>
-            <span style="font-size: 0.75rem; color: var(--text-secondary);">${c.character}</span>
+      list.innerHTML = credits.cast.slice(0, 6).map(c => `
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.6rem;">
+          <img src="${c.profile_path ? buildTMDBImageURL(c.profile_path, 'w92') : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.name)}`}"
+               alt="${c.name}"
+               style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+          <div style="line-height:1.2;overflow:hidden;">
+            <p style="font-size:0.85rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</p>
+            <span style="font-size:0.72rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">${c.character}</span>
           </div>
         </div>
       `).join('');
@@ -276,50 +334,37 @@ class WatchPageController {
     }
   }
 
+  // ── Historial ──────────────────────────────────────────────────────────────
   async saveToWatchHistory() {
     if (!isSupabaseConfigured || !this.currentUser) return;
-
     try {
       const userId = this.currentUser.id;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayISO = today.toISOString();
+      const today  = new Date(); today.setHours(0,0,0,0);
 
-      // Validar si ya se reprodujo hoy
       const { data: existing } = await supabase
         .from('watch_history')
         .select('id')
         .eq('user_id', userId)
         .eq('tmdb_id', this.mediaId)
         .eq('media_type', this.mediaType)
-        .gte('watched_at', todayISO)
+        .gte('watched_at', today.toISOString())
         .maybeSingle();
 
-      if (existing) {
-        console.log("Ya guardado en el historial para el día de hoy.");
-        return;
-      }
+      if (existing) return;
 
-      // Guardar registro
-      const { error } = await supabase
-        .from('watch_history')
-        .insert({
-          user_id: userId,
-          tmdb_id: this.mediaId,
-          media_type: this.mediaType,
-          title: this.mediaDetails.title || this.mediaDetails.name,
-          poster_path: this.mediaDetails.poster_path
-        });
-
-      if (error) throw error;
-      console.log("Historial registrado con éxito.");
-
+      await supabase.from('watch_history').insert({
+        user_id:    userId,
+        tmdb_id:    this.mediaId,
+        media_type: this.mediaType,
+        title:      this.mediaDetails.title || this.mediaDetails.name,
+        poster_path: this.mediaDetails.poster_path
+      });
     } catch (err) {
-      console.error("Error al registrar historial automático:", err);
+      console.error('Error al registrar historial:', err);
     }
   }
 }
 
-// Inicializar el controlador
+// Inicializar
 const controller = new WatchPageController();
 document.addEventListener('DOMContentLoaded', () => controller.init());

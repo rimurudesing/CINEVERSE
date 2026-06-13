@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CineVerse — Reproductor y Canales</title>
-  
+  <title>CineVerse — Reproductor</title>
+  <meta name="description" content="Reproduce películas y series directamente en CineVerse con el mejor reproductor online.">
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,74 +26,107 @@
   <link rel="stylesheet" href="css/responsive.css">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body style="padding-top: 100px;"> <!-- Navbar margin -->
 
-  <!-- Transición de página roja -->
+  <style>
+    /* Player page específico */
+    .watch-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      align-items: flex-start;
+    }
+    @media (max-width: 1024px) {
+      .watch-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    .watch-sidebar-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+    .watch-sidebar-card h3 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--accent-red);
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .watch-meta-box {
+      margin-top: 1.5rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+    }
+  </style>
+</head>
+<body style="padding-top: 100px;">
+
+  <!-- Transición de página -->
   <div class="page-transition-overlay out"></div>
 
-  <!-- Contenedor del Reproductor Dividido -->
-  <main class="container">
-    
-    <div class="grid grid--details" style="gap: 2.5rem; align-items: flex-start;">
-      
-      <!-- Columna Principal: Player -->
-      <section style="flex: 1; min-width: 0;">
+  <!-- Contenido Principal -->
+  <main class="container" style="padding-bottom: 4rem;">
+
+    <div class="watch-layout">
+
+      <!-- ══ Columna Principal: Player ══ -->
+      <section>
+        <!-- Player root — JS inyecta el iframe de Vimeus aquí -->
         <div id="player-area-root">
-          <div class="spinner" style="margin: 5rem auto;"></div>
+          <div style="aspect-ratio:16/9;width:100%;background:var(--bg-secondary);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;border:1px solid var(--border-subtle);">
+            <div class="spinner"></div>
+          </div>
         </div>
 
-        <!-- Meta información corta debajo del player -->
-        <div style="margin-top: 2rem; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 2rem; border-radius: var(--radius-lg);">
-          <div class="flex flex--align-center flex--justify-between flex--wrap" style="margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem; gap: 1rem;">
+        <!-- Meta información -->
+        <div class="watch-meta-box">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border-subtle);">
             <div>
-              <h1 id="watch-meta-title" style="font-size: 2rem; font-weight: 700;">Título del Recurso</h1>
-              <span id="watch-meta-year" style="font-size: 0.95rem; color: var(--text-secondary); font-family: var(--font-mono);">2024</span>
+              <h1 id="watch-meta-title" style="font-size:1.75rem;font-weight:700;line-height:1.2;margin-bottom:0.35rem;">Cargando...</h1>
+              <span id="watch-meta-year" style="font-size:0.9rem;color:var(--text-secondary);font-family:var(--font-mono);"></span>
             </div>
-            <span id="watch-meta-rating" style="font-family: var(--font-display); font-size: 1.5rem; color: var(--gold);">★ 0.0</span>
+            <span id="watch-meta-rating" style="font-family:var(--font-display);font-size:1.5rem;color:var(--gold);white-space:nowrap;flex-shrink:0;">★ —</span>
           </div>
-
-          <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Sinopsis corta</h3>
-          <p id="watch-meta-overview" style="font-family: var(--font-body); font-size: 1.1rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;"></p>
+          <p id="watch-meta-overview" style="font-family:var(--font-body);font-size:1.05rem;color:var(--text-secondary);line-height:1.65;"></p>
         </div>
       </section>
 
-      <!-- Columna Lateral (Sidebar): Clips, Canales y Streaming -->
-      <aside style="width: 100%; display: flex; flex-direction: column; gap: 2rem;">
-        
-        <!-- Lista de videos / trailers -->
-        <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-lg);">
-          <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--accent-red);">Clips y Trailers</h3>
-          <div id="watch-videos-list" style="max-height: 250px; overflow-y: auto; padding-right: 0.25rem;">
-            Cargando clips...
-          </div>
-        </div>
+      <!-- ══ Sidebar ══ -->
+      <aside style="display:flex;flex-direction:column;gap:1.25rem;">
 
-        <!-- ¿Dónde ver en Streaming? -->
-        <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-lg);">
-          <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--accent-red);">Plataformas Streaming</h3>
+        <!-- Plataformas de Streaming -->
+        <div class="watch-sidebar-card">
+          <h3>¿Dónde Ver?</h3>
           <div id="watch-providers-container">
-            Cargando plataformas...
+            <div class="skeleton" style="height:20px;border-radius:var(--radius-sm);margin-bottom:0.5rem;"></div>
+            <div class="skeleton" style="height:20px;border-radius:var(--radius-sm);width:80%;"></div>
           </div>
         </div>
 
-        <!-- Reparto Rápido -->
-        <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-lg);">
-          <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--accent-red);">Reparto Principal</h3>
+        <!-- Reparto Principal -->
+        <div class="watch-sidebar-card">
+          <h3>Reparto Principal</h3>
           <div id="watch-cast-list">
-            Cargando reparto...
+            <div class="skeleton" style="height:40px;border-radius:var(--radius-sm);margin-bottom:0.5rem;"></div>
+            <div class="skeleton" style="height:40px;border-radius:var(--radius-sm);margin-bottom:0.5rem;"></div>
+            <div class="skeleton" style="height:40px;border-radius:var(--radius-sm);"></div>
           </div>
         </div>
 
       </aside>
 
     </div>
-
   </main>
 
-  <footer style="background-color: var(--bg-void); border-top: 1px solid var(--border-subtle); padding: 4rem 0 2rem 0; margin-top: 5rem; font-family: var(--font-ui);">
-    <div class="container text-center" style="color: var(--text-muted); font-size: 0.85rem;">
-      <p>© 2025 CINEVERSE. Datos de TMDB. Todos los derechos reservados.</p>
+  <footer style="background-color:var(--bg-void);border-top:1px solid var(--border-subtle);padding:2rem 0;margin-top:2rem;font-family:var(--font-ui);">
+    <div class="container text-center" style="color:var(--text-muted);font-size:0.85rem;">
+      <p>© 2025 CINEVERSE. Todos los derechos reservados.</p>
     </div>
   </footer>
 
