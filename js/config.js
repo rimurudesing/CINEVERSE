@@ -22,6 +22,6 @@ export const TMDB_BACKDROP_SIZES = {
   original: "original"
 };
 
-// Configuración de Supabase (Reemplazar con tus credenciales reales en producción)
-export const SUPABASE_URL = "https://TU_PROYECTO.supabase.co";
-export const SUPABASE_ANON_KEY = "TU_ANON_KEY";
+// Configuración de Supabase
+export const SUPABASE_URL = "https://oeibxtnltxxcaiwvpldi.supabase.co";
+export const SUPABASE_ANON_KEY = "sb_publishable_qlJxPHqUnCD1xhuXCJ--kg_nMg44rCn";
