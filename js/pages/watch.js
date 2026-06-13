@@ -15,7 +15,7 @@ import { initCustomCursor } from '../cursor.js';
 import '../components/navbar.js';
 
 // ── Configuración de Vimeus ──────────────────────────────────────────────────
-const VIMEUS_VIEW_KEY = 'paNMzGDcjFQkzwBV45K7XHyO3J18REy411nA7F4McKk';
+const VIMEUS_VIEW_KEY = 'SIdNplTsfvK71V6ZRXUI1tti-rS3EwKRolj0mmqedZ4';
 
 function getVimeusURL(mediaType, tmdbId, season = null, episode = null) {
   if (mediaType === 'movie') {
