@@ -1,7 +1,7 @@
 /* ═══ cineverse/js/pages/serie.js ═══ */
 
 import { api } from '../api.js';
-import { supabase, isSupabaseConfigured } from '../supabase.js';
+import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { getCurrentUser } from '../auth.js';
 import { 
   initPageTransition,
@@ -19,6 +19,8 @@ import { RatingRing } from '../components/ratingRing.js';
 import { Carousel } from '../components/carousel.js';
 import { skeleton } from '../components/skeleton.js';
 
+let supabase = null;
+
 class TVPageController {
   constructor() {
     this.serieId = null;
@@ -33,6 +35,7 @@ class TVPageController {
   }
 
   async init() {
+    supabase = await getSupabase();
     initPageTransition();
     initCustomCursor();
 

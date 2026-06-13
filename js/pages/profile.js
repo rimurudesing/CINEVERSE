@@ -1,12 +1,14 @@
 /* ═══ cineverse/js/pages/profile.js ═══ */
 
-import { supabase, isSupabaseConfigured } from '../supabase.js';
+import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { getCurrentUser, signOut, updateProfile } from '../auth.js';
 import { navigateTo, initPageTransition, buildTMDBImageURL, showToast, formatDate } from '../utils.js';
 import { initCustomCursor } from '../cursor.js';
 import { api } from '../api.js';
 import '../components/navbar.js';
 import { createMovieCard } from '../components/movieCard.js';
+
+let supabase = null;
 
 class ProfilePageController {
   constructor() {
@@ -15,6 +17,7 @@ class ProfilePageController {
   }
 
   async init() {
+    supabase = await getSupabase();
     initPageTransition();
     initCustomCursor();
 

@@ -1,6 +1,15 @@
 /* ═══ cineverse/js/auth.js ═══ */
 
-import { supabase, isSupabaseConfigured } from './supabase.js';
+import { supabase, isSupabaseConfigured, getSupabase } from './supabase.js';
+
+/**
+ * Helper interno para obtener el cliente de Supabase asegurando su inicialización
+ */
+async function getClient() {
+  if (!isSupabaseConfigured) return null;
+  if (supabase) return supabase;
+  return await getSupabase();
+}
 
 /**
  * Registrar nuevo usuario con correo, contraseña y un nombre de usuario.
@@ -10,7 +19,8 @@ export async function signUp(email, password, username) {
     throw new Error("Supabase no está configurado. Revisa js/config.js.");
   }
   
-  const { data, error } = await supabase.auth.signUp({
+  const client = await getClient();
+  const { data, error } = await client.auth.signUp({
     email,
     password,
     options: {
@@ -33,7 +43,8 @@ export async function signIn(email, password) {
     throw new Error("Supabase no está configurado. Revisa js/config.js.");
   }
   
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const client = await getClient();
+  const { data, error } = await client.auth.signInWithPassword({
     email,
     password
   });
@@ -50,7 +61,8 @@ export async function signInWithGoogle() {
     throw new Error("Supabase no está configurado. Revisa js/config.js.");
   }
   
-  const { data, error } = await supabase.auth.signInWithOAuth({
+  const client = await getClient();
+  const { data, error } = await client.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: window.location.origin + '/index.html'
@@ -66,7 +78,9 @@ export async function signInWithGoogle() {
  */
 export async function signOut() {
   if (!isSupabaseConfigured) return;
-  const { error } = await supabase.auth.signOut();
+  const client = await getClient();
+  if (!client) return;
+  const { error } = await client.auth.signOut();
   if (error) throw error;
 }
 
@@ -77,11 +91,14 @@ export async function getCurrentUser() {
   if (!isSupabaseConfigured) return null;
   
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const client = await getClient();
+    if (!client) return null;
+    
+    const { data: { user }, error: userError } = await client.auth.getUser();
     if (userError || !user) return null;
     
     // Obtener datos del perfil extendido
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await client
       .from('profiles')
       .select('*')
       .eq('id', user.id)
@@ -110,25 +127,35 @@ export function onAuthStateChange(cb) {
     return () => {};
   }
   
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-    if (session?.user) {
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        cb(event, session, profile);
-      } catch (e) {
-        cb(event, session, null);
+  let unsubscribeFn = null;
+  let isUnsubscribed = false;
+  
+  getClient().then(client => {
+    if (isUnsubscribed || !client) return;
+    
+    const { data: { subscription } } = client.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        try {
+          const { data: profile } = await client
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          cb(event, session, profile);
+        } catch (e) {
+          cb(event, session, null);
+        }
+      } else {
+        cb(event, null, null);
       }
-    } else {
-      cb(event, null, null);
-    }
+    });
+    
+    unsubscribeFn = () => subscription.unsubscribe();
   });
   
   return () => {
-    subscription.unsubscribe();
+    isUnsubscribed = true;
+    if (unsubscribeFn) unsubscribeFn();
   };
 }
 
@@ -140,7 +167,8 @@ export async function resetPassword(email) {
     throw new Error("Supabase no está configurado. Revisa js/config.js.");
   }
   
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+  const client = await getClient();
+  const { data, error } = await client.auth.resetPasswordForEmail(email, {
     redirectTo: window.location.origin + '/login.html?reset=true'
   });
   
@@ -156,10 +184,11 @@ export async function updateProfile(data) {
     throw new Error("Supabase no está configurado. Revisa js/config.js.");
   }
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const client = await getClient();
+  const { data: { user } } = await client.auth.getUser();
   if (!user) throw new Error("No hay usuario autenticado.");
   
-  const { error } = await supabase
+  const { error } = await client
     .from('profiles')
     .update({
       ...data,
@@ -178,23 +207,25 @@ export async function uploadAvatar(file) {
     throw new Error("Supabase no está configurado. Revisa js/config.js.");
   }
   
-  const { data: { user } } = await supabase.auth.getUser();
+  const client = await getClient();
+  const { data: { user } } = await client.auth.getUser();
   if (!user) throw new Error("No hay usuario autenticado.");
   
   const fileExt = file.name.split('.').pop();
   const filePath = `${user.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
   
   // Subir archivo al bucket 'avatars' (el bucket debe ser público)
-  const { error: uploadError } = await supabase.storage
+  const { error: uploadError } = await client.storage
     .from('avatars')
     .upload(filePath, file, { upsert: true });
     
   if (uploadError) throw uploadError;
   
   // Obtener URL pública
-  const { data: { publicUrl } } = supabase.storage
+  const { data: { publicUrl } } = client.storage
     .from('avatars')
     .getPublicUrl(filePath);
     
   return publicUrl;
 }
+

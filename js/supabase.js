@@ -9,19 +9,32 @@ export const isSupabaseConfigured =
   SUPABASE_ANON_KEY && 
   SUPABASE_ANON_KEY !== "TU_ANON_KEY";
 
-let supabaseInstance = null;
+export let supabase = null;
+let initPromise = null;
 
+export function getSupabase() {
+  if (!isSupabaseConfigured) return Promise.resolve(null);
+  if (supabase) return Promise.resolve(supabase);
+  if (initPromise) return initPromise;
+
+  initPromise = import('https://esm.sh/@supabase/supabase-js@2')
+    .then(({ createClient }) => {
+      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      return supabase;
+    })
+    .catch(error => {
+      console.error("Error al inicializar Supabase:", error);
+      return null;
+    });
+
+  return initPromise;
+}
+
+// Iniciar la carga en segundo plano si está configurado
 if (isSupabaseConfigured) {
-  try {
-    // Importar Supabase directamente como módulo ES (no depende de CDN en HTML)
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-    supabaseInstance = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } catch (error) {
-    console.error("Error al inicializar Supabase:", error);
-  }
+  getSupabase();
 } else {
   console.warn("Supabase no configurado — auth y base de datos desactivados.");
 }
 
-export const supabase = supabaseInstance;
-export default supabase;
+export default getSupabase;

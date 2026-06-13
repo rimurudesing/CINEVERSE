@@ -1,7 +1,7 @@
 /* ═══ cineverse/js/pages/watch.js ═══ */
 
 import { api } from '../api.js';
-import { supabase, isSupabaseConfigured } from '../supabase.js';
+import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { getCurrentUser } from '../auth.js';
 import { 
   initPageTransition,
@@ -338,6 +338,9 @@ class WatchPageController {
   async saveToWatchHistory() {
     if (!isSupabaseConfigured || !this.currentUser) return;
     try {
+      const supabase = await getSupabase();
+      if (!supabase) return;
+
       const userId = this.currentUser.id;
       const today  = new Date(); today.setHours(0,0,0,0);
 

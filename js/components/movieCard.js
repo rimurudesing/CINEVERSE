@@ -1,6 +1,6 @@
 /* ═══ cineverse/js/components/movieCard.js ═══ */
 
-import { supabase, isSupabaseConfigured } from '../supabase.js';
+import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { getCurrentUser } from '../auth.js';
 import { buildTMDBImageURL, formatYear, formatRating, getMediaType, navigateTo, showToast } from '../utils.js';
 
@@ -135,6 +135,9 @@ async function checkInitialButtonStates(item, listBtn, favBtn) {
 
   const mediaType = getMediaType(item);
 
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
   // Consultar si está en favoritos
   supabase
     .from('favorites')
@@ -184,6 +187,9 @@ export async function toggleWatchlist(item) {
   const mediaType = getMediaType(item);
 
   try {
+    const supabase = await getSupabase();
+    if (!supabase) return null;
+
     const { data: existing } = await supabase
       .from('watchlist')
       .select('id')
@@ -242,6 +248,9 @@ export async function toggleFavorite(item) {
   const mediaType = getMediaType(item);
 
   try {
+    const supabase = await getSupabase();
+    if (!supabase) return null;
+
     const { data: existing } = await supabase
       .from('favorites')
       .select('id')
