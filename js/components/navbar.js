@@ -1,8 +1,5 @@
-/* ═══ cineverse/js/components/navbar.js ═══ */
-
 import { api } from '../api.js';
-import { getCurrentUser, signOut, onAuthStateChange } from '../auth.js';
-import { navigateTo, buildTMDBImageURL, formatYear, debounce, showToast } from '../utils.js';
+import { navigateTo, buildTMDBImageURL, formatYear, debounce } from '../utils.js';
 
 export function renderNavbar() {
   // Evitar inyección en watch.html si así se requiere, o renderizar versión minimalista
@@ -52,7 +49,7 @@ export function renderNavbar() {
         <a href="peliculas.html" class="navbar__link" data-link="movie">Películas</a>
         <a href="series.html" class="navbar__link" data-link="tv">Series</a>
         <a href="estrenos.html" class="navbar__link" data-link="upcoming">Estrenos</a>
-        <a href="perfil.html" class="navbar__link" data-link="profile" id="navbar-profile-link" style="display: none;">Mi Perfil</a>
+        <a href="perfil.html" class="navbar__link" data-link="profile">Perfil</a>
       </nav>
       
       <div class="navbar__actions">
@@ -60,10 +57,6 @@ export function renderNavbar() {
           <button class="navbar__search-btn">🔍</button>
           <input type="text" class="navbar__search-input" placeholder="Buscar películas, series...">
           <div class="navbar__search-results"></div>
-        </div>
-        
-        <div class="navbar__user-menu" id="navbar-auth-container">
-          <a href="login.html" class="btn btn--outline-red" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Entrar</a>
         </div>
         
         <button class="navbar__hamburger" aria-label="Abrir menú">
@@ -80,10 +73,7 @@ export function renderNavbar() {
       <a href="peliculas.html" class="navbar__mobile-link" data-link="movie">Películas</a>
       <a href="series.html" class="navbar__mobile-link" data-link="tv">Series</a>
       <a href="estrenos.html" class="navbar__mobile-link" data-link="upcoming">Estrenos</a>
-      <a href="perfil.html" class="navbar__mobile-link" data-link="profile" id="navbar-mobile-profile-link" style="display: none;">Mi Perfil</a>
-      <div id="navbar-mobile-auth-container" style="display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; padding: 0 2rem;">
-        <a href="login.html" class="btn btn--primary" style="width: 100%; margin-top: 1rem;">Iniciar Sesión / Registro</a>
-      </div>
+      <a href="perfil.html" class="navbar__mobile-link" data-link="profile">Perfil</a>
     </div>
   `;
 
@@ -221,94 +211,8 @@ export function renderNavbar() {
     }
   });
 
-  // 5. Suscribir a autenticación de Supabase para renderizar Avatar/Entrar
-  const authContainer = header.querySelector('#navbar-auth-container');
-  const mobileAuthContainer = header.querySelector('#navbar-mobile-auth-container');
-
-  onAuthStateChange((event, session, profile) => {
-    const desktopProfileLink = header.querySelector('#navbar-profile-link');
-    const mobileProfileLink = header.querySelector('#navbar-mobile-profile-link');
-
-    if (session && session.user) {
-      // Mostrar enlaces de perfil en los menús
-      if (desktopProfileLink) desktopProfileLink.style.display = 'inline-block';
-      if (mobileProfileLink) mobileProfileLink.style.display = 'block';
-
-      // Hay sesión de usuario activa
-      const user = session.user;
-      const name = profile?.display_name || profile?.username || user.email.split('@')[0];
-      const avatarSrc = profile?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
-
-      // Render de dropdown escritorio
-      authContainer.innerHTML = `
-        <div class="navbar__user-menu">
-          <img class="navbar__avatar" src="${avatarSrc}" alt="${name}">
-          <div class="navbar__profile-dropdown">
-            <a href="perfil.html" class="navbar__dropdown-item">👤 Ver Perfil</a>
-            <a href="perfil.html?tab=favorites" class="navbar__dropdown-item">❤️ Favoritos</a>
-            <a href="perfil.html?tab=watchlist" class="navbar__dropdown-item">🕐 Quiero Ver</a>
-            <button class="navbar__dropdown-item navbar__dropdown-item--logout" id="navbar-logout-btn">
-              🚪 Cerrar Sesión
-            </button>
-          </div>
-        </div>
-      `;
-
-      // Render de móvil
-      mobileAuthContainer.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 1rem; margin-top: 1rem;">
-          <img class="navbar__avatar" src="${avatarSrc}" alt="${name}" style="width: 50px; height: 50px;">
-          <span style="font-weight: 700; font-size: 1.1rem;">${name}</span>
-        </div>
-        <a href="perfil.html" class="btn btn--outline" style="width: 100%;">Mi Perfil</a>
-        <button class="btn btn--primary" id="navbar-mobile-logout-btn" style="width: 100%;">Cerrar Sesión</button>
-      `;
-
-      // Agregar eventos a botones de logout
-      const setupLogout = (btnId) => {
-        const btn = document.getElementById(btnId);
-        if (btn) {
-          btn.addEventListener('click', async () => {
-            try {
-              await signOut();
-              showToast("Sesión cerrada correctamente", "success");
-              setTimeout(() => navigateTo('index.html'), 500);
-            } catch (err) {
-              showToast("Error al cerrar sesión", "error");
-            }
-          });
-        }
-      };
-      setupLogout('navbar-logout-btn');
-      setupLogout('navbar-mobile-logout-btn');
-
-      // Control de despliegue dropdown en desktop (click en avatar)
-      const avatar = authContainer.querySelector('.navbar__avatar');
-      const dropdown = authContainer.querySelector('.navbar__profile-dropdown');
-      
-      avatar.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dropdown.classList.toggle('active');
-      });
-
-      document.addEventListener('click', () => {
-        if (dropdown) dropdown.classList.remove('active');
-      });
-    } else {
-      // Ocultar enlaces de perfil en los menús
-      if (desktopProfileLink) desktopProfileLink.style.display = 'none';
-      if (mobileProfileLink) mobileProfileLink.style.display = 'none';
-
-      // Sesión inactiva
-      authContainer.innerHTML = `
-        <a href="login.html" class="btn btn--outline-red" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Entrar</a>
-      `;
-
-      mobileAuthContainer.innerHTML = `
-        <a href="login.html" class="btn btn--primary" style="width: 100%; margin-top: 1rem;">Iniciar Sesión / Registro</a>
-      `;
-    }
-  });
+  // El estado de sesión y redirección se gestiona directamente en perfil.html / login.html
+  // sin necesidad de observadores complejos en la barra de navegación.
 }
 
 function highlightActiveLink() {
