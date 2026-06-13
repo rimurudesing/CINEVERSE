@@ -161,8 +161,63 @@ class MoviePageController {
       `<a href="search.html?genre=${g.id}" class="pill">${g.name}</a>`
     ).join('');
 
+    // Banner de expiración premium (menos de 3 días)
+    let premiumBannerHTML = '';
+    if (this.currentUser && this.currentUser.profile && this.currentUser.profile.is_premium && this.currentUser.profile.premium_until) {
+      const now = new Date();
+      const expiry = new Date(this.currentUser.profile.premium_until);
+      const timeDiff = expiry.getTime() - now.getTime();
+      const daysRemaining = timeDiff / (1000 * 60 * 60 * 24);
+      if (daysRemaining > 0 && daysRemaining < 3) {
+        const hoursRemaining = Math.max(0, Math.floor(timeDiff / (1000 * 60 * 60)));
+        const timeText = hoursRemaining >= 24 
+          ? `${Math.ceil(daysRemaining)} días` 
+          : `${hoursRemaining} horas`;
+        premiumBannerHTML = `
+          <div class="premium-expiry-banner" style="
+            background: linear-gradient(135deg, #e50914 0%, #b81d24 100%);
+            color: #ffffff;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-family: var(--font-ui);
+            animation: pulseBanner 2s infinite ease-in-out;
+          ">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="font-size: 1.5rem;">⚠️</span>
+              <div style="text-align: left;">
+                <strong style="font-weight: 700; display: block;">Tu suscripción Premium expira pronto</strong>
+                <span style="font-size: 0.85rem; opacity: 0.9;">Te quedan aproximadamente ${timeText}. ¡Renueva ahora para no perder tus beneficios!</span>
+              </div>
+            </div>
+            <a href="perfil.html?tab=premium" style="
+              border: 1px solid #ffffff;
+              background: transparent;
+              color: #ffffff;
+              padding: 0.4rem 1rem;
+              font-size: 0.85rem;
+              font-weight: 600;
+              text-decoration: none;
+              border-radius: var(--radius-sm);
+              white-space: nowrap;
+              cursor: pointer;
+              transition: all 0.2s ease;
+            " onmouseover="this.style.background='#ffffff'; this.style.color='#e50914'" onmouseout="this.style.background='transparent'; this.style.color='#ffffff'">
+              Renovar ⭐
+            </a>
+          </div>
+        `;
+      }
+    }
+
     // Rellenar la estructura
     root.innerHTML = `
+      ${premiumBannerHTML}
       <div class="grid grid--details">
         <!-- Columna Izquierda: Poster y Acciones -->
         <div class="flex flex--col flex--gap-md">

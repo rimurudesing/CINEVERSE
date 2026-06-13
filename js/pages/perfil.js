@@ -29,6 +29,14 @@ class ProfilePageController {
       return;
     }
 
+    // Mostrar botón de administración si el usuario es administrador
+    if (this.currentUser.profile && this.currentUser.profile.is_admin) {
+      const adminBtnContainer = document.getElementById('admin-panel-link-container');
+      if (adminBtnContainer) {
+        adminBtnContainer.style.display = 'block';
+      }
+    }
+
     // 2. Renderizar cabecera perfil
     this.renderProfileHero();
 
@@ -158,6 +166,12 @@ class ProfilePageController {
     const fileInput = document.getElementById('avatar-file-input');
 
     avatarImg.addEventListener('click', () => {
+      // Restringir a usuarios Premium
+      const profile = this.currentUser.profile || {};
+      if (!profile.is_premium) {
+        showToast("🌟 La personalización de avatar es una función Premium. Actívala en la pestaña Premium.", "info");
+        return;
+      }
       fileInput.click();
     });
 
@@ -252,6 +266,7 @@ class ProfilePageController {
     if (tab === 'history') this.loadHistory();
     if (tab === 'ratings') this.loadRatings();
     if (tab === 'reviews') this.loadReviews();
+    if (tab === 'premium') this.loadPremium();
   }
 
   /* ==========================================================================
@@ -701,6 +716,110 @@ class ProfilePageController {
         showToast("Error al actualizar la reseña", "error");
       }
     });
+  }
+
+  /* ==========================================================================
+     MONETIZACIÓN Y PREMIUM (TAB)
+     ========================================================================== */
+
+  async loadPremium() {
+    const statusBox = document.getElementById('premium-status-box');
+    const claimBtn = document.getElementById('claim-code-btn');
+    const codeInput = document.getElementById('premium-code-input');
+
+    if (!statusBox) return;
+
+    // Obtener los datos frescos del perfil del usuario actual
+    this.currentUser = await getCurrentUser();
+    const profile = this.currentUser.profile || {};
+
+    if (profile.is_premium) {
+      const expiryDate = new Date(profile.premium_until);
+      const now = new Date();
+      const diffTime = Math.abs(expiryDate - now);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      let alertBanner = '';
+      if (diffDays <= 3) {
+        alertBanner = `
+          <div style="background-color: rgba(229, 9, 20, 0.15); border: 1px solid var(--accent-red); color: var(--text-primary); padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-top: 1rem; font-size: 0.85rem; font-weight: 600;">
+            ⚠️ Tu suscripción Premium expira en menos de ${diffDays} día(s). ¡Por favor renueva tu suscripción pagando $3 USD en PayPal y canjeando un nuevo código!
+          </div>
+        `;
+      }
+
+      statusBox.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+          <div>
+            <h4 style="color: #FFD700; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+              👑 Estatus: Premium Activo
+            </h4>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+              Expira el: <strong>${formatDate(profile.premium_until)}</strong>
+            </p>
+          </div>
+          <span style="font-size: 2rem;">💎</span>
+        </div>
+        ${alertBanner}
+      `;
+    } else {
+      statusBox.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+          <div>
+            <h4 style="color: var(--text-muted); font-size: 1.25rem; font-weight: 700;">
+              ⚪ Estatus: Cuenta Gratuita (Free)
+            </h4>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+              Disfrutas de CineVerse con anuncios pre-roll. ¡Pásate a Premium para quitarlos!
+            </p>
+          </div>
+          <span style="font-size: 2rem;">🍿</span>
+        </div>
+      `;
+    }
+
+    // Evento canjear código
+    if (claimBtn && !claimBtn.dataset.bound) {
+      claimBtn.dataset.bound = "true";
+      claimBtn.addEventListener('click', async () => {
+        const code = codeInput.value.trim().toUpperCase();
+        if (!code) {
+          showToast("Por favor, introduce un código de activación.", "error");
+          return;
+        }
+
+        try {
+          claimBtn.disabled = true;
+          claimBtn.textContent = "Validando...";
+
+          // Llamar a la función RPC de Supabase claim_premium_code
+          const { data: success, error } = await supabase.rpc('claim_premium_code', {
+            entered_code: code
+          });
+
+          if (error) throw error;
+
+          if (success) {
+            showToast("🎉 ¡Felicidades! Tu cuenta CineVerse ahora es Premium por 30 días.", "success");
+            codeInput.value = '';
+            
+            // Recargar datos y pintar interfaz de nuevo
+            await this.loadPremium();
+            
+            // Actualizar hero por si hay insignias
+            this.renderProfileHero();
+          } else {
+            showToast("Código inválido, expirado o ya utilizado.", "error");
+          }
+        } catch (err) {
+          console.error("Error al canjear código:", err);
+          showToast(err.message || "Error del servidor al procesar el código.", "error");
+        } finally {
+          claimBtn.disabled = false;
+          claimBtn.textContent = "Activar Premium";
+        }
+      });
+    }
   }
 
   /* ==========================================================================

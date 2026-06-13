@@ -100,6 +100,18 @@ class WatchPageController {
 
     const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
 
+    // Comprobar estado Premium
+    const profile = this.currentUser ? (this.currentUser.profile || {}) : {};
+    const isPremium = !!profile.is_premium;
+
+    if (!isPremium) {
+      this.renderAd(playerRoot, vimeusURL);
+    } else {
+      this.renderActualPlayer(playerRoot, vimeusURL);
+    }
+  }
+
+  renderActualPlayer(playerRoot, vimeusURL) {
     playerRoot.innerHTML = `
       <div class="vimeus-player-wrap" style="
         position: relative;
@@ -138,6 +150,107 @@ class WatchPageController {
     if (this.mediaType === 'tv') {
       this.bindEpisodeBarEvents();
     }
+  }
+
+  renderAd(playerRoot, vimeusURL) {
+    // Un trailer cinematográfico genérico de YouTube sin controles interactivos directos
+    const adTrailerUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&controls=0&mute=1&loop=1&playlist=dQw4w9WgXcQ";
+
+    playerRoot.innerHTML = `
+      <div class="vimeus-player-wrap" id="ad-wrapper" style="
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16/9;
+        background: #000;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(229,9,20,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <iframe
+          src="${adTrailerUrl}"
+          style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; display: block; pointer-events: none; opacity: 0.55;"
+          allow="autoplay"
+        ></iframe>
+
+        <!-- Indicador de tiempo -->
+        <div style="
+          position: absolute;
+          bottom: 1.5rem;
+          right: 1.5rem;
+          background: rgba(10, 10, 10, 0.9);
+          border: 1px solid var(--border-subtle);
+          padding: 0.75rem 1.25rem;
+          border-radius: var(--radius-sm);
+          font-family: var(--font-ui);
+          font-size: 0.85rem;
+          z-index: 100;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        ">
+          <span style="color: var(--text-secondary);">El video comenzará en:</span>
+          <strong id="ad-timer" style="color: var(--accent-red); font-size: 1.1rem; font-family: var(--font-mono);">30</strong>s
+        </div>
+
+        <!-- Tag de anuncio -->
+        <div style="
+          position: absolute;
+          top: 1.5rem;
+          left: 1.5rem;
+          background: rgba(10, 10, 10, 0.9);
+          border: 1px solid var(--border-subtle);
+          padding: 0.5rem 1rem;
+          border-radius: var(--radius-sm);
+          font-family: var(--font-ui);
+          font-size: 0.75rem;
+          z-index: 100;
+          color: #FFD700;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+        ">
+          💎 ANUNCIO CINEVERSE FREE
+        </div>
+
+        <div style="
+          position: absolute;
+          bottom: 1.5rem;
+          left: 1.5rem;
+          background: rgba(10, 10, 10, 0.9);
+          border: 1px solid var(--border-subtle);
+          padding: 0.5rem 1rem;
+          border-radius: var(--radius-sm);
+          font-family: var(--font-ui);
+          font-size: 0.75rem;
+          z-index: 100;
+          color: var(--text-secondary);
+        ">
+          ¿No quieres esperar? <a href="perfil.html?tab=premium" style="color: var(--accent-red); font-weight: 700; text-decoration: none;">Pásate a Premium</a>
+        </div>
+      </div>
+      
+      <!-- Barra inferior de opciones del player (solo series, pero bloqueada mientras se reproduce el ad) -->
+      <div id="ad-episode-bar-placeholder"></div>
+    `;
+
+    // Configurar temporizador
+    let timeLeft = 30;
+    const timerEl = document.getElementById('ad-timer');
+    
+    const interval = setInterval(() => {
+      timeLeft--;
+      if (timerEl) timerEl.textContent = timeLeft;
+
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        showToast("Anuncio completado. Iniciando reproducción...", "success");
+        this.renderActualPlayer(playerRoot, vimeusURL);
+      }
+    }, 1000);
   }
 
   // Barra de selección de temporada/episodio para series

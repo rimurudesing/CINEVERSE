@@ -59,6 +59,12 @@
           <span>•</span>
           <span>📝 <strong id="stat-reviews" style="color: var(--text-primary);">0</strong> Reseñas</span>
         </div>
+        <!-- Botón Panel de Administración (oculto por defecto) -->
+        <div id="admin-panel-link-container" style="display: none; margin-top: 1.25rem;">
+          <a href="admin.html" class="btn btn--primary" style="background-color: var(--accent-ember); border-color: var(--accent-ember); font-weight: 700; padding: 0.5rem 1rem; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none;">
+            🛡️ Panel de Administración
+          </a>
+        </div>
       </div>
 
     </div>
@@ -75,6 +81,7 @@
       <button class="pill profile-tabs__btn" data-tab="ratings">⭐ Mis Notas</button>
       <button class="pill profile-tabs__btn" data-tab="reviews">📝 Mis Reseñas</button>
       <button class="pill profile-tabs__btn" data-tab="settings">⚙️ Ajustes</button>
+      <button class="pill profile-tabs__btn" data-tab="premium">⭐ Premium</button>
     </div>
 
     <!-- Contenedor Pestañas -->
@@ -141,6 +148,49 @@
           <!-- Botón de deslogueo alternativo -->
           <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
             <button class="btn btn--secondary" id="settings-logout-btn">🚪 Cerrar Sesión</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pestaña 7: Premium -->
+      <div class="profile-tab-section" id="profile-section-premium">
+        <div style="max-width: 600px; margin: 0 auto; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 2.5rem; border-radius: var(--radius-lg); font-family: var(--font-ui);">
+          <h3 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+            <span>⭐ CineVerse Premium</span>
+          </h3>
+
+          <!-- Estado Premium Actual -->
+          <div id="premium-status-box" style="margin-bottom: 2rem; padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--bg-void);">
+            <!-- Se carga dinámicamente por JS -->
+          </div>
+
+          <!-- Beneficios / Formulario de Pago y Canje -->
+          <div id="premium-actions-box">
+            <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">Beneficios Premium:</h4>
+            <ul style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; color: var(--text-secondary); font-size: 0.95rem;">
+              <li>🚫 <strong>Sin Anuncios:</strong> Disfruta de todo el catálogo al instante y sin interrupciones.</li>
+              <li>📷 <strong>Personalización Completa:</strong> Desbloquea la subida de avatares personalizados.</li>
+              <li>🚀 <strong>Acceso Prioritario:</strong> Servidores y conexiones más rápidas para reproducción fluida.</li>
+              <li>💎 <strong>Insignia de Premium:</strong> Un distintivo brillante en tu perfil y comentarios.</li>
+            </ul>
+
+            <!-- Sección Comprar (PayPal) -->
+            <div style="background-color: var(--bg-void); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 2rem; text-align: center;">
+              <p style="font-size: 1rem; margin-bottom: 1rem; color: var(--text-primary);">Suscripción Premium por solo <strong>$3.00 USD / mes</strong></p>
+              <a href="https://paypal.me/LorenzoButen" target="_blank" class="btn btn--primary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 700; background-color: #0079C1; border-color: #0079C1; text-decoration: none;">
+                💳 Pagar $3 USD vía PayPal
+              </a>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem;">Nota: Una vez realizado el pago, envíanos tu nombre de usuario y tu correo y te enviaremos el código de activación.</p>
+            </div>
+
+            <!-- Formulario Canjear Código -->
+            <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.5rem;">
+              <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">Canjear Código Premium</h4>
+              <div class="flex flex--gap-sm flex--wrap" style="align-items: stretch;">
+                <input type="text" id="premium-code-input" class="form-input" placeholder="CINE-XXXX-XXXX-XXXX" style="flex: 1; text-transform: uppercase; font-family: var(--font-mono); letter-spacing: 1px;">
+                <button class="btn btn--primary" id="claim-code-btn">Activar Premium</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

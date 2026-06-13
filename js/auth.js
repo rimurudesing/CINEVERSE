@@ -141,6 +141,21 @@ export async function getCurrentUser() {
           profile = fallbackProfile;
         }
       }
+    if (profile && profile.is_premium && profile.premium_until) {
+      const now = new Date();
+      const expiry = new Date(profile.premium_until);
+      if (now > expiry) {
+        try {
+          await client
+            .from('profiles')
+            .update({ is_premium: false })
+            .eq('id', user.id);
+          profile.is_premium = false;
+          console.log("Premium ha expirado de forma automática.");
+        } catch (e) {
+          console.error("Error al expirar premium en base de datos:", e);
+        }
+      }
     }
     
     return { ...user, profile };
@@ -195,6 +210,20 @@ export function onAuthStateChange(cb) {
               .select()
               .maybeSingle();
             if (newProfile) profile = newProfile;
+          if (profile && profile.is_premium && profile.premium_until) {
+            const now = new Date();
+            const expiry = new Date(profile.premium_until);
+            if (now > expiry) {
+              try {
+                await client
+                  .from('profiles')
+                  .update({ is_premium: false })
+                  .eq('id', session.user.id);
+                profile.is_premium = false;
+              } catch (e) {
+                console.error("Error al expirar premium en onAuthStateChange:", e);
+              }
+            }
           }
           cb(event, session, profile);
         } catch (e) {
