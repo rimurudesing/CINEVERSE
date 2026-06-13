@@ -21,7 +21,7 @@ class SearchPageController {
       q: '',
       type: 'all', // 'all', 'movie', 'tv', 'person'
       genres: [],
-      year: new Date().getFullYear(),
+      year: 2026,
       rating: 0,
       sort: 'popularity.desc'
     };
@@ -108,7 +108,8 @@ class SearchPageController {
 
     // Sliders inputs en tiempo real
     this.yearRange.addEventListener('input', (e) => {
-      this.yearLabel.textContent = e.target.value;
+      const val = parseInt(e.target.value);
+      this.yearLabel.textContent = val === 2026 ? 'Todos' : val;
     });
 
     this.ratingRange.addEventListener('input', (e) => {
@@ -259,8 +260,8 @@ class SearchPageController {
   }
 
   resetFiltersDOM() {
-    this.yearRange.value = new Date().getFullYear();
-    this.yearLabel.textContent = this.yearRange.value;
+    this.yearRange.value = 2026;
+    this.yearLabel.textContent = 'Todos';
     this.ratingRange.value = 0;
     this.ratingLabel.textContent = '0.0';
     this.sortSelect.value = 'popularity.desc';
@@ -270,7 +271,7 @@ class SearchPageController {
     });
 
     this.filters.genres = [];
-    this.filters.year = new Date().getFullYear();
+    this.filters.year = 2026;
     this.filters.rating = 0;
     this.filters.sort = 'popularity.desc';
   }
@@ -288,7 +289,7 @@ class SearchPageController {
     this.loading = true;
 
     // Si la barra está vacía y no hay filtros, mostrar sugerencias
-    if (!this.filters.q && this.filters.genres.length === 0 && this.filters.rating === 0 && this.filters.year === new Date().getFullYear()) {
+    if (!this.filters.q && this.filters.type === 'all' && this.filters.genres.length === 0 && this.filters.rating === 0 && this.filters.year === 2026) {
       this.resultsGrid.innerHTML = '';
       this.resultsCounter.textContent = 'Explora sugerencias';
       this.suggestionsSection.style.display = 'block';
@@ -320,7 +321,6 @@ class SearchPageController {
         const discoverParams = {
           page: this.page,
           sort_by: this.filters.sort,
-          primary_release_year: this.filters.year,
           'vote_average.gte': this.filters.rating
         };
 
@@ -328,13 +328,17 @@ class SearchPageController {
           discoverParams.with_genres = this.filters.genres.join(',');
         }
 
+        if (this.filters.year < 2026) {
+          if (type === 'tv') {
+            discoverParams.first_air_date_year = this.filters.year;
+          } else {
+            discoverParams.primary_release_year = this.filters.year;
+          }
+        }
+
         if (type === 'tv') {
-          // Ajustes menores de parámetros para series
-          discoverParams.first_air_date_year = this.filters.year;
-          delete discoverParams.primary_release_year;
           data = await api.discoverTV(discoverParams);
         } else {
-          // Películas por defecto
           data = await api.discoverMovies(discoverParams);
         }
       }
@@ -401,7 +405,7 @@ class SearchPageController {
       }
 
       // Filtro año
-      if (this.filters.year !== new Date().getFullYear()) {
+      if (this.filters.year < 2026) {
         const date = item.release_date || item.first_air_date || '';
         const year = date ? parseInt(date.substring(0, 4)) : null;
         if (year && year !== this.filters.year) return false;

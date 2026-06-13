@@ -412,6 +412,13 @@ class InfoPageController {
             </iframe>
           </div>
         `;
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('playTrailer') === 'true') {
+          setTimeout(() => {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 300);
+        }
       }
     } catch (e) { /* sin trailer */ }
   }

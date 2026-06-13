@@ -49,9 +49,9 @@ export function renderNavbar() {
       
       <nav class="navbar__menu">
         <a href="index.html" class="navbar__link" data-link="home">Inicio</a>
-        <a href="search.html?type=movie" class="navbar__link" data-link="movie">Películas</a>
-        <a href="search.html?type=tv" class="navbar__link" data-link="tv">Series</a>
-        <a href="search.html?filter=upcoming" class="navbar__link" data-link="upcoming">Estrenos</a>
+        <a href="peliculas.html" class="navbar__link" data-link="movie">Películas</a>
+        <a href="series.html" class="navbar__link" data-link="tv">Series</a>
+        <a href="estrenos.html" class="navbar__link" data-link="upcoming">Estrenos</a>
       </nav>
       
       <div class="navbar__actions">
@@ -76,9 +76,9 @@ export function renderNavbar() {
     <!-- Menú móvil colapsable -->
     <div class="navbar__mobile-menu">
       <a href="index.html" class="navbar__mobile-link" data-link="home">Inicio</a>
-      <a href="search.html?type=movie" class="navbar__mobile-link" data-link="movie">Películas</a>
-      <a href="search.html?type=tv" class="navbar__mobile-link" data-link="tv">Series</a>
-      <a href="search.html?filter=upcoming" class="navbar__mobile-link" data-link="upcoming">Estrenos</a>
+      <a href="peliculas.html" class="navbar__mobile-link" data-link="movie">Películas</a>
+      <a href="series.html" class="navbar__mobile-link" data-link="tv">Series</a>
+      <a href="estrenos.html" class="navbar__mobile-link" data-link="upcoming">Estrenos</a>
       <div id="navbar-mobile-auth-container" style="display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; padding: 0 2rem;"></div>
     </div>
   `;
@@ -304,7 +304,13 @@ function highlightActiveLink() {
   
   let activeTab = 'home';
   
-  if (currentPath.includes('search.html') || currentPath.includes('info.html') || currentPath.includes('watch.html')) {
+  if (currentPath.includes('peliculas.html')) {
+    activeTab = 'movie';
+  } else if (currentPath.includes('series.html')) {
+    activeTab = 'tv';
+  } else if (currentPath.includes('estrenos.html')) {
+    activeTab = 'upcoming';
+  } else if (currentPath.includes('search.html') || currentPath.includes('info.html') || currentPath.includes('watch.html')) {
     if (type === 'movie') activeTab = 'movie';
     else if (type === 'tv') activeTab = 'tv';
     else if (filter === 'upcoming') activeTab = 'upcoming';
