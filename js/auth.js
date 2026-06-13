@@ -103,15 +103,44 @@ export async function getCurrentUser() {
     if (userError || !user) return null;
     
     // Obtener datos del perfil extendido
-    const { data: profile, error: profileError } = await client
+    let { data: profile, error: profileError } = await client
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
       
     if (profileError) {
       console.error("Error al obtener perfil extendido:", profileError);
-      return { ...user, profile: null };
+    }
+    
+    if (!profile) {
+      const email = user.email || '';
+      const username = email.split('@')[0] || `user_${user.id.substring(0, 8)}`;
+      const { data: newProfile, error: insertError } = await client
+        .from('profiles')
+        .insert({
+          id: user.id,
+          username: username,
+          display_name: username,
+          bio: ''
+        })
+        .select()
+        .maybeSingle();
+        
+      if (!insertError && newProfile) {
+        profile = newProfile;
+      } else {
+        console.error("Error al auto-crear perfil en getCurrentUser:", insertError);
+        // Intentar volver a buscarlo por si acaso otra consulta lo creó en paralelo
+        const { data: fallbackProfile } = await client
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (fallbackProfile) {
+          profile = fallbackProfile;
+        }
+      }
     }
     
     return { ...user, profile };
@@ -141,13 +170,30 @@ export function onAuthStateChange(cb) {
     const { data: { subscription } } = client.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         try {
-          const { data: profile } = await client
+          let { data: profile, error: profileError } = await client
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
+            
+          if (!profile) {
+            const email = session.user.email || '';
+            const username = email.split('@')[0] || `user_${session.user.id.substring(0, 8)}`;
+            const { data: newProfile } = await client
+              .from('profiles')
+              .insert({
+                id: session.user.id,
+                username: username,
+                display_name: username,
+                bio: ''
+              })
+              .select()
+              .maybeSingle();
+            if (newProfile) profile = newProfile;
+          }
           cb(event, session, profile);
         } catch (e) {
+          console.error("Error fetching/creating profile in onAuthStateChange:", e);
           cb(event, session, null);
         }
       } else {
