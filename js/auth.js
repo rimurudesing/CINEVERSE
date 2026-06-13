@@ -141,6 +141,9 @@ export async function getCurrentUser() {
           profile = fallbackProfile;
         }
       }
+    }
+
+    // Verificar si la suscripción premium ha expirado
     if (profile && profile.is_premium && profile.premium_until) {
       const now = new Date();
       const expiry = new Date(profile.premium_until);
@@ -210,6 +213,9 @@ export function onAuthStateChange(cb) {
               .select()
               .maybeSingle();
             if (newProfile) profile = newProfile;
+          }
+
+          // Verificar si la suscripción premium ha expirado
           if (profile && profile.is_premium && profile.premium_until) {
             const now = new Date();
             const expiry = new Date(profile.premium_until);
