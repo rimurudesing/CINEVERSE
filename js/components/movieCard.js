@@ -79,14 +79,14 @@ export function createMovieCard(item, options = {}) {
 
   // Click general en la tarjeta navega al detalle
   card.addEventListener('click', () => {
-    navigateTo(`${type}.html`, { id: item.id });
+    navigateTo('info.html', { id: item.id, type: type });
   });
 
   // Botón Ver
   const infoBtn = card.querySelector('.card-info-btn');
   infoBtn.addEventListener('click', (e) => {
     e.stopPropagation(); // Evitar doble evento de navegación
-    navigateTo(`${type}.html`, { id: item.id });
+    navigateTo('info.html', { id: item.id, type: type });
   });
 
   // Botón Watchlist (+ Lista)

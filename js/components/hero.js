@@ -158,7 +158,7 @@ export class HeroSpotlight {
       btn.addEventListener('click', (e) => {
         const id = e.target.getAttribute('data-id');
         const type = e.target.getAttribute('data-type');
-        navigateTo(`${type}.html`, { id });
+        navigateTo('info.html', { id, type });
       });
     });
   }

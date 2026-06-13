@@ -180,7 +180,7 @@ export function renderNavbar() {
       const poster = buildTMDBImageURL(item.poster_path, 'w92');
 
       resultsHTML += `
-        <a href="${item.media_type === 'movie' ? 'movie.html' : 'serie.html'}?id=${item.id}" class="navbar__search-item">
+        <a href="info.html?id=${item.id}&type=${item.media_type}" class="navbar__search-item">
           <img class="navbar__search-item-img" src="${poster}" alt="${title}">
           <div class="navbar__search-item-info">
             <h4 class="navbar__search-item-title">${title}</h4>
@@ -304,7 +304,7 @@ function highlightActiveLink() {
   
   let activeTab = 'home';
   
-  if (currentPath.includes('search.html')) {
+  if (currentPath.includes('search.html') || currentPath.includes('info.html') || currentPath.includes('watch.html')) {
     if (type === 'movie') activeTab = 'movie';
     else if (type === 'tv') activeTab = 'tv';
     else if (filter === 'upcoming') activeTab = 'upcoming';
