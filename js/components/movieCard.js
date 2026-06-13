@@ -4,6 +4,33 @@ import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { getCurrentUser } from '../auth.js';
 import { buildTMDBImageURL, formatYear, formatRating, getMediaType, navigateTo, showToast } from '../utils.js';
 
+/**
+ * Asegura que el perfil del usuario exista en la tabla profiles.
+ * Lo crea si el trigger no lo generó automáticamente.
+ */
+async function ensureProfile(user, supabase) {
+  if (!user || !supabase) return;
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!profile) {
+      const email = user.email || '';
+      const username = email.split('@')[0] || `user_${user.id.substring(0, 8)}`;
+      await supabase.from('profiles').insert({
+        id: user.id,
+        username: username,
+        display_name: username
+      });
+    }
+  } catch (e) {
+    console.warn('ensureProfile warning:', e.message);
+  }
+}
+
 // Diccionario estático de géneros TMDB en español para mapeo instantáneo
 const GENRES_MAP = {
   28: "Acción", 12: "Aventura", 16: "Animación", 35: "Comedia", 80: "Crimen",
@@ -190,6 +217,9 @@ export async function toggleWatchlist(item) {
     const supabase = await getSupabase();
     if (!supabase) return null;
 
+    // Asegurar perfil antes de insertar (fix para FK constraint)
+    await ensureProfile(user, supabase);
+
     const { data: existing } = await supabase
       .from('watchlist')
       .select('id')
@@ -250,6 +280,9 @@ export async function toggleFavorite(item) {
   try {
     const supabase = await getSupabase();
     if (!supabase) return null;
+
+    // Asegurar perfil antes de insertar (fix para FK constraint)
+    await ensureProfile(user, supabase);
 
     const { data: existing } = await supabase
       .from('favorites')

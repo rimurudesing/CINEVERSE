@@ -36,8 +36,6 @@ class InfoPageController {
   async init() {
     initPageTransition();
 
-    supabase = await getSupabase();
-
     const params = new URLSearchParams(window.location.search);
     this.mediaId   = parseInt(params.get('id'));
     this.mediaType = params.get('type') || 'movie';
@@ -47,37 +45,48 @@ class InfoPageController {
       return;
     }
 
-    this.currentUser = await getCurrentUser();
+    // ── Cargar TMDB y Supabase en paralelo, independientemente ──────────────
+    const [tmdbResult, userResult, supabaseResult] = await Promise.allSettled([
+      this.mediaType === 'movie'
+        ? api.getMovieDetails(this.mediaId)
+        : api.getTVDetails(this.mediaId),
+      getCurrentUser(),
+      getSupabase()
+    ]);
 
-    try {
-      // Cargar detalles
-      if (this.mediaType === 'movie') {
-        this.details = await api.getMovieDetails(this.mediaId);
-      } else {
-        this.details = await api.getTVDetails(this.mediaId);
-      }
-
-      if (!this.details) {
-        document.getElementById('info-root').innerHTML =
-          `<p style="text-align:center;padding:4rem;color:var(--text-muted)">No se pudieron cargar los detalles.</p>`;
-        return;
-      }
-
-      const title = this.details.title || this.details.name;
-      document.title = `${title} — CineVerse`;
-
-      // Hero backdrop
-      this._renderHero();
-
-      // Cargar estados DB
-      await this._loadDBStates();
-
-      // Render principal
-      this._render();
-
-    } catch (err) {
-      console.error('InfoPageController error:', err);
+    // Resultado de TMDB
+    if (tmdbResult.status === 'fulfilled' && tmdbResult.value) {
+      this.details = tmdbResult.value;
+    } else {
+      console.error('Error cargando detalles TMDB:', tmdbResult.reason);
+      document.getElementById('info-root').innerHTML =
+        `<p style="text-align:center;padding:4rem;color:var(--text-muted)">No se pudieron cargar los detalles. Inténtalo de nuevo.</p>`;
+      return;
     }
+
+    // Resultado de auth (no bloquea la página si falla)
+    if (userResult.status === 'fulfilled') {
+      this.currentUser = userResult.value;
+    }
+
+    // Resultado de Supabase (no bloquea la página si falla)
+    if (supabaseResult.status === 'fulfilled') {
+      supabase = supabaseResult.value;
+    }
+
+    const title = this.details.title || this.details.name;
+    document.title = `${title} — CineVerse`;
+
+    // Hero backdrop
+    this._renderHero();
+
+    // Cargar estados DB (solo si Supabase disponible y hay usuario)
+    if (supabase && this.currentUser) {
+      await this._loadDBStates();
+    }
+
+    // Render principal (siempre)
+    this._render();
   }
 
   // ── Hero ─────────────────────────────────────────────────────────────────
@@ -89,10 +98,10 @@ class InfoPageController {
 
   // ── Estados DB ───────────────────────────────────────────────────────────
   async _loadDBStates() {
-    if (!isSupabaseConfigured || !this.currentUser || !supabase) return;
+    if (!supabase || !this.currentUser) return;
     try {
       const uid  = this.currentUser.id;
-      const type = this.mediaType === 'movie' ? 'movie' : 'tv';
+      const type = this.mediaType;
 
       const [{ data: fav }, { data: wl }, { data: hist }, { data: rat }] = await Promise.all([
         supabase.from('favorites').select('id').eq('user_id', uid).eq('tmdb_id', this.mediaId).eq('media_type', type).maybeSingle(),
@@ -105,7 +114,7 @@ class InfoPageController {
       this.isWatchlist = !!wl;
       this.isWatched   = !!hist;
       this.userRating  = rat ? rat.rating : 0;
-    } catch (e) { console.error('DB states:', e); }
+    } catch (e) { console.warn('DB states error (no crítico):', e); }
   }
 
   // ── Render principal ─────────────────────────────────────────────────────
@@ -263,14 +272,14 @@ class InfoPageController {
       <button class="action-btn-primary" id="btn-watch-action">${watchLabel}</button>
       <button class="action-btn-secondary" id="btn-trailer-action">🎬 Ver Trailer</button>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
-        <button class="action-btn-secondary" id="btn-fav">
+        <button class="action-btn-secondary ${this.isFav ? 'action-btn--active' : ''}" id="btn-fav">
           ${this.isFav ? '❤️ Favorito' : '🤍 Favorito'}
         </button>
-        <button class="action-btn-secondary" id="btn-watchlist">
+        <button class="action-btn-secondary ${this.isWatchlist ? 'action-btn--active' : ''}" id="btn-watchlist">
           ${this.isWatchlist ? '✓ Lista' : '+ Watchlist'}
         </button>
       </div>
-      <button class="action-btn-secondary" id="btn-watched">
+      <button class="action-btn-secondary ${this.isWatched ? 'action-btn--active' : ''}" id="btn-watched">
         ${this.isWatched ? '✓ Ya la he visto' : '👁️ Marcar como vista'}
       </button>
       <button class="action-btn-secondary" id="btn-rate">
@@ -454,9 +463,16 @@ class InfoPageController {
     const btnFav = document.getElementById('btn-fav');
     if (btnFav) {
       btnFav.onclick = async () => {
-        const { toggleFavorite } = await import('../components/movieCard.js');
-        const res = await toggleFavorite(this.details);
-        if (res) { this.isFav = res === 'added'; this._rebuildActions(); }
+        btnFav.disabled = true;
+        try {
+          const result = await this._toggleFavorite();
+          if (result !== null) {
+            this.isFav = result === 'added';
+            this._rebuildActions();
+          }
+        } finally {
+          btnFav.disabled = false;
+        }
       };
     }
 
@@ -464,9 +480,16 @@ class InfoPageController {
     const btnWl = document.getElementById('btn-watchlist');
     if (btnWl) {
       btnWl.onclick = async () => {
-        const { toggleWatchlist } = await import('../components/movieCard.js');
-        const res = await toggleWatchlist(this.details);
-        if (res) { this.isWatchlist = res === 'added'; this._rebuildActions(); }
+        btnWl.disabled = true;
+        try {
+          const result = await this._toggleWatchlist();
+          if (result !== null) {
+            this.isWatchlist = result === 'added';
+            this._rebuildActions();
+          }
+        } finally {
+          btnWl.disabled = false;
+        }
       };
     }
 
@@ -474,7 +497,7 @@ class InfoPageController {
     const btnWatched = document.getElementById('btn-watched');
     if (btnWatched) {
       btnWatched.onclick = async () => {
-        if (!supabase) return;
+        if (!supabase) { showToast('Base de datos no disponible', 'error'); return; }
         try {
           if (this.isWatched) {
             await supabase.from('watch_history').delete()
@@ -495,7 +518,10 @@ class InfoPageController {
             showToast('Marcado como visto', 'success');
           }
           this._rebuildActions();
-        } catch (e) { showToast('Error al guardar', 'error'); }
+        } catch (e) {
+          console.error(e);
+          showToast('Error al guardar', 'error');
+        }
       };
     }
 
@@ -506,9 +532,130 @@ class InfoPageController {
     }
   }
 
+  // ── Toggle Favorito (robusto con fallback) ────────────────────────────────
+  async _toggleFavorite() {
+    if (!supabase || !this.currentUser) {
+      showToast('Inicia sesión para guardar favoritos', 'info');
+      return null;
+    }
+
+    const mediaType = this.mediaType;
+    const uid = this.currentUser.id;
+
+    try {
+      // Asegurar que el perfil existe antes de insertar
+      await this._ensureProfile();
+
+      const { data: existing } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', uid)
+        .eq('tmdb_id', this.mediaId)
+        .eq('media_type', mediaType)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase.from('favorites').delete().eq('id', existing.id);
+        if (error) throw error;
+        showToast(`Quitado de favoritos`, 'info');
+        return 'removed';
+      } else {
+        const { error } = await supabase.from('favorites').insert({
+          user_id: uid,
+          tmdb_id: this.mediaId,
+          media_type: mediaType,
+          title: this.details.title || this.details.name,
+          poster_path: this.details.poster_path,
+          vote_average: this.details.vote_average,
+          release_date: this.details.release_date || this.details.first_air_date
+        });
+        if (error) throw error;
+        showToast(`Guardado en favoritos ❤️`, 'success');
+        return 'added';
+      }
+    } catch (err) {
+      console.error('Error en _toggleFavorite:', err);
+      showToast(`Error: ${err.message || 'No se pudo guardar'}`, 'error');
+      return null;
+    }
+  }
+
+  // ── Toggle Watchlist (robusto con fallback) ───────────────────────────────
+  async _toggleWatchlist() {
+    if (!supabase || !this.currentUser) {
+      showToast('Inicia sesión para guardar en tu lista', 'info');
+      return null;
+    }
+
+    const mediaType = this.mediaType;
+    const uid = this.currentUser.id;
+
+    try {
+      await this._ensureProfile();
+
+      const { data: existing } = await supabase
+        .from('watchlist')
+        .select('id')
+        .eq('user_id', uid)
+        .eq('tmdb_id', this.mediaId)
+        .eq('media_type', mediaType)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase.from('watchlist').delete().eq('id', existing.id);
+        if (error) throw error;
+        showToast(`Quitado de "Quiero Ver"`, 'info');
+        return 'removed';
+      } else {
+        const { error } = await supabase.from('watchlist').insert({
+          user_id: uid,
+          tmdb_id: this.mediaId,
+          media_type: mediaType,
+          title: this.details.title || this.details.name,
+          poster_path: this.details.poster_path,
+          vote_average: this.details.vote_average,
+          release_date: this.details.release_date || this.details.first_air_date
+        });
+        if (error) throw error;
+        showToast(`Añadido a "Quiero Ver" 🕐`, 'success');
+        return 'added';
+      }
+    } catch (err) {
+      console.error('Error en _toggleWatchlist:', err);
+      showToast(`Error: ${err.message || 'No se pudo guardar'}`, 'error');
+      return null;
+    }
+  }
+
+  // ── Asegurar que el perfil existe (fix para FK constraint) ────────────────
+  async _ensureProfile() {
+    if (!supabase || !this.currentUser) return;
+    try {
+      const uid = this.currentUser.id;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', uid)
+        .maybeSingle();
+
+      if (!profile) {
+        // El trigger no creó el perfil, crearlo manualmente
+        const email = this.currentUser.email || '';
+        const username = email.split('@')[0] || `user_${uid.substring(0, 8)}`;
+        await supabase.from('profiles').insert({
+          id: uid,
+          username: username,
+          display_name: username
+        });
+        console.log('Perfil creado manualmente para:', uid);
+      }
+    } catch (e) {
+      console.warn('ensureProfile error (no crítico):', e);
+    }
+  }
+
   // ── Modal de valoración (inline) ──────────────────────────────────────────
   _openRatingModal() {
-    // Crear modal dinámico si no existe
     let modal = document.getElementById('info-rating-modal');
     if (!modal) {
       modal = document.createElement('div');
@@ -539,7 +686,6 @@ class InfoPageController {
     let selected = this.userRating;
 
     const stars  = modal.querySelectorAll('#ir-stars span');
-    const valEl  = modal.getElementById ? modal.getElementById('ir-value') : modal.querySelector('#ir-value');
     const valEl2 = modal.querySelector('#ir-value');
 
     const paint = (n) => {
@@ -556,7 +702,9 @@ class InfoPageController {
 
     modal.querySelector('#ir-save').onclick = async () => {
       if (!selected) { showToast('Selecciona una nota', 'error'); return; }
+      if (!supabase) { showToast('Base de datos no disponible', 'error'); return; }
       try {
+        await this._ensureProfile();
         await supabase.from('user_ratings').upsert({
           user_id: this.currentUser.id,
           tmdb_id: this.mediaId,
