@@ -10,6 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+  <!-- Chart.js para estadísticas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
   <!-- Hojas de Estilo -->
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/reset.css">
@@ -31,13 +34,24 @@
   <div class="page-transition-overlay out"></div>
 
   <!-- Héroe del Perfil (Fondo Gradiente Rojo y Negro) -->
-  <section style="background: linear-gradient(135deg, var(--accent-dark-red) 0%, var(--bg-primary) 80%); border-bottom: 1px solid var(--border-subtle); padding: 4rem 0 3rem 0; font-family: var(--font-ui);">
-    <div class="container flex profile-hero" style="align-items: center; gap: 2rem;">
+  <section id="profile-hero-section" style="position: relative; border-bottom: 1px solid var(--border-subtle); font-family: var(--font-ui); overflow: hidden;">
+    
+    <!-- Banner de fondo (imagen o gradiente) -->
+    <div id="profile-banner-bg" style="position: absolute; inset: 0; background: linear-gradient(135deg, var(--accent-dark-red) 0%, var(--bg-primary) 80%); background-size: cover; background-position: center; z-index: 0;"></div>
+    <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(5,5,5,0.2) 0%, rgba(5,5,5,0.75) 100%); z-index: 1;"></div>
+
+    <!-- Botón subir banner (premium, visible solo con JS) -->
+    <button id="banner-upload-btn" style="display: none; position: absolute; top: 1rem; right: 1rem; z-index: 5; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 0.4rem 0.9rem; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer; font-family: var(--font-ui);">
+      🖼️ Cambiar Portada
+    </button>
+    <input type="file" id="banner-file-input" accept="image/*" style="display: none;">
+
+    <div class="container flex profile-hero" style="position: relative; z-index: 2; align-items: center; gap: 2rem; padding: 4rem 0 3rem 0;">
       
       <!-- Avatar circular (Uploader) -->
       <div class="profile-hero__avatar-container" style="position: relative; cursor: pointer; flex-shrink: 0; margin-right: 1rem;">
-        <img id="profile-avatar" src="" alt="Avatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-red); box-shadow: 0 0 25px var(--glow-red);">
-        <div style="position: absolute; bottom: 0; right: 0; background-color: var(--accent-red); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; border: 2px solid var(--bg-primary); color: #fff;">
+        <img id="profile-avatar" src="" alt="Avatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-red); box-shadow: 0 0 25px var(--glow-red); transition: all 0.3s;">
+        <div id="avatar-edit-overlay" style="position: absolute; bottom: 0; right: 0; background-color: var(--accent-red); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; border: 2px solid var(--bg-primary); color: #fff; cursor: pointer;">
           📷
         </div>
         <!-- Input File oculto -->
@@ -46,9 +60,20 @@
 
       <!-- Datos del usuario -->
       <div style="flex: 1;">
-        <h2 id="profile-name" class="profile-hero__name" style="font-size: 2.25rem; font-weight: 700; margin-bottom: 0.25rem; cursor: pointer;" data-tooltip="Haz click para editar">Cargando usuario...</h2>
-        <p id="profile-bio" class="profile-hero__bio" style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; cursor: pointer;" data-tooltip="Haz click para editar"></p>
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <h2 id="profile-name" class="profile-hero__name" style="font-size: 2.25rem; font-weight: 700; margin-bottom: 0; cursor: pointer;" data-tooltip="Haz click para editar">Cargando usuario...</h2>
+          <!-- Badge premium (oculto por defecto, se muestra por JS) -->
+          <span id="profile-premium-badge" style="display: none; background: linear-gradient(135deg, #FFD700, #FF8C00); color: #000; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: var(--radius-full); letter-spacing: 0.05em; text-transform: uppercase;">👑 PREMIUM</span>
+          <!-- Badge Crítico Verificado (oculto por defecto) -->
+          <span id="profile-verified-badge" style="display: none; background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid #10B981; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: var(--radius-full); letter-spacing: 0.04em;">✅ Crítico Verificado</span>
+        </div>
+        <p id="profile-bio" class="profile-hero__bio" style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; cursor: pointer; margin-top: 0.4rem;" data-tooltip="Haz click para editar"></p>
         
+        <!-- Racha de actividad (oculta por defecto) -->
+        <div id="streak-display" style="display: none; margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+          <span class="streak-flame">🔥</span> <span id="streak-count">0</span> días de racha
+        </div>
+
         <!-- Stats -->
         <div class="flex flex--wrap flex--gap-md" style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
           <span>❤️ <strong id="stat-favorites" style="color: var(--text-primary);">0</strong> Favoritos</span>
@@ -80,6 +105,8 @@
       <button class="pill profile-tabs__btn" data-tab="history">👁️ Historial</button>
       <button class="pill profile-tabs__btn" data-tab="ratings">⭐ Mis Notas</button>
       <button class="pill profile-tabs__btn" data-tab="reviews">📝 Mis Reseñas</button>
+      <button class="pill profile-tabs__btn" data-tab="stats">📊 Estadísticas</button>
+      <button class="pill profile-tabs__btn" data-tab="achievements">🏆 Logros</button>
       <button class="pill profile-tabs__btn" data-tab="settings">⚙️ Ajustes</button>
       <button class="pill profile-tabs__btn" data-tab="premium">⭐ Premium</button>
     </div>
@@ -117,7 +144,19 @@
         <div id="profile-reviews-list" style="max-width: 800px; margin: 0 auto;"></div>
       </div>
 
-      <!-- Pestaña 6: Ajustes / Configuración -->
+      <!-- Pestaña 6: Estadísticas (Premium) -->
+      <div class="profile-tab-section" id="profile-section-stats">
+        <div id="stats-container"></div>
+      </div>
+
+      <!-- Pestaña 7: Logros -->
+      <div class="profile-tab-section" id="profile-section-achievements">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">🏆 Mis Logros</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">Desbloquea medallas completando metas en CineVerse.</p>
+        <div id="achievements-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem;"></div>
+      </div>
+
+      <!-- Pestaña 8: Ajustes / Configuración -->
       <div class="profile-tab-section" id="profile-section-settings">
         <div style="max-width: 600px; margin: 0 auto; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 2.5rem; border-radius: var(--radius-lg);">
           <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">Configuración de Cuenta</h3>
@@ -152,9 +191,9 @@
         </div>
       </div>
 
-      <!-- Pestaña 7: Premium -->
+      <!-- Pestaña 9: Premium -->
       <div class="profile-tab-section" id="profile-section-premium">
-        <div style="max-width: 600px; margin: 0 auto; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 2.5rem; border-radius: var(--radius-lg); font-family: var(--font-ui);">
+        <div style="max-width: 680px; margin: 0 auto; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 2.5rem; border-radius: var(--radius-lg); font-family: var(--font-ui);">
           <h3 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
             <span>⭐ CineVerse Premium</span>
           </h3>
@@ -164,14 +203,46 @@
             <!-- Se carga dinámicamente por JS -->
           </div>
 
+          <!-- Personalización Premium (visible solo para usuarios premium) -->
+          <div id="premium-customization-box" style="display: none; margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-void); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+            <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--gold);">🎨 Personalización Exclusiva</h4>
+            
+            <!-- Selector de tema de color -->
+            <div style="margin-bottom: 1.5rem;">
+              <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.75rem; font-weight: 600;">🎨 Tema de Color</label>
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;" id="theme-color-picker">
+                <button class="theme-btn" data-theme="red"    style="width: 36px; height: 36px; border-radius: 50%; background: #E50914; border: 3px solid transparent; cursor: pointer; transition: all 0.2s;" title="Rojo Clásico"></button>
+                <button class="theme-btn" data-theme="gold"   style="width: 36px; height: 36px; border-radius: 50%; background: #F5C518; border: 3px solid transparent; cursor: pointer; transition: all 0.2s;" title="Oro Premium"></button>
+                <button class="theme-btn" data-theme="blue"   style="width: 36px; height: 36px; border-radius: 50%; background: #0079FF; border: 3px solid transparent; cursor: pointer; transition: all 0.2s;" title="Azul Eléctrico"></button>
+                <button class="theme-btn" data-theme="purple" style="width: 36px; height: 36px; border-radius: 50%; background: #8B5CF6; border: 3px solid transparent; cursor: pointer; transition: all 0.2s;" title="Violeta Oscuro"></button>
+                <button class="theme-btn" data-theme="green"  style="width: 36px; height: 36px; border-radius: 50%; background: #10B981; border: 3px solid transparent; cursor: pointer; transition: all 0.2s;" title="Verde Esmeralda"></button>
+              </div>
+            </div>
+
+            <!-- Selector de marco de avatar -->
+            <div>
+              <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.75rem; font-weight: 600;">👑 Marco de Avatar</label>
+              <div style="display: flex; gap: 1rem; flex-wrap: wrap;" id="avatar-frame-picker">
+                <button class="frame-btn" data-frame="none"    style="font-size: 0.78rem; padding: 0.4rem 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">Sin Marco</button>
+                <button class="frame-btn" data-frame="glow"    style="font-size: 0.78rem; padding: 0.4rem 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">✨ Brillo</button>
+                <button class="frame-btn" data-frame="pulse"   style="font-size: 0.78rem; padding: 0.4rem 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">💓 Pulso</button>
+                <button class="frame-btn" data-frame="rainbow" style="font-size: 0.78rem; padding: 0.4rem 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">🌈 Arcoíris</button>
+              </div>
+            </div>
+          </div>
+
           <!-- Beneficios / Formulario de Pago y Canje -->
           <div id="premium-actions-box">
             <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">Beneficios Premium:</h4>
             <ul style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; color: var(--text-secondary); font-size: 0.95rem;">
               <li>🚫 <strong>Sin Anuncios:</strong> Disfruta de todo el catálogo al instante y sin interrupciones.</li>
-              <li>📷 <strong>Personalización Completa:</strong> Desbloquea la subida de avatares personalizados.</li>
-              <li>🚀 <strong>Acceso Prioritario:</strong> Servidores y conexiones más rápidas para reproducción fluida.</li>
-              <li>💎 <strong>Insignia de Premium:</strong> Un distintivo brillante en tu perfil y comentarios.</li>
+              <li>📷 <strong>Personalización Completa:</strong> Avatar personalizado, banner de portada, marcos animados y temas de color.</li>
+              <li>📊 <strong>Estadísticas Avanzadas:</strong> Dashboard con gráficas de géneros, actores, actividad y tu Top 10 personal.</li>
+              <li>🏆 <strong>Logros Exclusivos:</strong> Desbloquea medallas especiales que los usuarios free no pueden conseguir.</li>
+              <li>💬 <strong>Reseñas Sin Límite:</strong> Escribe reseñas sin restricción de caracteres.</li>
+              <li>✅ <strong>Badge de Crítico Verificado:</strong> Un distintivo especial en todas tus reseñas y comentarios.</li>
+              <li>👍 <strong>Votar Reseñas:</strong> Da "Útil" o "No útil" a las reseñas de otros usuarios.</li>
+              <li>🔥 <strong>Racha de Actividad:</strong> Sistema de racha por días consecutivos activo en la plataforma.</li>
             </ul>
 
             <!-- Sección Comprar (PayPal) -->
@@ -208,8 +279,22 @@
   <style>
     .profile-tab-section { display: none; }
     .profile-tab-section.active { display: block; }
+    
+    /* Tema de color activo */
+    .theme-btn.active {
+      border-color: white !important;
+      transform: scale(1.2);
+      box-shadow: 0 0 10px rgba(255,255,255,0.4);
+    }
+    .frame-btn.active {
+      border-color: var(--accent-red) !important;
+      color: var(--text-primary) !important;
+      background: var(--bg-elevated) !important;
+    }
   </style>
 
   <script type="module" src="js/pages/perfil.js"></script>
+  <!-- Chat en Vivo en Tiempo Real -->
+  <script type="module" src="js/chat.js"></script>
 </body>
 </html>

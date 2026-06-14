@@ -665,7 +665,7 @@ class TVPageController {
       if (isSupabaseConfigured) {
         const { data: dbReviews } = await supabase
           .from('reviews')
-          .select('*, profiles(username, display_name, avatar_url)')
+          .select('*, profiles(username, display_name, avatar_url, is_premium)')
           .eq('tmdb_id', this.serieId)
           .eq('media_type', 'tv')
           .order('created_at', { ascending: false });
@@ -674,11 +674,14 @@ class TVPageController {
           dbReviews.forEach(r => {
             const authorName = r.profiles?.display_name || r.profiles?.username || 'Usuario Cineverse';
             mergedReviews.unshift({
+              id: r.id,
               author: authorName,
               avatar: r.profiles?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(authorName)}`,
               rating: r.rating,
               content: r.content,
-              created_at: r.created_at
+              created_at: r.created_at,
+              is_premium_author: !!r.profiles?.is_premium,
+              fromDB: true
             });
           });
         }
@@ -689,22 +692,78 @@ class TVPageController {
         return;
       }
 
-      list.innerHTML = mergedReviews.map(r => `
-        <div class="review-card" style="background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 1rem; display: flex; gap: 1rem;">
-          <img src="${r.avatar}" alt="${r.author}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-subtle); flex-shrink:0;">
-          <div>
-            <div class="flex flex--align-center flex--gap-sm" style="margin-bottom: 0.5rem;">
-              <h4 style="font-weight: 700;">${r.author}</h4>
-              ${r.rating ? `<span class="badge badge--yellow" style="font-size: 0.75rem;">★ ${r.rating}/10</span>` : ''}
-              <span style="font-size: 0.75rem; color: var(--text-muted);">${formatDate(r.created_at)}</span>
+      // Cargar votos del usuario actual si existe
+      let userVotes = {};
+      if (isSupabaseConfigured && this.currentUser) {
+        const { data: votes } = await supabase
+          .from('review_votes')
+          .select('review_id, vote')
+          .eq('user_id', this.currentUser.id);
+        (votes || []).forEach(v => { userVotes[v.review_id] = v.vote; });
+      }
+
+      // Cargar conteo total de votos por reseña
+      let voteCounts = {};
+      if (isSupabaseConfigured) {
+        const dbIds = mergedReviews.filter(r => r.id).map(r => r.id);
+        if (dbIds.length > 0) {
+          const { data: allVotes } = await supabase.from('review_votes').select('review_id, vote').in('review_id', dbIds);
+          (allVotes || []).forEach(v => {
+            if (!voteCounts[v.review_id]) voteCounts[v.review_id] = { up: 0, down: 0 };
+            if (v.vote === 1) voteCounts[v.review_id].up++;
+            else voteCounts[v.review_id].down++;
+          });
+        }
+      }
+
+      list.innerHTML = mergedReviews.map(r => {
+        const voteBlock = r.fromDB ? `
+          <div class="review-votes" data-review-id="${r.id}" style="display:flex;align-items:center;gap:0.75rem;margin-top:0.75rem;">
+            <button class="vote-btn" data-review-id="${r.id}" data-vote="1" style="display:flex;align-items:center;gap:0.3rem;background:${userVotes[r.id]===1?'rgba(16,185,129,0.2)':'transparent'};border:1px solid ${userVotes[r.id]===1?'#10B981':'var(--border-subtle)'};color:${userVotes[r.id]===1?'#10B981':'var(--text-muted)'};padding:0.25rem 0.6rem;border-radius:var(--radius-full);cursor:pointer;font-size:0.8rem;transition:all 0.2s;">
+              👍 <span class="vote-up-count">${(voteCounts[r.id]?.up||0)}</span>
+            </button>
+            <button class="vote-btn" data-review-id="${r.id}" data-vote="-1" style="display:flex;align-items:center;gap:0.3rem;background:${userVotes[r.id]===-1?'rgba(229,9,20,0.2)':'transparent'};border:1px solid ${userVotes[r.id]===-1?'var(--accent-red)':'var(--border-subtle)'};color:${userVotes[r.id]===-1?'var(--accent-red)':'var(--text-muted)'};padding:0.25rem 0.6rem;border-radius:var(--radius-full);cursor:pointer;font-size:0.8rem;transition:all 0.2s;">
+              👎 <span class="vote-down-count">${(voteCounts[r.id]?.down||0)}</span>
+            </button>
+          </div>` : '';
+        return `
+          <div class="review-card" style="background-color:var(--bg-secondary);border:1px solid var(--border-subtle);padding:1.5rem;border-radius:var(--radius-md);margin-bottom:1rem;display:flex;gap:1rem;">
+            <img src="${r.avatar}" alt="${r.author}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:1px solid var(--border-subtle);flex-shrink:0;">
+            <div style="flex:1;">
+              <div class="flex flex--align-center flex--gap-sm" style="margin-bottom:0.5rem;flex-wrap:wrap;">
+                <h4 style="font-weight:700;">${r.author}</h4>
+                ${r.is_premium_author ? '<span style="font-size:0.7rem;background:rgba(16,185,129,0.15);color:#10B981;border:1px solid #10B981;padding:0.15rem 0.45rem;border-radius:var(--radius-full);font-weight:700;">✅ Verificado</span>' : ''}
+                ${r.rating ? `<span class="badge badge--yellow" style="font-size:0.75rem;">★ ${r.rating}/10</span>` : ''}
+                <span style="font-size:0.75rem;color:var(--text-muted);">${formatDate(r.created_at)}</span>
+              </div>
+              <p style="font-family:var(--font-body);font-size:1rem;color:var(--text-secondary);line-height:1.5;white-space:pre-line;">${r.content}</p>
+              ${voteBlock}
             </div>
-            <p style="font-family: var(--font-body); font-size: 1rem; color: var(--text-secondary); line-height: 1.5; white-space: pre-line;">${r.content}</p>
-          </div>
-        </div>
-      `).join('');
+          </div>`;
+      }).join('');
+
+      // Eventos de votos
+      list.querySelectorAll('.vote-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!this.currentUser) { showToast('Inicia sesión para votar reseñas.', 'error'); return; }
+          const reviewId = btn.getAttribute('data-review-id');
+          const vote = parseInt(btn.getAttribute('data-vote'));
+          const currentVote = userVotes[reviewId];
+          if (currentVote === vote) {
+            // Quitar voto
+            await supabase.from('review_votes').delete().eq('user_id', this.currentUser.id).eq('review_id', reviewId);
+            delete userVotes[reviewId];
+          } else {
+            // Upsert voto
+            await supabase.from('review_votes').upsert({ user_id: this.currentUser.id, review_id: reviewId, vote });
+            userVotes[reviewId] = vote;
+          }
+          this.loadReviews();
+        });
+      });
 
     } catch (err) {
-      console.error(err);
+      console.error("Error al cargar reseñas:", err);
       list.innerHTML = '<p>Error al cargar las reseñas.</p>';
     }
   }
@@ -736,6 +795,23 @@ class TVPageController {
       if (!this.currentUser) {
         reviewForm.innerHTML = `<div style="padding: 1.5rem; text-align: center; border: 1px dashed var(--border-subtle); border-radius: var(--radius-md); color: var(--text-muted);">Inicia sesión para escribir una reseña.</div>`;
       } else {
+        // Límite de caracteres para usuarios Free
+        const isPremium = !!this.currentUser.profile?.is_premium;
+        const CHAR_LIMIT = 280;
+        const textarea   = document.getElementById('review-text');
+        if (textarea && !isPremium) {
+          textarea.maxLength = CHAR_LIMIT;
+          const counter = document.createElement('div');
+          counter.style.cssText = 'font-size:0.78rem;color:var(--text-muted);text-align:right;margin-top:0.25rem;';
+          counter.textContent = `0 / ${CHAR_LIMIT} caracteres (usuarios Free)`;
+          textarea.parentNode.insertBefore(counter, textarea.nextSibling);
+          textarea.addEventListener('input', () => {
+            const len = textarea.value.length;
+            counter.textContent = `${len} / ${CHAR_LIMIT} caracteres (usuarios Free)`;
+            counter.style.color = len >= CHAR_LIMIT ? 'var(--accent-red)' : 'var(--text-muted)';
+          });
+        }
+
         reviewForm.addEventListener('submit', async (e) => {
           e.preventDefault();
           const content = document.getElementById('review-text').value.trim();
@@ -743,6 +819,10 @@ class TVPageController {
 
           if (!content) {
             showToast("La reseña no puede estar vacía", "error");
+            return;
+          }
+          if (!isPremium && content.length > CHAR_LIMIT) {
+            showToast(`Los usuarios Free solo pueden escribir ${CHAR_LIMIT} caracteres. ¡Pásate a Premium!`, 'error');
             return;
           }
 
@@ -755,7 +835,8 @@ class TVPageController {
                 media_type: 'tv',
                 title: this.serieDetails.name,
                 content: content,
-                rating: ratingVal
+                rating: ratingVal,
+                is_premium_author: isPremium
               });
 
             if (error) throw error;
