@@ -1,8 +1,6 @@
 /* ═══ cineverse/js/api.js ═══ */
 
 import {
-  TMDB_API_KEY,
-  TMDB_BASE_URL,
   TMDB_IMG_BASE,
   TMDB_LANGUAGE,
   TMDB_REGION
@@ -15,21 +13,30 @@ export class TMDBApi {
   }
 
   /**
-   * Método base para llamadas HTTP a TMDB con gestión de caché y errores
+   * Método base para llamadas HTTP a TMDB a través del Proxy de Cloudflare
    * @param {string} endpoint - Ruta del recurso (ej: '/movie/popular')
    * @param {Object} params - Parámetros de búsqueda adicionales
    * @param {boolean} bypassCache - Si es verdadero, no lee ni escribe en caché
    */
   async fetch(endpoint, params = {}, bypassCache = false) {
-    // Agregar parámetros por defecto para idioma y región
+    // Determinar la base del proxy de Cloudflare Pages
+    // En producción web usamos la ruta relativa "/api/tmdb"
+    // En desarrollo local (localhost, file:) o APK móvil (Capacitor) usamos la URL completa de producción
+    const isProductionWeb = window.location.hostname === 'cineverse-7u5.pages.dev' || 
+                            (window.location.hostname && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1') && window.location.protocol !== 'file:');
+    
+    const proxyBase = isProductionWeb ? '/api/tmdb' : 'https://cineverse-7u5.pages.dev/api/tmdb';
+
+    // Agregar parámetros por defecto para idioma y región (la API key la inyecta Cloudflare)
     const queryParams = new URLSearchParams({
-      api_key: TMDB_API_KEY,
       language: TMDB_LANGUAGE,
       region: TMDB_REGION,
-      ...params
+      ...params,
+      endpoint: endpoint // Pasamos el endpoint como parámetro para el proxy
     });
 
-    const url = `${TMDB_BASE_URL}${endpoint}?${queryParams.toString()}`;
+    const url = `${proxyBase}?${queryParams.toString()}`;
+
 
     // Verificar caché
     if (!bypassCache) {

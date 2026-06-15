@@ -1,8 +1,6 @@
 /* ═══ cineverse/js/config.js ═══ */
 
 // Configuración de The Movie Database (TMDB)
-export const TMDB_API_KEY = "ee66db71a6ad38fc45fac9281bbe916e";
-export const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 export const TMDB_IMG_BASE = "https://image.tmdb.org/t/p/";
 export const TMDB_LANGUAGE = "es-ES";
 export const TMDB_REGION = "ES";
