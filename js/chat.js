@@ -1,6 +1,6 @@
 /* ═══ cineverse/js/chat.js ═══ */
 
-import { supabase, isSupabaseConfigured } from './supabase.js';
+import { getSupabase, isSupabaseConfigured } from './supabase.js';
 import { getCurrentUser } from './auth.js';
 import { showToast } from './utils.js';
 
@@ -10,6 +10,7 @@ class LiveChat {
     this.messages = [];
     this.isOpen = false;
     this.channel = null;
+    this.supabase = null;
   }
 
   async init() {
@@ -17,6 +18,13 @@ class LiveChat {
       console.warn("LiveChat: Supabase no está configurado. Deshabilitando chat.");
       return;
     }
+
+    const client = await getSupabase();
+    if (!client) {
+      console.warn("LiveChat: No se pudo inicializar el cliente de Supabase.");
+      return;
+    }
+    this.supabase = client;
 
     try {
       this.currentUser = await getCurrentUser();
@@ -206,7 +214,7 @@ class LiveChat {
     if (!container) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('chat_messages')
         .select('*, profiles(username, display_name, avatar_url, is_premium)')
         .order('created_at', { ascending: false })
@@ -283,7 +291,7 @@ class LiveChat {
   async sendMessage(text) {
     if (!this.currentUser) return;
     try {
-      const { error } = await supabase
+      const { error } = await this.supabase
         .from('chat_messages')
         .insert({
           user_id: this.currentUser.id,
@@ -312,7 +320,7 @@ class LiveChat {
     btnEl.disabled = true;
 
     try {
-      const { error } = await supabase
+      const { error } = await this.supabase
         .from('chat_messages')
         .delete()
         .eq('id', msgId)
@@ -339,7 +347,7 @@ class LiveChat {
   }
 
   subscribeToRealtime() {
-    this.channel = supabase
+    this.channel = this.supabase
       .channel('chat-realtime-v2')
       .on(
         'postgres_changes',
@@ -347,7 +355,7 @@ class LiveChat {
         async (payload) => {
           const newMsg = payload.new;
 
-          const { data: profile } = await supabase
+          const { data: profile } = await this.supabase
             .from('profiles')
             .select('username, display_name, avatar_url, is_premium')
             .eq('id', newMsg.user_id)
