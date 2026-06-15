@@ -207,3 +207,56 @@ export function applyUserTheme(themeName) {
   root.style.setProperty('--glow-red-intense', theme.glowInt);
   root.style.setProperty('--border-red',       theme.border);
 }
+
+/**
+ * Evita la inspección de código deshabilitando clic derecho y combinaciones de teclas comunes para DevTools.
+ */
+export function protectWebCode() {
+  // Si está corriendo de forma local (desarrollo), no activar protección de depuración
+  const isLocal = window.location.hostname === 'localhost' || 
+                  window.location.hostname === '127.0.0.1' || 
+                  window.location.protocol === 'file:';
+  
+  if (isLocal) return;
+
+  // 1. Deshabilitar menú contextual (clic derecho)
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  // 2. Deshabilitar combinaciones de teclas
+  document.addEventListener('keydown', (e) => {
+    // F12
+    if (e.key === 'F12') {
+      e.preventDefault();
+      return false;
+    }
+    // Ctrl+Shift+I, J, C o Ctrl+U
+    if (e.ctrlKey && (
+      (e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+      (e.key === 'U' || e.key === 'u')
+    )) {
+      e.preventDefault();
+      return false;
+    }
+    // Cmd+Alt+I (Mac)
+    if (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i')) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  // 3. Protección activa usando debugger infinito si intentan forzar apertura de consola
+  setInterval(() => {
+    const startTime = performance.now();
+    debugger;
+    const endTime = performance.now();
+    if (endTime - startTime > 100) {
+      document.body.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; color:white; font-family:sans-serif; background:#111; text-align:center; padding: 2rem;">
+          <h2 style="color:var(--accent-red,#E50914); margin-bottom: 1rem;">Código Protegido</h2>
+          <p style="color:#aaa; max-width: 500px;">El acceso a las herramientas de desarrollador ha sido desactivado para proteger la propiedad intelectual de CineVerse.</p>
+        </div>
+      `;
+    }
+  }, 1000);
+}
+
