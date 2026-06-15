@@ -1,6 +1,7 @@
 /* ═══ cineverse/js/auth.js ═══ */
 
 import { supabase, isSupabaseConfigured, getSupabase } from './supabase.js';
+import { applyUserTheme } from './utils.js';
 
 /**
  * Helper interno para obtener el cliente de Supabase asegurando su inicialización
@@ -161,6 +162,21 @@ export async function getCurrentUser() {
       }
     }
     
+    // Aplicar tema dinámico si es premium, si no revertir a rojo
+    if (profile) {
+      if (profile.is_premium) {
+        const themeToApply = profile.theme_color || 'red';
+        localStorage.setItem('cineverse_theme_color', themeToApply);
+        applyUserTheme(themeToApply);
+      } else {
+        localStorage.setItem('cineverse_theme_color', 'red');
+        applyUserTheme('red');
+      }
+    } else {
+      localStorage.setItem('cineverse_theme_color', 'red');
+      applyUserTheme('red');
+    }
+    
     return { ...user, profile };
   } catch (err) {
     console.error("Error en getCurrentUser:", err);
@@ -231,12 +247,29 @@ export function onAuthStateChange(cb) {
               }
             }
           }
+          
+          if (profile) {
+            if (profile.is_premium) {
+              const themeToApply = profile.theme_color || 'red';
+              localStorage.setItem('cineverse_theme_color', themeToApply);
+              applyUserTheme(themeToApply);
+            } else {
+              localStorage.setItem('cineverse_theme_color', 'red');
+              applyUserTheme('red');
+            }
+          } else {
+            localStorage.setItem('cineverse_theme_color', 'red');
+            applyUserTheme('red');
+          }
+          
           cb(event, session, profile);
         } catch (e) {
           console.error("Error fetching/creating profile in onAuthStateChange:", e);
           cb(event, session, null);
         }
       } else {
+        localStorage.setItem('cineverse_theme_color', 'red');
+        applyUserTheme('red');
         cb(event, null, null);
       }
     });

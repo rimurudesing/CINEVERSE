@@ -14,6 +14,8 @@ import {
 import { initCustomCursor } from '../cursor.js';
 import '../components/navbar.js';
 
+import { showInterstitialAd } from '../admob.js';
+
 // ── Configuración de Vimeus ──────────────────────────────────────────────────
 const VIMEUS_VIEW_KEY = 'SIdNplTsfvK71V6ZRXUI1tti-rS3EwKRolj0mmqedZ4';
 
@@ -152,8 +154,22 @@ class WatchPageController {
     }
   }
 
-  renderAd(playerRoot, vimeusURL) {
-    // Un trailer cinematográfico genérico de YouTube sin controles interactivos directos
+  async renderAd(playerRoot, vimeusURL) {
+    // Si estamos en la APK nativa, intentamos mostrar el anuncio intersticial de AdMob a pantalla completa
+    try {
+      const adShown = await showInterstitialAd();
+      if (adShown) {
+        console.log('[AdMob] Interstitial real mostrado con éxito.');
+        // Si el anuncio de AdMob se mostró, podemos saltar directamente al reproductor real 
+        // o reducir el tiempo de espera. Saltamos directamente al reproductor ya que vio el interstitial real.
+        this.renderActualPlayer(playerRoot, vimeusURL);
+        return;
+      }
+    } catch (e) {
+      console.error('[AdMob] Error intentando mostrar anuncio nativo:', e);
+    }
+
+    // Un trailer cinematográfico genérico de YouTube sin controles interactivos directos (simulado para web)
     const adTrailerUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&controls=0&mute=1&loop=1&playlist=dQw4w9WgXcQ";
 
     playerRoot.innerHTML = `

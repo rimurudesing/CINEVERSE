@@ -1,5 +1,9 @@
 import { api } from '../api.js';
-import { navigateTo, buildTMDBImageURL, formatYear, debounce } from '../utils.js';
+import { navigateTo, buildTMDBImageURL, formatYear, debounce, applyUserTheme } from '../utils.js';
+
+// Aplicar tema guardado inmediatamente en la carga de la página
+const savedTheme = localStorage.getItem('cineverse_theme_color') || 'red';
+applyUserTheme(savedTheme);
 
 export function renderNavbar() {
   // Evitar inyección en watch.html si así se requiere, o renderizar versión minimalista

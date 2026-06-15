@@ -181,3 +181,29 @@ export async function showToast(message, type = 'info') {
     console.error("Error al disparar el toast dinámico:", error);
   }
 }
+
+/**
+ * Paleta de colores Premium de CineVerse
+ */
+export const THEME_COLORS = {
+  red:    { accent: '#E50914', crimson: '#C1121F', ember: '#FF2D2D', dark: '#8B0000', glow: 'rgba(229,9,20,0.35)', glowInt: 'rgba(229,9,20,0.7)', border: 'rgba(229,9,20,0.4)' },
+  gold:   { accent: '#F5C518', crimson: '#D4A017', ember: '#FFD700', dark: '#9A7D0A', glow: 'rgba(245,197,24,0.35)', glowInt: 'rgba(245,197,24,0.7)', border: 'rgba(245,197,24,0.4)' },
+  blue:   { accent: '#0079FF', crimson: '#0060CC', ember: '#3B9EFF', dark: '#003D80', glow: 'rgba(0,121,255,0.35)', glowInt: 'rgba(0,121,255,0.7)', border: 'rgba(0,121,255,0.4)' },
+  purple: { accent: '#8B5CF6', crimson: '#7C3AED', ember: '#A78BFA', dark: '#4C1D95', glow: 'rgba(139,92,246,0.35)', glowInt: 'rgba(139,92,246,0.7)', border: 'rgba(139,92,246,0.4)' },
+  green:  { accent: '#10B981', crimson: '#059669', ember: '#34D399', dark: '#065F46', glow: 'rgba(16,185,129,0.35)', glowInt: 'rgba(16,185,129,0.7)', border: 'rgba(16,185,129,0.4)' },
+};
+
+/**
+ * Aplica el tema seleccionado al elemento raíz de la página
+ */
+export function applyUserTheme(themeName) {
+  const theme = THEME_COLORS[themeName] || THEME_COLORS.red;
+  const root = document.documentElement;
+  root.style.setProperty('--accent-red',       theme.accent);
+  root.style.setProperty('--accent-crimson',   theme.crimson);
+  root.style.setProperty('--accent-ember',     theme.ember);
+  root.style.setProperty('--accent-dark-red',  theme.dark);
+  root.style.setProperty('--glow-red',         theme.glow);
+  root.style.setProperty('--glow-red-intense', theme.glowInt);
+  root.style.setProperty('--border-red',       theme.border);
+}

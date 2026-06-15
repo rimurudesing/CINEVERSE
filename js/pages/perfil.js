@@ -1,8 +1,6 @@
-/* ═══ cineverse/js/pages/perfil.js ═══ */
-
 import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { getCurrentUser, signOut, updateProfile } from '../auth.js';
-import { navigateTo, initPageTransition, buildTMDBImageURL, showToast, formatDate } from '../utils.js';
+import { navigateTo, initPageTransition, buildTMDBImageURL, showToast, formatDate, THEME_COLORS, applyUserTheme } from '../utils.js';
 import { initCustomCursor } from '../cursor.js';
 import { api } from '../api.js';
 import '../components/navbar.js';
@@ -25,14 +23,6 @@ const ACHIEVEMENTS = [
   { key: 'premium',       icon: '👑', name: 'Mecenas CineVerse',    desc: 'Activar modo Premium',                 premiumOnly: false },
   { key: 'early_adopter', icon: '🚀', name: 'Early Adopter',        desc: 'Ser uno de los primeros en unirse',   premiumOnly: false },
 ];
-
-const THEME_COLORS = {
-  red:    { accent: '#E50914', crimson: '#C1121F', ember: '#FF2D2D', dark: '#8B0000', glow: 'rgba(229,9,20,0.35)', glowInt: 'rgba(229,9,20,0.7)', border: 'rgba(229,9,20,0.4)' },
-  gold:   { accent: '#F5C518', crimson: '#D4A017', ember: '#FFD700', dark: '#9A7D0A', glow: 'rgba(245,197,24,0.35)', glowInt: 'rgba(245,197,24,0.7)', border: 'rgba(245,197,24,0.4)' },
-  blue:   { accent: '#0079FF', crimson: '#0060CC', ember: '#3B9EFF', dark: '#003D80', glow: 'rgba(0,121,255,0.35)', glowInt: 'rgba(0,121,255,0.7)', border: 'rgba(0,121,255,0.4)' },
-  purple: { accent: '#8B5CF6', crimson: '#7C3AED', ember: '#A78BFA', dark: '#4C1D95', glow: 'rgba(139,92,246,0.35)', glowInt: 'rgba(139,92,246,0.7)', border: 'rgba(139,92,246,0.4)' },
-  green:  { accent: '#10B981', crimson: '#059669', ember: '#34D399', dark: '#065F46', glow: 'rgba(16,185,129,0.35)', glowInt: 'rgba(16,185,129,0.7)', border: 'rgba(16,185,129,0.4)' },
-};
 
 class ProfilePageController {
   constructor() {

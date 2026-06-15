@@ -1,10 +1,28 @@
 /*.js
   Content-Type: application/javascript; charset=utf-8
+  Cache-Control: public, max-age=31536000, immutable
 
 /*.css
   Content-Type: text/css; charset=utf-8
+  Cache-Control: public, max-age=31536000, immutable
 
 /*
+  # ── Seguridad general ───────────────────────────────────────────────────────
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
+  X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+
+  # ── Prevenir indexación del código fuente ───────────────────────────────────
+  X-Robots-Tag: noarchive, nosnippet
+
+  # ── Bloquear ataques de tipo Clickjacking ───────────────────────────────────
+  Content-Security-Policy: default-src 'self' https://cineverse-7u5.pages.dev; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://pagead2.googlesyndication.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://image.tmdb.org https://api.dicebear.com https://img.youtube.com https://*.supabase.co; media-src 'self' blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.themoviedb.org https://pagead2.googlesyndication.com; frame-src https://www.youtube.com https://vimeo.com https://vimeus.com https://*.vimeus.com; object-src 'none'; base-uri 'self'; form-action 'self';
+
+  # ── Seguridad de transporte HTTPS ────────────────────────────────────────────
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+  # ── Evitar que el navegador filtre el código fuente ─────────────────────────
+  X-Download-Options: noopen
+  X-Permitted-Cross-Domain-Policies: none
