@@ -185,3 +185,18 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Forzar que las rejillas de películas/series tengan 2 columnas (cuadritos) en móviles en modo cuadrícula */
+@media (max-width: 768px) {
+  .grid--4,
+  #search-results-grid.grid--4,
+  #top-movies-grid.grid--4,
+  #top-tv-grid.grid--4,
+  #genre-explore-grid.grid--4,
+  #profile-favorites-grid.grid--4,
+  #profile-watchlist-grid.grid--4,
+  #profile-ratings-grid.grid--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+  }
+}
