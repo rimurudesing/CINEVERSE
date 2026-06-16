@@ -1,6 +1,7 @@
 /* ═══ cineverse/js/utils.js ═══ */
 
 import { TMDB_IMG_BASE } from './config.js';
+import './tv.js';
 
 /**
  * Formatea una fecha de formato YYYY-MM-DD a "DD Mes YYYY" en español.
