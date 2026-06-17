@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "sync": "rsync -av --delete --exclude='.git' --exclude='node_modules' --exclude='android' --exclude='www' --exclude='CineVerse-debug.apk' ./ www/",
+    "cap-sync": "npm run sync && npx cap sync android",
+    "build:apk": "npm run cap-sync && cd android && JAVA_HOME=/opt/android-studio/jbr ./gradlew assembleDebug && cp app/build/outputs/apk/debug/app-debug.apk ../CineVerse-debug.apk"
   },
   "repository": {
     "type": "git",
