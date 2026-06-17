@@ -397,6 +397,10 @@ class LiveChat {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Evitar inyectar la burbuja flotante y el panel en la página dedicada de chat
+  if (window.location.pathname.includes('chat.html')) {
+    return;
+  }
   const chat = new LiveChat();
   chat.init();
 });

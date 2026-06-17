@@ -1,30 +1,29 @@
-/* ═══ cineverse/js/chat.js ═══ */
+/* ═══ cineverse/js/pages/chat.js ═══ */
 
-import { getSupabase, isSupabaseConfigured } from './supabase.js';
-import { getCurrentUser } from './auth.js';
-import { showToast } from './utils.js';
+import { getSupabase, isSupabaseConfigured } from '../supabase.js';
+import { getCurrentUser } from '../auth.js';
+import { showToast } from '../utils.js';
 
-class LiveChat {
+class ChatPageLobby {
   constructor() {
     this.currentUser = null;
     this.messages = [];
-    this.isOpen = false;
     this.channel = null;
     this.supabase = null;
   }
 
   async init() {
-    // Inyectar dinámicamente la hoja de estilo del chat
-    this.loadStylesheet();
-
     if (!isSupabaseConfigured) {
-      console.warn("LiveChat: Supabase no está configurado. Deshabilitando chat.");
+      const container = document.getElementById('chat-messages-container');
+      if (container) {
+        container.innerHTML = '<p style="text-align: center; color: var(--accent-red); font-size: 0.9rem; padding: 2rem;">Supabase no está configurado. El chat está inhabilitado.</p>';
+      }
       return;
     }
 
     const client = await getSupabase();
     if (!client) {
-      console.warn("LiveChat: No se pudo inicializar el cliente de Supabase.");
+      console.warn("ChatLobby: No se pudo obtener el cliente de Supabase.");
       return;
     }
     this.supabase = client;
@@ -32,102 +31,54 @@ class LiveChat {
     try {
       this.currentUser = await getCurrentUser();
     } catch (e) {
-      console.error("LiveChat: Error al obtener usuario actual", e);
+      console.error("ChatLobby: Error al obtener usuario actual", e);
     }
 
-    this.renderUI();
+    this.renderInputPlaceholder();
     this.setupListeners();
-    this.loadMessages();
+    await this.loadMessages();
+    await this.loadPremiumMecenas();
     this.subscribeToRealtime();
   }
 
-  loadStylesheet() {
-    if (document.getElementById('cineverse-chat-css')) return;
-    const link = document.createElement('link');
-    link.id = 'cineverse-chat-css';
-    link.rel = 'stylesheet';
-    link.href = 'css/chat.css';
-    document.head.appendChild(link);
-  }
-
-  renderUI() {
-    const bubble = document.createElement('div');
-    bubble.id = 'chat-bubble';
-    bubble.className = 'chat-bubble';
-    bubble.innerHTML = `
-      <div class="chat-bubble-inner">
-        <svg viewBox="0 0 24 24">
-          <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
-        </svg>
-        <span id="chat-badge" class="chat-badge">!</span>
-      </div>
-    `;
-
-    const panel = document.createElement('div');
-    panel.id = 'chat-panel';
-    panel.className = 'chat-panel';
+  renderInputPlaceholder() {
+    const placeholder = document.getElementById('chat-input-placeholder');
+    if (!placeholder) return;
 
     const isPremium = this.currentUser?.profile?.is_premium;
 
-    panel.innerHTML = `
-      <!-- Cabecera del chat -->
-      <div class="chat-header">
-        <div class="chat-header-title">
-          <div class="chat-header-row">
-            <span class="chat-status-dot"></span>
-            <h3>Chat en Vivo</h3>
-          </div>
-          <span class="chat-header-subtitle">Canal Público Global</span>
-        </div>
-        <button id="chat-close-btn" class="chat-close-btn">✕</button>
-      </div>
-
-      <!-- Lista de mensajes -->
-      <div id="chat-messages-container" class="chat-messages-container">
-        <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 2rem;">Cargando mensajes del canal...</p>
-      </div>
-
-      <!-- Footer / Input del chat -->
-      <div class="chat-footer">
-        ${this.getChatInputHTML(isPremium)}
-      </div>
-    `;
-
-    document.body.appendChild(bubble);
-    document.body.appendChild(panel);
-  }
-
-  getChatInputHTML(isPremium) {
     if (!this.currentUser) {
-      return `
-        <div style="text-align: center; padding: 0.5rem 0;">
-          <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 0.75rem;">Inicia sesión para participar en el chat.</p>
-          <a href="login.html" class="btn btn--primary" style="display: block; font-size: 0.85rem; padding: 0.5rem 1rem; text-decoration: none; text-align: center; font-weight: 700; border-radius: var(--radius-sm);">Iniciar Sesión</a>
+      placeholder.innerHTML = `
+        <div style="text-align: center; padding: 1rem 0;">
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.85rem;">Inicia sesión para poder participar en el chat global.</p>
+          <a href="login.html" class="btn btn--primary" style="display: inline-block; font-size: 0.9rem; padding: 0.6rem 1.5rem; text-decoration: none; text-align: center; font-weight: 700; border-radius: var(--radius-sm);">Iniciar Sesión / Crear Cuenta</a>
         </div>
       `;
+      return;
     }
 
     if (!isPremium) {
-      return `
+      placeholder.innerHTML = `
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
           <div class="chat-input-form">
-            <input type="text" disabled placeholder="Solo lectura para usuarios Free..." class="chat-input-text">
+            <input type="text" disabled placeholder="El chat en vivo es de solo lectura para cuentas Free..." class="chat-input-text">
             <button disabled class="chat-send-btn">
               <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
           </div>
           <div class="chat-premium-promo">
-            <span class="chat-promo-badge">👑 Función Exclusiva de Premium</span>
-            <p class="chat-promo-text">Los usuarios Premium pueden escribir en tiempo real. ¡Pásate a Premium para chatear!</p>
-            <a href="perfil.html?tab=premium" class="chat-promo-link">Activar Premium Aquí</a>
+            <span class="chat-promo-badge">👑 ¿Quieres participar en el chat?</span>
+            <p class="chat-promo-text">La escritura en tiempo real en el chat global es una característica exclusiva para usuarios Premium de CineVerse. ¡Hazte mecenas hoy mismo!</p>
+            <a href="perfil.html?tab=premium" class="chat-promo-link">Conocer Planes Premium →</a>
           </div>
         </div>
       `;
+      return;
     }
 
-    return `
+    placeholder.innerHTML = `
       <form id="chat-input-form" class="chat-input-form">
-        <input type="text" id="chat-message-text" placeholder="Escribe un mensaje (máx 150 car)..." maxlength="150" required class="chat-input-text">
+        <input type="text" id="chat-message-text" placeholder="Escribe tu mensaje en el chat general (máx 150 caracteres)..." maxlength="150" required class="chat-input-text">
         <button type="submit" id="chat-send-btn" class="chat-send-btn">
           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
@@ -136,32 +87,12 @@ class LiveChat {
   }
 
   setupListeners() {
-    const bubble = document.getElementById('chat-bubble');
-    const panel = document.getElementById('chat-panel');
-    const closeBtn = document.getElementById('chat-close-btn');
-
-    const toggleChat = () => {
-      this.isOpen = !this.isOpen;
-      if (this.isOpen) {
-        panel.classList.add('active');
-        bubble.style.transform = 'scale(0.8) rotate(90deg)';
-        bubble.style.opacity = '0.5';
-        document.getElementById('chat-badge').style.display = 'none';
-        this.scrollToBottom();
-      } else {
-        panel.classList.remove('active');
-        bubble.style.transform = '';
-        bubble.style.opacity = '';
-        bubble.style.boxShadow = '';
-      }
-    };
-
-    if (bubble) bubble.addEventListener('click', toggleChat);
-    if (closeBtn) closeBtn.addEventListener('click', toggleChat);
-
-    const form = document.getElementById('chat-input-form');
-    if (form) {
-      form.addEventListener('submit', async (e) => {
+    const placeholder = document.getElementById('chat-input-placeholder');
+    if (placeholder) {
+      placeholder.addEventListener('submit', async (e) => {
+        const form = e.target.closest('#chat-input-form');
+        if (!form) return;
+        
         e.preventDefault();
         const input = document.getElementById('chat-message-text');
         const text = input.value.trim();
@@ -171,7 +102,7 @@ class LiveChat {
       });
     }
 
-    // Event delegation para borrar mensajes
+    // Delegation for message deletion
     const container = document.getElementById('chat-messages-container');
     if (container) {
       container.addEventListener('click', async (e) => {
@@ -192,7 +123,7 @@ class LiveChat {
         .from('chat_messages')
         .select('*, profiles(username, display_name, avatar_url, is_premium)')
         .order('created_at', { ascending: false })
-        .limit(40);
+        .limit(50);
 
       if (error) throw error;
 
@@ -200,8 +131,8 @@ class LiveChat {
       this.renderMessages();
       this.scrollToBottom();
     } catch (e) {
-      console.error("LiveChat: Error al cargar mensajes", e);
-      container.innerHTML = '<p style="text-align: center; color: var(--accent-red); font-size: 0.8rem; padding: 1rem;">No se pudieron cargar los mensajes.</p>';
+      console.error("ChatLobby: Error al cargar mensajes", e);
+      container.innerHTML = '<p style="text-align: center; color: var(--accent-red); font-size: 0.9rem; padding: 2rem;">Error de conexión. No se pudieron cargar los mensajes.</p>';
     }
   }
 
@@ -210,7 +141,7 @@ class LiveChat {
     if (!container) return;
 
     if (this.messages.length === 0) {
-      container.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 0.82rem; padding: 2rem;">¡Canal vacío! Escribe el primer mensaje.</p>';
+      container.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 3rem;">El canal está en silencio. ¡Sé el primero en enviar un mensaje!</p>';
       return;
     }
 
@@ -223,7 +154,7 @@ class LiveChat {
     const avatar = profile.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(authorName)}`;
     const isMsgPremium = !!profile.is_premium;
 
-    // Sanitizar contenido para XSS
+    // Sanitizar HTML contra XSS
     const tempDiv = document.createElement('div');
     tempDiv.textContent = msg.message;
     const sanitizedMsg = tempDiv.innerHTML;
@@ -234,7 +165,7 @@ class LiveChat {
 
     const timestamp = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // Botón de borrar (solo autor del mensaje)
+    // Botón borrar si soy el autor
     const isOwn = this.currentUser && msg.user_id === this.currentUser.id;
     const deleteBtn = isOwn
       ? `<button class="chat-msg-delete-btn" data-delete-msg-id="${msg.id}" title="Borrar mensaje">
@@ -266,6 +197,44 @@ class LiveChat {
     `;
   }
 
+  async loadPremiumMecenas() {
+    const listContainer = document.getElementById('premium-rank-list');
+    if (!listContainer || !this.supabase) return;
+
+    try {
+      // Consultar usuarios que son Premium
+      const { data, error } = await this.supabase
+        .from('profiles')
+        .select('username, display_name, avatar_url, is_premium')
+        .eq('is_premium', true)
+        .limit(10);
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        listContainer.innerHTML = '<div style="text-align: center; padding: 1rem; color: var(--text-muted); font-size: 0.8rem;">Sé el primer mecenas en apoyar a CineVerse</div>';
+        return;
+      }
+
+      listContainer.innerHTML = data.map(user => {
+        const name = user.display_name || user.username || 'Mecenas';
+        const avatar = user.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+        return `
+          <div class="rank-item">
+            <img class="rank-avatar premium" src="${avatar}" alt="${name}">
+            <div class="rank-info">
+              <span class="rank-name premium">${name}</span>
+              <span class="rank-badge premium">👑 Mecenas VIP</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      console.error("ChatLobby: Error al cargar mecenas", e);
+      listContainer.innerHTML = '<div style="text-align: center; padding: 1rem; color: var(--text-muted); font-size: 0.8rem;">No se pudieron cargar mecenas</div>';
+    }
+  }
+
   async sendMessage(text) {
     if (!this.currentUser) return;
     try {
@@ -284,7 +253,7 @@ class LiveChat {
         }
       }
     } catch (e) {
-      console.error("LiveChat: Error al enviar mensaje", e);
+      console.error("ChatLobby: Error al enviar mensaje", e);
       showToast("No se pudo enviar el mensaje.", "error");
     }
   }
@@ -315,7 +284,7 @@ class LiveChat {
       this.messages = this.messages.filter(m => m.id !== msgId);
 
     } catch (e) {
-      console.error("LiveChat: Error al borrar mensaje", e);
+      console.error("ChatLobby: Error al borrar mensaje", e);
       btnEl.innerHTML = originalText;
       btnEl.disabled = false;
       showToast("No se pudo borrar el mensaje.", "error");
@@ -323,12 +292,10 @@ class LiveChat {
   }
 
   subscribeToRealtime() {
-    if (!this.supabase) {
-      console.warn('LiveChat: supabase no disponible, cancelando suscripción en tiempo real.');
-      return;
-    }
+    if (!this.supabase) return;
+
     this.channel = this.supabase
-      .channel('chat-realtime-v3')
+      .channel('chat-lobby-realtime')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'chat_messages' },
@@ -343,17 +310,18 @@ class LiveChat {
 
           newMsg.profiles = profile || {};
           this.messages.push(newMsg);
-          if (this.messages.length > 50) this.messages.shift();
+          if (this.messages.length > 80) this.messages.shift();
 
           const container = document.getElementById('chat-messages-container');
           if (container) {
             if (this.messages.length === 1) container.innerHTML = '';
+            
             const div = document.createElement('div');
             div.innerHTML = this.formatMessageHTML(newMsg);
             const msgNode = div.firstElementChild;
             container.appendChild(msgNode);
 
-            // Listener de borrado del mensaje en tiempo real
+            // Setup delete listener if own message
             const delBtn = msgNode?.querySelector('[data-delete-msg-id]');
             if (delBtn) {
               delBtn.addEventListener('click', async () => {
@@ -361,12 +329,7 @@ class LiveChat {
               });
             }
 
-            if (this.isOpen) {
-              this.scrollToBottom();
-            } else {
-              const badge = document.getElementById('chat-badge');
-              if (badge) badge.style.display = 'flex';
-            }
+            this.scrollToBottom();
           }
         }
       )
@@ -397,10 +360,6 @@ class LiveChat {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Evitar inyectar la burbuja flotante y el panel en la página dedicada de chat
-  if (window.location.pathname.includes('chat.html')) {
-    return;
-  }
-  const chat = new LiveChat();
-  chat.init();
+  const chatLobby = new ChatPageLobby();
+  chatLobby.init();
 });
