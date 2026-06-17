@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Icono y Favicon de la Web -->
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVerse — Estrenos y Próximos Lanzamientos</title>
+  <meta name="description" content="Descubre los próximos estrenos de cine y series más esperados en CineVerse.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hojas de Estilo -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/hero.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body style="padding-top: 100px;">
+
+  <!-- Transición de página -->
+  <div class="page-transition-overlay out"></div>
+
+  <main class="container">
+    
+    <!-- Título de Sección -->
+    <section class="flex flex--col flex--align-center text-center" style="margin-top: 2rem; margin-bottom: 3rem; width: 100%;">
+      <h1 style="font-family: var(--font-display); font-size: 3.5rem; letter-spacing: 1px; margin-bottom: 1rem;">
+        Próximos <span style="color: var(--accent-red)">Estrenos</span>
+      </h1>
+      <p style="color: var(--text-secondary); max-width: 600px; font-size: 1.1rem; line-height: 1.5;">
+        Entérate de las películas y series que están a punto de llegar a la pantalla. Tráileres oficiales y fechas de lanzamiento actualizadas.
+      </p>
+    </section>
+
+    <!-- Panel de Resultados (Ancho Completo para Estrenos) -->
+    <section style="width: 100%;">
+      
+      <!-- Header de Resultados -->
+      <div class="flex flex--align-center flex--justify-between" style="margin-bottom: 2rem; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 0.75rem 1.25rem; border-radius: var(--radius-md);">
+        <span id="results-counter" style="font-weight: 600; color: var(--text-secondary);">Cargando próximos estrenos...</span>
+        
+        <div class="flex flex--gap-sm">
+          <button class="btn btn--primary btn--icon" id="view-grid-btn" data-tooltip="Vista Cuadrícula" style="width: 32px; height: 32px; font-size: 0.8rem;">田</button>
+          <button class="btn btn--secondary btn--icon" id="view-list-btn" data-tooltip="Vista Lista" style="width: 32px; height: 32px; font-size: 0.8rem;">☰</button>
+        </div>
+      </div>
+
+      <!-- Grid de Estrenos -->
+      <div class="grid grid--4" id="search-results-grid"></div>
+
+      <!-- Centinela para Scroll Infinito -->
+      <div id="infinite-scroll-sentinel" style="height: 100px; width: 100%; margin-top: 2rem;"></div>
+
+      <!-- Estado Vacío -->
+      <div id="search-empty-state" style="display: none; text-align: center; padding: 5rem 2rem; background-color: var(--bg-secondary); border: 1px dashed var(--border-subtle); border-radius: var(--radius-lg);">
+        <svg style="width: 80px; height: 80px; fill: var(--text-muted); margin-bottom: 1.5rem;" viewBox="0 0 24 24">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">No hay estrenos para mostrar</h3>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer style="background-color: var(--bg-void); border-top: 1px solid var(--border-subtle); padding: 4rem 0 2rem 0; margin-top: 5rem; font-family: var(--font-ui);">
+    <div class="container text-center" style="color: var(--text-muted); font-size: 0.85rem;">
+      <p>© 2025 CINEVERSE. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/pages/estrenos.js"></script>
+  <!-- Chat en Vivo en Tiempo Real -->
+  <script type="module" src="js/chat.js"></script>
+</body>
+</html>

@@ -2,21 +2,22 @@
 
 /**
  * Optimización y Navegación Espacial (D-Pad / TV) para Smart TVs y Android TV
+ * Versión 2.0 — Rendimiento optimizado para chipsets lentos de TV
  */
 
 // Detectar si el dispositivo es una televisión mediante el UserAgent
 export function isTVDevice() {
   const ua = navigator.userAgent.toLowerCase();
-  return ua.includes('smarttv') || 
-         ua.includes('tizen') || 
-         ua.includes('webos') || 
-         ua.includes('googletv') || 
-         ua.includes('androidtv') || 
-         ua.includes('appletv') || 
-         ua.includes('roku') || 
-         ua.includes('playstation') || 
-         ua.includes('xbox') || 
-         ua.includes('nintendo') || 
+  return ua.includes('smarttv') ||
+         ua.includes('tizen') ||
+         ua.includes('webos') ||
+         ua.includes('googletv') ||
+         ua.includes('androidtv') ||
+         ua.includes('appletv') ||
+         ua.includes('roku') ||
+         ua.includes('playstation') ||
+         ua.includes('xbox') ||
+         ua.includes('nintendo') ||
          ua.includes('aftb') || // Fire TV
          ua.includes('tv');
 }
@@ -26,7 +27,7 @@ export function initTVMode() {
   const isTV = isTVDevice();
   if (isTV) {
     document.body.classList.add('tv-mode');
-    console.log("CineVerse: Modo TV activado. Desactivando efectos pesados de rendering y desenfoques.");
+    console.log('[CineVerse TV] Modo TV activado. Desactivando efectos pesados.');
   }
 
   // Hacer que los elementos interactivos dinámicos de CineVerse sean enfocables
@@ -36,60 +37,110 @@ export function initTVMode() {
   setupSpatialNavigation();
 }
 
-// Escanear periódicamente para asegurar que tarjetas y botones dinámicos tengan tabindex
+// ── Cache de elementos enfocables ─────────────────────────────────────────────
+let _focusablesCache = null;
+let _focusablesDirty = true;
+let _cacheTimeout = null;
+
+function invalidateFocusCache() {
+  _focusablesDirty = true;
+  // Debounce: reconstruir cache sólo 150ms después del último cambio DOM
+  clearTimeout(_cacheTimeout);
+  _cacheTimeout = setTimeout(() => { _focusablesCache = null; }, 150);
+}
+
+function getFocusablesInViewport() {
+  if (!_focusablesDirty && _focusablesCache) return _focusablesCache;
+
+  const all = document.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]'
+  );
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const margin = 200; // px de margen extra fuera del viewport visible
+
+  const visible = [];
+  for (let i = 0; i < all.length; i++) {
+    const el = all[i];
+    if (el === document.body) continue;
+    // Rápida comprobación de visibilidad sin reflow (style cache)
+    const style = window.getComputedStyle(el);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') continue;
+
+    const rect = el.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) continue;
+    if (rect.bottom < -margin || rect.top > vh + margin) continue;
+    if (rect.right < -margin || rect.left > vw + margin) continue;
+
+    visible.push({ el, rect });
+  }
+
+  _focusablesCache = visible;
+  _focusablesDirty = false;
+  return visible;
+}
+
+// Escanear periódicamente para asegurar que tarjetas y botones dinámicos sean enfocables
 function setupFocusableElements() {
+  const selectors = [
+    '.movie-card',
+    '.pill',
+    '.suggestion-tag',
+    '.form-checkbox-wrapper',
+    '.genre-checkbox',
+    '.suggestion-genre-btn',
+    '.carousel-section__btn',
+    '.tab-btn'
+  ];
+
   const makeFocusable = () => {
-    const selectors = [
-      '.movie-card',
-      '.pill',
-      '.suggestion-tag',
-      '.form-checkbox-wrapper',
-      '.genre-checkbox',
-      '.suggestion-genre-btn',
-      '.carousel-section__btn',
-      '.tab-btn',
-      '.btn',
-      'a'
-    ];
-    
+    invalidateFocusCache();
     document.querySelectorAll(selectors.join(',')).forEach(el => {
-      // Ignorar si ya tiene tabindex o si es un enlace/botón estándar (que son enfocables por defecto)
-      const tagName = el.tagName.toLowerCase();
-      const needsTabindex = tagName !== 'a' && tagName !== 'button' && tagName !== 'input' && tagName !== 'select' && tagName !== 'textarea';
+      const tag = el.tagName.toLowerCase();
+      const needsTabindex = tag !== 'a' && tag !== 'button' && tag !== 'input' && tag !== 'select' && tag !== 'textarea';
       if (needsTabindex && !el.hasAttribute('tabindex')) {
         el.setAttribute('tabindex', '0');
       }
     });
   };
 
-  // Ejecutar al inicio y mantener un observer de cambios en el DOM
   makeFocusable();
-  
-  const observer = new MutationObserver(makeFocusable);
+
+  // Observer con throttling para no invalidar el cache demasiado a menudo
+  let observerTimer = null;
+  const observer = new MutationObserver(() => {
+    clearTimeout(observerTimer);
+    observerTimer = setTimeout(makeFocusable, 100);
+  });
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
-// Algoritmo de navegación espacial 2D por teclado (D-Pad TV)
+// ── Algoritmo de Navegación Espacial 2D optimizado ───────────────────────────
 function setupSpatialNavigation() {
   let tvFocusActive = false;
+  let isNavigating = false; // Throttle de navegación para TVs lentas
 
   document.addEventListener('keydown', (e) => {
-    const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'];
-    if (!keys.includes(e.key)) return;
+    const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+    const isArrow = arrowKeys.includes(e.key);
+    const isEnter = e.key === 'Enter';
 
-    // Si el usuario presiona una tecla de navegación de TV, activar visuales de TV
+    if (!isArrow && !isEnter) return;
+
+    // Activar visuales de TV al primer uso del D-Pad
     if (!tvFocusActive) {
       tvFocusActive = true;
       document.body.classList.add('tv-focus-active');
     }
 
     const currentEl = document.activeElement;
-    
-    // Si Enter y hay un elemento enfocado que no es input/button/select nativo
-    if (e.key === 'Enter') {
+
+    // Manejar Enter
+    if (isEnter) {
       if (currentEl && currentEl !== document.body) {
-        const tagName = currentEl.tagName.toLowerCase();
-        if (tagName !== 'input' && tagName !== 'textarea' && tagName !== 'button' && tagName !== 'select' && tagName !== 'a') {
+        const tag = currentEl.tagName.toLowerCase();
+        if (tag !== 'input' && tag !== 'textarea' && tag !== 'button' && tag !== 'select' && tag !== 'a') {
           e.preventDefault();
           currentEl.click();
         }
@@ -97,92 +148,80 @@ function setupSpatialNavigation() {
       return;
     }
 
-    e.preventDefault(); // Evitar scroll por defecto de la página
+    e.preventDefault(); // Evitar scroll nativo de la página
 
-    // Obtener todos los elementos enfocables visibles en el DOM
-    const allFocusables = Array.from(document.querySelectorAll('a, button, input, select, textarea, [tabindex="0"]'));
-    const visibleFocusables = allFocusables.filter(el => {
-      if (el === document.body) return false;
-      const rect = el.getBoundingClientRect();
-      // Debe tener dimensiones reales y estar en pantalla
-      return rect.width > 0 && 
-             rect.height > 0 && 
-             rect.bottom >= 0 && 
-             rect.top <= window.innerHeight && 
-             rect.right >= 0 && 
-             rect.left <= window.innerWidth;
-    });
+    // Throttle: ignorar si ya estamos procesando una navegación (TVs muy lentas)
+    if (isNavigating) return;
+    isNavigating = true;
+    requestAnimationFrame(() => { isNavigating = false; });
 
-    if (visibleFocusables.length === 0) return;
+    // Obtener elementos visibles (desde cache si está fresco)
+    const candidates = getFocusablesInViewport();
+    if (candidates.length === 0) return;
 
-    // Si nada está enfocado o el foco está en el body, enfocar el primer elemento visible
-    if (!currentEl || currentEl === document.body || !visibleFocusables.includes(currentEl)) {
-      visibleFocusables[0].focus();
+    // Si nada está enfocado, enfocar el primero visible
+    const currentIdx = candidates.findIndex(c => c.el === currentEl);
+    if (currentIdx === -1) {
+      candidates[0].el.focus({ preventScroll: true });
+      scrollToElement(candidates[0].el);
       return;
     }
 
-    const currentRect = currentEl.getBoundingClientRect();
-    const currentCenter = {
-      x: currentRect.left + currentRect.width / 2,
-      y: currentRect.top + currentRect.height / 2
-    };
+    const { rect: curRect } = candidates[currentIdx];
+    const curCX = curRect.left + curRect.width / 2;
+    const curCY = curRect.top + curRect.height / 2;
 
-    let bestCandidate = null;
+    let bestEl = null;
     let bestScore = Infinity;
 
-    visibleFocusables.forEach(candidate => {
-      if (candidate === currentEl) return;
+    for (let i = 0; i < candidates.length; i++) {
+      const { el, rect } = candidates[i];
+      if (el === currentEl) continue;
 
-      const candRect = candidate.getBoundingClientRect();
-      const candCenter = {
-        x: candRect.left + candRect.width / 2,
-        y: candRect.top + candRect.height / 2
-      };
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = cx - curCX;
+      const dy = cy - curCY;
 
-      const dx = candCenter.x - currentCenter.x;
-      const dy = candCenter.y - currentCenter.y;
+      // Comprobar dirección
+      let inDir = false;
+      if (e.key === 'ArrowLeft'  && dx < -5) inDir = true;
+      if (e.key === 'ArrowRight' && dx >  5) inDir = true;
+      if (e.key === 'ArrowUp'    && dy < -5) inDir = true;
+      if (e.key === 'ArrowDown'  && dy >  5) inDir = true;
+      if (!inDir) continue;
 
-      // Verificar si el candidato está en la dirección correcta
-      let isCorrectDirection = false;
-      if (e.key === 'ArrowLeft' && dx < -5) isCorrectDirection = true;
-      if (e.key === 'ArrowRight' && dx > 5) isCorrectDirection = true;
-      if (e.key === 'ArrowUp' && dy < -5) isCorrectDirection = true;
-      if (e.key === 'ArrowDown' && dy > 5) isCorrectDirection = true;
-
-      if (!isCorrectDirection) return;
-
-      // Calcular puntuación basada en la distancia euclidiana penalizando la desviación del eje principal
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      let score = dist;
-
+      // Puntuación: preferir el eje principal, penalizar la desviación
+      let score;
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        // Penalizar fuertemente la distancia vertical para preferir la misma fila
         score = Math.abs(dx) + Math.abs(dy) * 2.5;
       } else {
-        // Penalizar fuertemente la distancia horizontal para preferir la misma columna
         score = Math.abs(dy) + Math.abs(dx) * 2.5;
       }
 
       if (score < bestScore) {
         bestScore = score;
-        bestCandidate = candidate;
-      }
-    });
-
-    if (bestCandidate) {
-      bestCandidate.focus();
-      
-      // Auto-scrollear suavemente al elemento enfocado si queda fuera del viewport
-      const bestRect = bestCandidate.getBoundingClientRect();
-      const threshold = 80; // Margen de seguridad en px
-      
-      if (bestRect.bottom > window.innerHeight - threshold) {
-        window.scrollBy({ top: (bestRect.bottom - window.innerHeight) + threshold, behavior: 'smooth' });
-      } else if (bestRect.top < threshold) {
-        window.scrollBy({ top: bestRect.top - threshold, behavior: 'smooth' });
+        bestEl = el;
       }
     }
+
+    if (bestEl) {
+      bestEl.focus({ preventScroll: true });
+      scrollToElement(bestEl);
+    }
   });
+}
+
+// Scroll instantáneo (sin smooth) para TVs — más responsivo
+function scrollToElement(el) {
+  const rect = el.getBoundingClientRect();
+  const threshold = 100;
+
+  if (rect.bottom > window.innerHeight - threshold) {
+    window.scrollBy({ top: rect.bottom - window.innerHeight + threshold, behavior: 'auto' });
+  } else if (rect.top < threshold) {
+    window.scrollBy({ top: rect.top - threshold, behavior: 'auto' });
+  }
 }
 
 // Autoejecución al cargar el script

@@ -1,0 +1,27 @@
+{
+  "name": "cineverse",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://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@github.com/rimurudesing/CINEVERSE.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/rimurudesing/CINEVERSE/issues"
+  },
+  "homepage": "https://github.com/rimurudesing/CINEVERSE#readme",
+  "dependencies": {
+    "@capacitor-community/admob": "^8.0.0",
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0"
+  }
+}

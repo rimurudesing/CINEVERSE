@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Icono y Favicon de la Web -->
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVerse — Buscador de Películas y Series</title>
+  <meta name="description" content="Busca y filtra películas y series por género, año de estreno, puntuación y popularidad en CineVerse.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hojas de Estilo -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/hero.css">
+  <link rel="stylesheet" href="css/carousel.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+</head>
+<body style="padding-top: 100px;"> <!-- Padding para navbar sticky -->
+
+  <!-- Transición de página roja -->
+  <div class="page-transition-overlay out"></div>
+
+  <main class="container">
+    
+    <!-- Sección Buscador Gigante -->
+    <section class="flex flex--col flex--align-center text-center" style="margin-top: 2rem; margin-bottom: 3rem; width: 100%;">
+      <h1 style="font-family: var(--font-display); font-size: 3.5rem; letter-spacing: 1px; margin-bottom: 1rem;">Descubre tu próxima <span style="color: var(--accent-red)">Historia</span></h1>
+      
+      <div style="position: relative; width: 100%; max-width: 700px; display: flex; align-items: center;">
+        <span style="position: absolute; left: 1.25rem; font-size: 1.5rem; color: var(--text-muted);">🔍</span>
+        <input 
+          type="text" 
+          id="search-input" 
+          class="form-input" 
+          placeholder="Busca películas, series, personas..." 
+          style="padding: 1rem 1.5rem 1rem 3.5rem; font-size: 1.15rem; border-radius: var(--radius-full); box-shadow: 0 4px 25px rgba(0,0,0,0.5);"
+        >
+        <button 
+          id="clear-search-btn" 
+          style="position: absolute; right: 1.25rem; display: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer;"
+        >
+          ✕
+        </button>
+      </div>
+    </section>
+
+    <!-- Botón Toggle de Filtros en Mobile -->
+    <div class="flex flex--justify-center" style="margin-bottom: 1rem;">
+      <button class="btn btn--secondary search-filter-toggle" id="filter-toggle-btn" style="width: 100%; display: none;">Filtros +</button>
+    </div>
+
+    <!-- Layout Dividido: Sidebar Filtros + Resultados -->
+    <div class="flex flex--gap-lg search-page" style="align-items: flex-start;">
+      
+      <!-- Panel de Filtros Lateral (Sidebar) -->
+      <aside 
+        class="search-sidebar" 
+        id="search-sidebar"
+        style="width: 300px; flex-shrink: 0; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-lg); position: sticky; top: 100px;"
+      >
+        <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--text-primary);">Filtros Avanzados</h3>
+
+        <!-- Filtro 1: Tipo -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label">Tipo de Contenido</label>
+          <div class="flex flex--wrap flex--gap-sm">
+            <button class="pill pill--active filter-type-btn" data-type="all" style="flex: 1;">Todo</button>
+            <button class="pill filter-type-btn" data-type="movie" style="flex: 1;">Cine</button>
+            <button class="pill filter-type-btn" data-type="tv" style="flex: 1;">Series</button>
+          </div>
+        </div>
+
+        <!-- Filtro 2: Ordenar -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label">Ordenar por</label>
+          <select id="filter-sort" class="form-select">
+            <option value="popularity.desc">Más popular</option>
+            <option value="vote_average.desc">Más valoradas</option>
+            <option value="primary_release_date.desc">Más nuevas</option>
+            <option value="title.ascii">Alfabético</option>
+          </select>
+        </div>
+
+        <!-- Filtro 3: Rango de Año -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <div class="flex flex--justify-between">
+            <label class="form-label">Año de Lanzamiento</label>
+            <span id="year-val" style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-red);">Todos</span>
+          </div>
+          <input type="range" id="filter-year" class="form-range" min="1970" max="2026" value="2026">
+          <div class="form-range-labels">
+            <span>1970</span>
+            <span>Todos</span>
+          </div>
+        </div>
+
+        <!-- Filtro 4: Puntuación Mínima -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <div class="flex flex--justify-between">
+            <label class="form-label">Rating Mínimo</label>
+            <span id="rating-val" style="font-family: var(--font-mono); font-weight: 700; color: var(--gold);">0.0</span>
+          </div>
+          <input type="range" id="filter-rating" class="form-range" min="0" max="10" step="0.5" value="0">
+          <div class="form-range-labels">
+            <span>0.0</span>
+            <span>10.0</span>
+          </div>
+        </div>
+
+        <!-- Filtro 5: Géneros Checkboxes -->
+        <div class="form-group" style="margin-bottom: 1.75rem;">
+          <label class="form-label">Géneros</label>
+          <div id="genres-checkboxes-container" style="max-height: 200px; overflow-y: auto; padding-right: 0.5rem;">
+            Cargando géneros...
+          </div>
+        </div>
+
+        <!-- Botones Acción -->
+        <div class="flex flex--col flex--gap-sm">
+          <button class="btn btn--primary" id="apply-filters-btn" style="width: 100%;">Aplicar Filtros</button>
+          <button class="btn btn--outline" id="clear-filters-btn" style="width: 100%;">Limpiar Todo</button>
+        </div>
+      </aside>
+
+      <!-- Panel de Resultados -->
+      <section style="flex: 1; min-width: 0;">
+        
+        <!-- Header de Resultados: Contador y Toggles de Vista -->
+        <div class="flex flex--align-center flex--justify-between" style="margin-bottom: 1.5rem; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 0.75rem 1.25rem; border-radius: var(--radius-md);">
+          <span id="results-counter" style="font-weight: 600; color: var(--text-secondary);">Escribe o filtra para buscar...</span>
+          
+          <div class="flex flex--gap-sm">
+            <button class="btn btn--primary btn--icon" id="view-grid-btn" data-tooltip="Vista Cuadrícula" style="width: 32px; height: 32px; font-size: 0.8rem;">田</button>
+            <button class="btn btn--secondary btn--icon" id="view-list-btn" data-tooltip="Vista Lista" style="width: 32px; height: 32px; font-size: 0.8rem;">☰</button>
+          </div>
+        </div>
+
+        <!-- Grids / Listado de Cards de Resultados -->
+        <div class="grid grid--4" id="search-results-grid"></div>
+
+        <!-- Centinela para Scroll Infinito -->
+        <div id="infinite-scroll-sentinel" style="height: 100px; width: 100%; margin-top: 2rem;"></div>
+
+        <!-- Sugerencias de Búsqueda (Visible cuando el campo está vacío) -->
+        <div id="search-suggestions" style="display: none; padding-top: 1rem;">
+          <!-- Búsquedas populares -->
+          <div style="margin-bottom: 3rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-secondary);">Búsquedas Populares</h3>
+            <div class="flex flex--wrap flex--gap-sm">
+              <button class="pill suggestion-tag">Avengers</button>
+              <button class="pill suggestion-tag">Breaking Bad</button>
+              <button class="pill suggestion-tag">Batman</button>
+              <button class="pill suggestion-tag">Interstellar</button>
+              <button class="pill suggestion-tag">Dark</button>
+              <button class="pill suggestion-tag">Star Wars</button>
+            </div>
+          </div>
+
+          <!-- Géneros Destacados -->
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-secondary);">Géneros Destacados</h3>
+            <div class="grid grid--3" style="gap: 1rem;">
+              <button class="btn btn--secondary suggestion-genre-btn" data-genre-id="28" style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://image.tmdb.org/t/p/w300/6MK23AhwG7XtUKn04Jv5Tfh4n5t.jpg'); background-size: cover; background-position: center; height: 100px; border-radius: var(--radius-md); font-family: var(--font-display); font-size: 1.5rem; letter-spacing: 1px;">Acción</button>
+              <button class="btn btn--secondary suggestion-genre-btn" data-genre-id="27" style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://image.tmdb.org/t/p/w300/o7n7nC5Y2V612S6WfD1WjZ6o724.jpg'); background-size: cover; background-position: center; height: 100px; border-radius: var(--radius-md); font-family: var(--font-display); font-size: 1.5rem; letter-spacing: 1px;">Terror</button>
+              <button class="btn btn--secondary suggestion-genre-btn" data-genre-id="878" style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://image.tmdb.org/t/p/w300/rAiwTzK54H9n9w3oR8K8H7qD2oW.jpg'); background-size: cover; background-position: center; height: 100px; border-radius: var(--radius-md); font-family: var(--font-display); font-size: 1.5rem; letter-spacing: 1px;">Ciencia Ficción</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado Vacío (Empty State) -->
+        <div 
+          id="search-empty-state" 
+          style="display: none; text-align: center; padding: 5rem 2rem; background-color: var(--bg-secondary); border: 1px dashed var(--border-subtle); border-radius: var(--radius-lg);"
+        >
+          <svg style="width: 80px; height: 80px; fill: var(--text-muted); margin-bottom: 1.5rem;" viewBox="0 0 24 24">
+            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+          </svg>
+          <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">No se encontraron resultados</h3>
+          <p style="color: var(--text-secondary); max-width: 400px; margin: 0 auto 1.5rem auto;">Intenta buscar otros términos de películas, series o ajusta los rangos del filtro.</p>
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+  <footer style="background-color: var(--bg-void); border-top: 1px solid var(--border-subtle); padding: 4rem 0 2rem 0; margin-top: 5rem; font-family: var(--font-ui);">
+    <div class="container text-center" style="color: var(--text-muted); font-size: 0.85rem;">
+      <p>© 2025 CINEVERSE. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/pages/search.js"></script>
+  <!-- Chat en Vivo en Tiempo Real -->
+  <script type="module" src="js/chat.js"></script>
+</body>
+</html>

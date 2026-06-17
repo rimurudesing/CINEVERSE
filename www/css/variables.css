@@ -1,0 +1,41 @@
+/* ═══ cineverse/css/variables.css ═══ */
+
+:root {
+  /* Paleta de Colores (Negro & Rojo - Inmutable) */
+  --bg-void:          #050505;    /* Fondo absoluto */
+  --bg-primary:       #0a0a0a;    /* Fondo principal */
+  --bg-secondary:     #111111;    /* Tarjetas */
+  --bg-elevated:      #181818;    /* Modales, dropdowns */
+  --bg-overlay:       #1f1f1f;    /* Navbar scrolled */
+  --accent-red:       #E50914;    /* Rojo principal */
+  --accent-crimson:   #C1121F;    /* Hover rojo */
+  --accent-ember:     #FF2D2D;    /* Glow, badges activos */
+  --accent-dark-red:  #8B0000;    /* Sombras rojas */
+  --gold:             #F5C518;    /* Estrellas/ratings (IMDb style) */
+  
+  --text-primary:     #FFFFFF;
+  --text-secondary:   #B0B0B0;
+  --text-muted:       #555555;
+  
+  --border-subtle:    #1e1e1e;
+  --border-red:       rgba(229, 9, 20, 0.4);
+  --glow-red:         rgba(229, 9, 20, 0.35);
+  --glow-red-intense: rgba(229, 9, 20, 0.7);
+
+  /* Radios de Borde */
+  --radius-sm:        6px;
+  --radius-md:        12px;
+  --radius-lg:        20px;
+  --radius-full:      9999px;
+
+  /* Transiciones */
+  --transition-fast:  150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-med:   300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow:  500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Tipografía */
+  --font-display:     'Bebas Neue', sans-serif;     /* Títulos gigantes, logo, hero */
+  --font-ui:          'Outfit', sans-serif;         /* Navegación, etiquetas, botones */
+  --font-body:        'Crimson Pro', serif;         /* Descripciones, párrafos */
+  --font-mono:        'JetBrains Mono', monospace;  /* Scores, códigos, badges numéricos */
+}
