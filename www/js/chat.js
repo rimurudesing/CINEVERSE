@@ -56,7 +56,9 @@ class LiveChat {
     bubble.className = 'chat-bubble';
     bubble.innerHTML = `
       <div class="chat-bubble-inner">
-        <span>💬</span>
+        <svg viewBox="0 0 24 24">
+          <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+        </svg>
         <span id="chat-badge" class="chat-badge">!</span>
       </div>
     `;
@@ -71,8 +73,11 @@ class LiveChat {
       <!-- Cabecera del chat -->
       <div class="chat-header">
         <div class="chat-header-title">
-          <span class="chat-status-dot"></span>
-          <h3>CineVerse Chat en Vivo</h3>
+          <div class="chat-header-row">
+            <span class="chat-status-dot"></span>
+            <h3>Chat en Vivo</h3>
+          </div>
+          <span class="chat-header-subtitle">Canal Público Global</span>
         </div>
         <button id="chat-close-btn" class="chat-close-btn">✕</button>
       </div>
@@ -108,7 +113,7 @@ class LiveChat {
           <div class="chat-input-form">
             <input type="text" disabled placeholder="Solo lectura para usuarios Free..." class="chat-input-text">
             <button disabled class="chat-send-btn">
-              <span style="font-size: 0.9rem; filter: grayscale(100%);">🚀</span>
+              <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
           </div>
           <div class="chat-premium-promo">
@@ -124,7 +129,7 @@ class LiveChat {
       <form id="chat-input-form" class="chat-input-form">
         <input type="text" id="chat-message-text" placeholder="Escribe un mensaje (máx 150 car)..." maxlength="150" required class="chat-input-text">
         <button type="submit" id="chat-send-btn" class="chat-send-btn">
-          <span style="font-size: 0.9rem;">🚀</span>
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
       </form>
     `;
@@ -232,12 +237,16 @@ class LiveChat {
     // Botón de borrar (solo autor del mensaje)
     const isOwn = this.currentUser && msg.user_id === this.currentUser.id;
     const deleteBtn = isOwn
-      ? `<button class="chat-msg-delete-btn" data-delete-msg-id="${msg.id}" title="Borrar mensaje">🗑️</button>`
+      ? `<button class="chat-msg-delete-btn" data-delete-msg-id="${msg.id}" title="Borrar mensaje">
+          <svg style="width:13px; height:13px; fill:currentColor;" viewBox="0 0 24 24">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
+         </button>`
       : '';
 
     return `
-      <div class="chat-msg" data-msg-id="${msg.id}">
-        <img class="chat-avatar" src="${avatar}" alt="${authorName}">
+      <div class="chat-msg ${isOwn ? 'chat-msg--own' : ''}" data-msg-id="${msg.id}">
+        <img class="chat-avatar ${isMsgPremium ? 'premium' : ''}" src="${avatar}" alt="${authorName}">
         <div class="chat-msg-body">
           <div class="chat-msg-header">
             <div class="chat-msg-author-group">
@@ -249,7 +258,7 @@ class LiveChat {
               ${deleteBtn}
             </div>
           </div>
-          <div class="chat-msg-bubble">
+          <div class="chat-msg-bubble ${isMsgPremium ? 'premium-bubble' : ''}">
             ${sanitizedMsg}
           </div>
         </div>
