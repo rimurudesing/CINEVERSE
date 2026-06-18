@@ -1,78 +1,71 @@
 /* ═══ cineverse/css/ads.css ═══ */
 
-/* Contenedores de Anuncios Web (Leaderboards y Banners) */
-.cv-ad-banner {
-  margin: 2.5rem auto;
-  max-width: 728px;
+/* Contenedor principal de Banners Adsterra */
+.adsterra-banner {
+  margin: 2rem auto;
   width: 100%;
-  min-height: 90px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px dashed rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-sm);
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  position: relative;
+  align-items: center;
+  min-height: 50px;
   overflow: hidden;
-  padding: 10px;
-  transition: all 0.3s ease;
+  z-index: 2;
+  position: relative;
 }
 
-.cv-ad-banner:hover {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(229, 9, 20, 0.35);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+/* Mostrar banner de 728x90 en pantallas grandes */
+.adsterra-banner--desktop {
+  display: block;
+  min-width: 728px;
+  min-height: 90px;
 }
 
-.cv-ad-label {
-  position: absolute;
-  top: 3px;
-  right: 8px;
-  font-size: 0.62rem;
+/* Ocultar banner de 320x50 en pantallas grandes */
+.adsterra-banner--mobile {
+  display: none;
+  min-width: 320px;
+  min-height: 50px;
+}
+
+/* Contenedor de Anuncios Nativos */
+.adsterra-native-container {
+  margin: 3rem auto;
+  max-width: 1100px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  z-index: 2;
+  position: relative;
+}
+
+.adsterra-native-label {
+  font-size: 0.65rem;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  display: block;
   font-family: var(--font-ui);
 }
 
-.cv-ad-placeholder-text {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-family: var(--font-ui);
-  text-align: center;
-  letter-spacing: 0.5px;
-}
-
-.cv-ad-placeholder-subtext {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  font-family: var(--font-ui);
-  margin-top: 2px;
-  text-align: center;
-}
-
-/* Banner de anuncios para reproductor (watch.html) */
-.cv-ad-player-banner {
-  margin: 1.5rem auto;
-  max-width: 960px;
-  width: 100%;
-  min-height: 80px;
-}
-
-/* Responsive Ads */
+/* Responsivo para móviles y tablets */
 @media (max-width: 768px) {
-  .cv-ad-banner {
-    max-width: 320px;
-    min-height: 50px;
-    padding: 6px;
+  .adsterra-banner {
     margin: 1.5rem auto;
   }
-  .cv-ad-placeholder-text {
-    font-size: 0.72rem;
+  
+  .adsterra-banner--desktop {
+    display: none !important;
   }
-  .cv-ad-placeholder-subtext {
-    font-size: 0.62rem;
+  
+  .adsterra-banner--mobile {
+    display: block !important;
+  }
+
+  .adsterra-native-container {
+    padding: 1rem;
+    margin: 2rem auto;
   }
 }
