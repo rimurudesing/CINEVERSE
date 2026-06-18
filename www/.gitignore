@@ -41,3 +41,7 @@ logs/
 # Archivos temporales
 *.tmp
 *.temp
+
+# Ignorar el APK compilado para evitar inflar el tamaño de subida en Git
+CineVerse-debug.apk
+www/CineVerse-debug.apk

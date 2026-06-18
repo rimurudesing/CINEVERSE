@@ -58,6 +58,7 @@ export function renderNavbar() {
         <a href="series.html" class="navbar__link" data-link="tv">Series</a>
         <a href="estrenos.html" class="navbar__link" data-link="upcoming">Estrenos</a>
         <a href="chat.html" class="navbar__link" data-link="chat">Chat</a>
+        <a href="descargar.html" class="navbar__link" data-link="download">Descargar App</a>
         <a href="perfil.html" class="navbar__link" data-link="profile">Perfil</a>
       </nav>
       
@@ -83,6 +84,7 @@ export function renderNavbar() {
       <a href="series.html" class="navbar__mobile-link" data-link="tv">Series</a>
       <a href="estrenos.html" class="navbar__mobile-link" data-link="upcoming">Estrenos</a>
       <a href="chat.html" class="navbar__mobile-link" data-link="chat">Chat</a>
+      <a href="descargar.html" class="navbar__mobile-link" data-link="download">Descargar App</a>
       <a href="perfil.html" class="navbar__mobile-link" data-link="profile">Perfil</a>
     </div>
   `;
@@ -251,6 +253,8 @@ function highlightActiveLink() {
     activeTab = 'profile';
   } else if (currentPath.includes('chat.html')) {
     activeTab = 'chat';
+  } else if (currentPath.includes('descargar.html')) {
+    activeTab = 'download';
   } else if (currentPath.includes('login.html')) {
     activeTab = 'login';
   }
