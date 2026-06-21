@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Icono y Favicon -->
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVerse — Buscador Universal</title>
+  <meta name="description" content="Busca películas, series y todo el catálogo de CineVerse. Resultados en tiempo real con filtros avanzados.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- CSS Global -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/ads.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <style>
+    /* ══════════════════════════════════════════════
+       BUSCADOR DEDICADO — CineVerse Search Page
+    ══════════════════════════════════════════════ */
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-void);
+      overflow-x: hidden;
+    }
+
+    /* ── Fondo animado ── */
+    .search-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .search-bg__orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0;
+      animation: orbFloat 8s ease-in-out infinite;
+    }
+
+    .search-bg__orb--1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(229,9,20,0.18) 0%, transparent 70%);
+      top: -200px; left: -150px;
+      animation-delay: 0s;
+    }
+
+    .search-bg__orb--2 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
+      bottom: -150px; right: -100px;
+      animation-delay: 3s;
+    }
+
+    .search-bg__orb--3 {
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+      top: 40%; left: 50%;
+      transform: translateX(-50%);
+      animation-delay: 6s;
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { opacity: 0.6; transform: translateY(0px) scale(1); }
+      50%       { opacity: 1;   transform: translateY(-30px) scale(1.05); }
+    }
+
+    /* ── Contenedor principal ── */
+    .search-page-wrap {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      padding-top: 100px;
+    }
+
+    /* ── Hero del buscador ── */
+    .search-hero {
+      text-align: center;
+      padding: 3rem 1.5rem 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .search-hero__label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-red);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      background: rgba(229,9,20,0.08);
+      border: 1px solid rgba(229,9,20,0.2);
+      border-radius: var(--radius-full);
+      padding: 0.35rem 1rem;
+      margin-bottom: 1.5rem;
+      animation: fadeInDown 0.5s ease forwards;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .search-hero__title {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      line-height: 0.9;
+      letter-spacing: 2px;
+      color: #fff;
+      margin-bottom: 1.5rem;
+      animation: fadeInDown 0.5s ease 0.1s both;
+    }
+
+    .search-hero__title span {
+      color: var(--accent-red);
+      display: block;
+    }
+
+    .search-hero__subtitle {
+      font-family: var(--font-ui);
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 500px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.6;
+      animation: fadeInDown 0.5s ease 0.2s both;
+    }
+
+    /* ── Caja de búsqueda principal ── */
+    .search-box {
+      max-width: 720px;
+      margin: 0 auto;
+      animation: fadeInDown 0.5s ease 0.3s both;
+    }
+
+    .search-box__inner {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-full);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+
+    .search-box__inner:focus-within {
+      border-color: var(--accent-red);
+      background: rgba(255,255,255,0.07);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 4px rgba(229,9,20,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
+      transform: translateY(-2px);
+    }
+
+    .search-box__icon {
+      position: absolute;
+      left: 1.4rem;
+      font-size: 1.3rem;
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: color 0.2s;
+    }
+
+    .search-box__inner:focus-within .search-box__icon {
+      color: var(--accent-red);
+    }
+
+    .search-box__input {
+      width: 100%;
+      background: none;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 1.15rem;
+      font-weight: 500;
+      padding: 1.1rem 1.4rem 1.1rem 3.5rem;
+      caret-color: var(--accent-red);
+    }
+
+    .search-box__input::placeholder {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .search-box__clear {
+      position: absolute;
+      right: 5rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0.4rem;
+      border-radius: 50%;
+      display: none;
+      transition: all 0.2s;
+    }
+
+    .search-box__clear:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+
+    .search-box__clear.visible {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .search-box__btn {
+      position: absolute;
+      right: 0.4rem;
+      background: var(--accent-red);
+      border: none;
+      border-radius: var(--radius-full);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.7rem 1.4rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .search-box__btn:hover {
+      background: #ef4444;
+      transform: scale(1.03);
+    }
+
+    /* ── Filtros de tipo ── */
+    .search-filters {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin: 1.5rem auto;
+      max-width: 720px;
+      animation: fadeInDown 0.5s ease 0.4s both;
+    }
+
+    .filter-chip {
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.5rem 1.1rem;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .filter-chip:hover {
+      border-color: rgba(229,9,20,0.3);
+      color: #fff;
+      background: rgba(229,9,20,0.06);
+    }
+
+    .filter-chip.active {
+      background: var(--accent-red);
+      border-color: var(--accent-red);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(229,9,20,0.3);
+    }
+
+    /* ── Indicador de carga / estado ── */
+    .search-status {
+      text-align: center;
+      padding: 0.75rem;
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      min-height: 2.5rem;
+    }
+
+    .search-status .count {
+      color: var(--accent-red);
+      font-weight: 700;
+    }
+
+    /* ── Barra de progreso animada ── */
+    .search-progress {
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-red), #ef4444, #f97316, var(--accent-red));
+      background-size: 200% 100%;
+      border-radius: 2px;
+      max-width: 720px;
+      margin: 0 auto 1rem;
+      display: none;
+      animation: progressSlide 1.2s linear infinite;
+    }
+
+    .search-progress.visible {
+      display: block;
+    }
+
+    @keyframes progressSlide {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ── Grid de resultados ── */
+    .search-results-section {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 1.5rem 5rem;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* ── Card de resultado ── */
+    .result-card {
+      position: relative;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+      animation: cardIn 0.4s ease both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: scale(0.92) translateY(10px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .result-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      border-color: rgba(229,9,20,0.35);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 0 1px rgba(229,9,20,0.15);
+    }
+
+    .result-card__poster {
+      width: 100%;
+      aspect-ratio: 2/3;
+      object-fit: cover;
+      display: block;
+      background: var(--bg-secondary);
+      transition: transform 0.4s ease;
+    }
+
+    .result-card:hover .result-card__poster {
+      transform: scale(1.04);
+    }
+
+    .result-card__overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 1rem;
+      gap: 0.5rem;
+    }
+
+    .result-card:hover .result-card__overlay {
+      opacity: 1;
+    }
+
+    .result-card__info {
+      padding: 0.8rem;
+    }
+
+    .result-card__title {
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 0.3rem;
+    }
+
+    .result-card__meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .result-card__type {
+      background: var(--accent-red);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+    }
+
+    .result-card__rating {
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .result-card__play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      width: 48px;
+      height: 48px;
+      background: rgba(229,9,20,0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.25s;
+      backdrop-filter: blur(4px);
+    }
+
+    .result-card:hover .result-card__play {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* ── Estado vacío ── */
+    .search-empty {
+      text-align: center;
+      padding: 5rem 2rem;
+      display: none;
+    }
+
+    .search-empty.visible {
+      display: block;
+    }
+
+    .search-empty__icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      display: block;
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .search-empty__title {
+      font-family: var(--font-ui);
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .search-empty__text {
+      color: var(--text-secondary);
+      font-family: var(--font-ui);
+      max-width: 400px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Sugerencias iniciales ── */
+    .search-suggestions {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem;
+      animation: fadeInDown 0.5s ease 0.5s both;
+    }
+
+    .suggestions-title {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .suggestions-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: center;
+    }
+
+    .suggestion-tag {
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-full);
+      padding: 0.5rem 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .suggestion-tag:hover {
+      background: rgba(229,9,20,0.1);
+      border-color: rgba(229,9,20,0.3);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    /* ── Géneros visuales ── */
+    .genre-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+
+    .genre-card {
+      position: relative;
+      height: 80px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: all 0.25s;
+    }
+
+    .genre-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      border-color: rgba(229,9,20,0.3);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .genre-card__bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.4);
+      transition: filter 0.3s;
+    }
+
+    .genre-card:hover .genre-card__bg {
+      filter: brightness(0.55);
+    }
+
+    .genre-card__name {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    }
+
+    /* ── Load more ── */
+    .load-more-wrap {
+      text-align: center;
+      padding: 2rem 0 1rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .search-hero__title { font-size: 3rem; }
+      .search-box__btn { display: none; }
+      .results-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem; }
+      .genre-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    }
+
+    @media (max-width: 480px) {
+      .results-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Transición de página -->
+  <div class="page-transition-overlay out"></div>
+
+  <!-- Fondo animado con orbes -->
+  <div class="search-bg">
+    <div class="search-bg__orb search-bg__orb--1"></div>
+    <div class="search-bg__orb search-bg__orb--2"></div>
+    <div class="search-bg__orb search-bg__orb--3"></div>
+  </div>
+
+  <div class="search-page-wrap">
+
+    <!-- ── Hero Buscador ── -->
+    <section class="search-hero">
+      <div class="search-hero__label">🎬 Buscador Universal</div>
+      <h1 class="search-hero__title">
+        Encuentra tu próxima
+        <span>Historia</span>
+      </h1>
+      <p class="search-hero__subtitle">
+        Millones de títulos al alcance de tu búsqueda. Películas, series y mucho más.
+      </p>
+
+      <!-- Input Principal -->
+      <div class="search-box" id="search-box">
+        <div class="search-box__inner">
+          <span class="search-box__icon">🔍</span>
+          <input
+            type="text"
+            id="main-search-input"
+            class="search-box__input"
+            placeholder="Ej: Juego de Tronos, Christopher Nolan..."
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          >
+          <button class="search-box__clear" id="clear-btn" title="Limpiar">✕</button>
+          <button class="search-box__btn" id="search-btn">Buscar →</button>
+        </div>
+      </div>
+
+      <!-- Barra de progreso de carga -->
+      <div class="search-progress" id="search-progress"></div>
+
+      <!-- Chips de filtro -->
+      <div class="search-filters">
+        <button class="filter-chip active" data-type="all">🌐 Todo</button>
+        <button class="filter-chip" data-type="movie">🎬 Películas</button>
+        <button class="filter-chip" data-type="tv">📺 Series</button>
+      </div>
+
+      <!-- Estado de resultados -->
+      <div class="search-status" id="search-status"></div>
+    </section>
+
+    <!-- Anuncio Adsterra -->
+    <div style="max-width: 800px; margin: 0 auto; padding: 0 1.5rem;">
+      <div class="adsterra-banner adsterra-banner--desktop">
+        <script>
+          atOptions = { 'key': '1e641c652913ad7208ae96f454ffed02', 'format': 'iframe', 'height': 90, 'width': 728, 'params': {} };
+        </script>
+        <script src="https://www.highperformanceformat.com/1e641c652913ad7208ae96f454ffed02/invoke.js"></script>
+      </div>
+      <div class="adsterra-banner adsterra-banner--mobile">
+        <script>
+          atOptions = { 'key': '0fb10f90384450b9db33fa72a94fa189', 'format': 'iframe', 'height': 50, 'width': 320, 'params': {} };
+        </script>
+        <script src="https://www.highperformanceformat.com/0fb10f90384450b9db33fa72a94fa189/invoke.js"></script>
+      </div>
+    </div>
+
+    <!-- ── Sugerencias (estado inicial, sin búsqueda) ── -->
+    <section class="search-suggestions" id="suggestions-section">
+      <p class="suggestions-title">🔥 Búsquedas populares</p>
+      <div class="suggestions-tags">
+        <button class="suggestion-tag" data-query="Avengers">Avengers</button>
+        <button class="suggestion-tag" data-query="Breaking Bad">Breaking Bad</button>
+        <button class="suggestion-tag" data-query="Batman">Batman</button>
+        <button class="suggestion-tag" data-query="Interstellar">Interstellar</button>
+        <button class="suggestion-tag" data-query="Game of Thrones">Game of Thrones</button>
+        <button class="suggestion-tag" data-query="Dark">Dark</button>
+        <button class="suggestion-tag" data-query="The Office">The Office</button>
+        <button class="suggestion-tag" data-query="Star Wars">Star Wars</button>
+        <button class="suggestion-tag" data-query="Christopher Nolan">Christopher Nolan</button>
+        <button class="suggestion-tag" data-query="Harry Potter">Harry Potter</button>
+      </div>
+
+      <!-- Géneros -->
+      <p class="suggestions-title" style="margin-top: 2.5rem;">🎭 Explorar por género</p>
+      <div class="genre-grid" id="genre-grid">
+        <!-- Cargado por JS -->
+      </div>
+    </section>
+
+    <!-- ── Resultados ── -->
+    <section class="search-results-section" id="results-section" style="display:none;">
+      <div class="results-grid" id="results-grid"></div>
+      <div class="search-empty" id="search-empty">
+        <span class="search-empty__icon">🎭</span>
+        <h2 class="search-empty__title">Sin resultados</h2>
+        <p class="search-empty__text">No encontramos nada para esa búsqueda. Prueba con otro término o explora los géneros.</p>
+      </div>
+      <div class="load-more-wrap">
+        <button class="btn btn--outline-red" id="load-more-btn" style="display:none;">Cargar más resultados</button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/components/navbar.js"></script>
+  <script type="module" src="js/chat.js"></script>
+  <script type="module">
+    import { api } from './js/api.js';
+    import { navigateTo, buildTMDBImageURL, formatYear, formatRating, debounce } from './js/utils.js';
+
+    // ── Estado ───────────────────────────────────────────────
+    let currentQuery   = '';
+    let currentType    = 'all';
+    let currentPage    = 1;
+    let totalPages     = 1;
+    let isLoading      = false;
+
+    // ── DOM ───────────────────────────────────────────────────
+    const inputEl         = document.getElementById('main-search-input');
+    const clearBtn        = document.getElementById('clear-btn');
+    const searchBtn       = document.getElementById('search-btn');
+    const progressEl      = document.getElementById('search-progress');
+    const statusEl        = document.getElementById('search-status');
+    const suggestionsEl   = document.getElementById('suggestions-section');
+    const resultsSection  = document.getElementById('results-section');
+    const resultsGrid     = document.getElementById('results-grid');
+    const emptyEl         = document.getElementById('search-empty');
+    const loadMoreBtn     = document.getElementById('load-more-btn');
+    const filterChips     = document.querySelectorAll('.filter-chip');
+    const genreGrid       = document.getElementById('genre-grid');
+
+    // ── Géneros visuales ──────────────────────────────────────
+    const GENRES = [
+      { id: 28,  name: 'Acción',         emoji: '💥', type: 'movie' },
+      { id: 35,  name: 'Comedia',        emoji: '😂', type: 'movie' },
+      { id: 27,  name: 'Terror',         emoji: '👻', type: 'movie' },
+      { id: 878, name: 'Sci-Fi',         emoji: '🚀', type: 'movie' },
+      { id: 10749,name: 'Romance',       emoji: '💘', type: 'movie' },
+      { id: 53,  name: 'Thriller',       emoji: '🔪', type: 'movie' },
+      { id: 16,  name: 'Animación',      emoji: '🎨', type: 'movie' },
+      { id: 18,  name: 'Drama',          emoji: '🎭', type: 'movie' },
+      { id: 12,  name: 'Aventura',       emoji: '🗺️', type: 'movie' },
+      { id: 80,  name: 'Crimen',         emoji: '🕵️', type: 'movie' },
+    ];
+
+    const GENRE_COLORS = [
+      'linear-gradient(135deg,#1a1a2e,#16213e)',
+      'linear-gradient(135deg,#2d1b69,#11998e)',
+      'linear-gradient(135deg,#8b0000,#1a0000)',
+      'linear-gradient(135deg,#0f3460,#533483)',
+      'linear-gradient(135deg,#4a0e8f,#e91e8c)',
+      'linear-gradient(135deg,#1a1a1a,#4a1942)',
+      'linear-gradient(135deg,#004d40,#1b5e20)',
+      'linear-gradient(135deg,#37003c,#004d7a)',
+      'linear-gradient(135deg,#b71c1c,#7b1fa2)',
+      'linear-gradient(135deg,#212121,#bf360c)',
+    ];
+
+    function renderGenres() {
+      genreGrid.innerHTML = GENRES.map((g, i) => `
+        <button class="genre-card" data-genre-id="${g.id}" data-genre-name="${g.name}" data-genre-type="${g.type}"
+          style="background:${GENRE_COLORS[i]};">
+          <div class="genre-card__name">${g.emoji} ${g.name}</div>
+        </button>
+      `).join('');
+
+      genreGrid.querySelectorAll('.genre-card').forEach(card => {
+        card.addEventListener('click', () => {
+          // Navegar a peliculas o series filtrando por género
+          const gType = card.dataset.genreType;
+          const gId   = card.dataset.genreId;
+          navigateTo(`${gType === 'movie' ? 'peliculas' : 'series'}.html`, { genre: gId });
+        });
+      });
+    }
+
+    // ── Leer query de la URL al cargar ───────────────────────
+    function initFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get('q') || '';
+      const type = params.get('type') || '';
+
+      if (type === 'movie' || type === 'tv') {
+        currentType = type;
+        // Actualizar chips de filtro
+        filterChips.forEach(chip => {
+          if (chip.dataset.type === type) chip.classList.add('active');
+          else chip.classList.remove('active');
+        });
+      }
+
+      if (q) {
+        inputEl.value = q;
+        clearBtn.classList.add('visible');
+        doSearch(q, 1, true);
+      }
+    }
+
+    // ── Mostrar / ocultar progreso ───────────────────────────
+    function setLoading(state) {
+      isLoading = state;
+      progressEl.classList.toggle('visible', state);
+    }
+
+    // ── Construir tarjeta de resultado ───────────────────────
+    function buildCard(item) {
+      const title  = item.title || item.name || 'Sin título';
+      const type   = item.media_type === 'tv' ? 'Serie' : 'Película';
+      const date   = item.release_date || item.first_air_date || '';
+      const year   = date ? formatYear(date) : '';
+      const rating = item.vote_average ? item.vote_average.toFixed(1) : '—';
+      const poster = item.poster_path
+        ? buildTMDBImageURL(item.poster_path, 'w342')
+        : `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(title)}&backgroundColor=1a1a2e`;
+      const detailPage = item.media_type === 'tv' ? 'serie' : 'movie';
+
+      const card = document.createElement('a');
+      card.href = `info.html?id=${item.id}&type=${item.media_type}`;
+      card.className = 'result-card';
+
+      card.innerHTML = `
+        <img class="result-card__poster" src="${poster}" alt="${title}" loading="lazy">
+        <div class="result-card__overlay">
+          <a href="${detailPage}.html?id=${item.id}" class="result-card__play" title="Ver ahora">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+          </a>
+        </div>
+        <div class="result-card__info">
+          <div class="result-card__title" title="${title}">${title}</div>
+          <div class="result-card__meta">
+            <span class="result-card__type">${type}</span>
+            <span>${year}</span>
+            <span class="result-card__rating">★ ${rating}</span>
+          </div>
+        </div>
+      `;
+      return card;
+    }
+
+    // ── Búsqueda principal ────────────────────────────────────
+    async function doSearch(query, page = 1, reset = true) {
+      if (isLoading || !query.trim()) return;
+
+      currentQuery = query.trim();
+      currentPage  = page;
+      setLoading(true);
+
+      // Ocultar sugerencias, mostrar resultados
+      suggestionsEl.style.display = 'none';
+      resultsSection.style.display = 'block';
+      emptyEl.classList.remove('visible');
+      loadMoreBtn.style.display = 'none';
+
+      if (reset) {
+        resultsGrid.innerHTML = '';
+        statusEl.textContent = 'Buscando...';
+      }
+
+      try {
+        let data;
+        if (currentType === 'movie') {
+          data = await api.searchMovies(currentQuery, page);
+        } else if (currentType === 'tv') {
+          data = await api.searchTV(currentQuery, page);
+          // Normalizar: añadir media_type
+          if (data && data.results) {
+            data.results = data.results.map(r => ({ ...r, media_type: 'tv' }));
+          }
+        } else {
+          data = await api.searchMulti(currentQuery, page);
+          // Filtrar solo movie/tv
+          if (data && data.results) {
+            data.results = data.results.filter(r => r.media_type === 'movie' || r.media_type === 'tv');
+          }
+        }
+
+        const results = data?.results || [];
+        totalPages = data?.total_pages || 1;
+        const total = data?.total_results || 0;
+
+        if (results.length === 0 && page === 1) {
+          emptyEl.classList.add('visible');
+          statusEl.innerHTML = `Sin resultados para <strong>"${currentQuery}"</strong>`;
+        } else {
+          // Añadir cards con animación escalonada
+          results.forEach((item, i) => {
+            const card = buildCard(item);
+            card.style.animationDelay = `${i * 0.04}s`;
+            resultsGrid.appendChild(card);
+          });
+
+          const shown = resultsGrid.querySelectorAll('.result-card').length;
+          statusEl.innerHTML = `<span class="count">${shown.toLocaleString()}</span> de <span class="count">${total.toLocaleString()}</span> resultados para "<strong>${currentQuery}</strong>"`;
+
+          if (currentPage < totalPages) {
+            loadMoreBtn.style.display = 'inline-flex';
+          }
+        }
+      } catch (err) {
+        console.error('[Buscar] Error:', err);
+        statusEl.textContent = 'Error al buscar. Intenta de nuevo.';
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // ── Debounce para búsqueda en tiempo real ─────────────────
+    const debouncedSearch = debounce((q) => {
+      if (q.length >= 2) doSearch(q, 1, true);
+      else if (q.length === 0) resetToSuggestions();
+    }, 350);
+
+    function resetToSuggestions() {
+      suggestionsEl.style.display = 'block';
+      resultsSection.style.display = 'none';
+      statusEl.textContent = '';
+    }
+
+    // ── Eventos ───────────────────────────────────────────────
+    inputEl.addEventListener('input', e => {
+      const val = e.target.value;
+      clearBtn.classList.toggle('visible', val.length > 0);
+      debouncedSearch(val.trim());
+    });
+
+    inputEl.addEventListener('keypress', e => {
+      if (e.key === 'Enter' && inputEl.value.trim()) {
+        doSearch(inputEl.value.trim(), 1, true);
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      inputEl.value = '';
+      clearBtn.classList.remove('visible');
+      inputEl.focus();
+      resetToSuggestions();
+    });
+
+    searchBtn.addEventListener('click', () => {
+      if (inputEl.value.trim()) doSearch(inputEl.value.trim(), 1, true);
+    });
+
+    // Filtros de tipo
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        filterChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentType = chip.dataset.type;
+        if (currentQuery) doSearch(currentQuery, 1, true);
+      });
+    });
+
+    // Tags de sugerencia
+    document.querySelectorAll('.suggestion-tag').forEach(tag => {
+      tag.addEventListener('click', () => {
+        const q = tag.dataset.query;
+        inputEl.value = q;
+        clearBtn.classList.add('visible');
+        doSearch(q, 1, true);
+      });
+    });
+
+    // Cargar más
+    loadMoreBtn.addEventListener('click', () => {
+      doSearch(currentQuery, currentPage + 1, false);
+    });
+
+    // ── Init ─────────────────────────────────────────────────
+    renderGenres();
+    initFromURL();
+
+    // Autofocus en el input
+    setTimeout(() => inputEl.focus(), 400);
+  </script>
+
+</body>
+</html>

@@ -35,8 +35,27 @@ class SeriesPageController {
     // Cargar checkboxes de géneros de TV/Series
     await this.loadGenres();
 
+    // Leer parámetros de la URL (por ejemplo, género)
+    this.readURLParams();
+
     // Ejecutar discover inicial
     this.triggerSearch(true);
+  }
+
+  readURLParams() {
+    const params = new URLSearchParams(window.location.search);
+    const genre = params.get('genre');
+    if (genre) {
+      const id = parseInt(genre);
+      if (!isNaN(id)) {
+        this.filters.genres = [id];
+        // También marcar el checkbox correspondiente
+        const cb = document.querySelector(`.genre-checkbox[value="${id}"]`);
+        if (cb) {
+          cb.checked = true;
+        }
+      }
+    }
   }
 
   cacheDOM() {

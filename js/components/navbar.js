@@ -63,11 +63,8 @@ export function renderNavbar() {
       </nav>
       
       <div class="navbar__actions">
-        <div class="navbar__search-wrapper">
-          <button class="navbar__search-btn">🔍</button>
-          <input type="text" class="navbar__search-input" placeholder="Buscar películas, series...">
-          <div class="navbar__search-results"></div>
-        </div>
+        <!-- Botón de búsqueda: navega a la página dedicada de búsqueda -->
+        <a href="buscar.html" class="navbar__search-btn" aria-label="Buscar" id="navbar-search-btn">🔍</a>
         
         <button class="navbar__hamburger" aria-label="Abrir menú">
           <span></span>
@@ -115,116 +112,9 @@ export function renderNavbar() {
     mobileMenu.classList.toggle('active');
   });
 
-  // 4. Barra de búsqueda rápida expandible
-  const searchWrapper = header.querySelector('.navbar__search-wrapper');
-  const searchBtn = header.querySelector('.navbar__search-btn');
-  const searchInput = header.querySelector('.navbar__search-input');
-  const searchResults = header.querySelector('.navbar__search-results');
-
-  searchBtn.addEventListener('click', (e) => {
-    if (!searchWrapper.classList.contains('active')) {
-      e.stopPropagation();
-      searchWrapper.classList.add('active');
-      searchInput.focus();
-    } else if (searchInput.value.trim() === '') {
-      searchWrapper.classList.remove('active');
-      searchResults.classList.remove('active');
-    } else {
-      // Navegar a buscador con el query
-      navigateTo('search.html', { q: searchInput.value.trim() });
-    }
-  });
-
-  // Cerrar al hacer click fuera
-  document.addEventListener('click', (e) => {
-    if (!searchWrapper.contains(e.target)) {
-      searchWrapper.classList.remove('active');
-      searchResults.classList.remove('active');
-    }
-  });
-
-  // Capturar tecla escape para cerrar buscador
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      searchResults.classList.remove('active');
-      searchInput.blur();
-    }
-  });
-
-  // Búsqueda en tiempo real con Debounce de 400ms
-  const executeQuickSearch = debounce(async (query) => {
-    if (query.length < 2) {
-      searchResults.innerHTML = '';
-      searchResults.classList.remove('active');
-      return;
-    }
-
-    const data = await api.searchMulti(query, 1);
-    if (!data || !data.results || data.results.length === 0) {
-      searchResults.innerHTML = `<div style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem; text-align: center;">No hay resultados rápidos</div>`;
-      searchResults.classList.add('active');
-      return;
-    }
-
-    // Filtrar para mostrar solo películas, series o personas y recortar a 6 items
-    const filteredResults = data.results
-      .filter(item => item.media_type === 'movie' || item.media_type === 'tv')
-      .slice(0, 6);
-
-    if (filteredResults.length === 0) {
-      searchResults.innerHTML = `<div style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem; text-align: center;">No hay resultados</div>`;
-      searchResults.classList.add('active');
-      return;
-    }
-
-    let resultsHTML = '';
-    filteredResults.forEach(item => {
-      const title = item.title || item.name;
-      const mediaLabel = item.media_type === 'movie' ? 'Película' : 'Serie';
-      const date = item.release_date || item.first_air_date || '';
-      const year = date ? `(${formatYear(date)})` : '';
-      const poster = buildTMDBImageURL(item.poster_path, 'w92');
-
-      resultsHTML += `
-        <a href="info.html?id=${item.id}&type=${item.media_type}" class="navbar__search-item">
-          <img class="navbar__search-item-img" src="${poster}" alt="${title}">
-          <div class="navbar__search-item-info">
-            <h4 class="navbar__search-item-title">${title}</h4>
-            <div class="navbar__search-item-meta">
-              <span class="badge badge--red" style="font-size: 0.65rem; padding: 0.1rem 0.3rem;">${mediaLabel}</span>
-              <span>${year}</span>
-              <span style="color: var(--gold)">★ ${item.vote_average ? item.vote_average.toFixed(1) : '0.0'}</span>
-            </div>
-          </div>
-        </a>
-      `;
-    });
-
-    resultsHTML += `
-      <a href="search.html?q=${encodeURIComponent(query)}" class="navbar__search-all">
-        Ver todos los resultados para "${query}" →
-      </a>
-    `;
-
-    searchResults.innerHTML = resultsHTML;
-    searchResults.classList.add('active');
-  }, 400);
-
-  searchInput.addEventListener('input', (e) => {
-    executeQuickSearch(e.target.value.trim());
-  });
-
-  searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      const query = searchInput.value.trim();
-      if (query) {
-        navigateTo('search.html', { q: query });
-      }
-    }
-  });
-
   // El estado de sesión y redirección se gestiona directamente en perfil.html / login.html
   // sin necesidad de observadores complejos en la barra de navegación.
+  // El botón de búsqueda ahora navega directamente a buscar.html
 }
 
 function highlightActiveLink() {
@@ -241,7 +131,7 @@ function highlightActiveLink() {
     activeTab = 'tv';
   } else if (currentPath.includes('estrenos.html')) {
     activeTab = 'upcoming';
-  } else if (currentPath.includes('search.html') || currentPath.includes('info.html') || currentPath.includes('watch.html')) {
+  } else if (currentPath.includes('search.html') || currentPath.includes('buscar.html') || currentPath.includes('info.html') || currentPath.includes('watch.html')) {
     if (type === 'movie') activeTab = 'movie';
     else if (type === 'tv') activeTab = 'tv';
     else if (filter === 'upcoming') activeTab = 'upcoming';

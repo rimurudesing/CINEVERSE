@@ -19,9 +19,9 @@
 // ────────────────────────────────────────────────────────────
 export const ADMOB_IDS = {
   // IDs REALES de AdMob creados por el usuario
-  interstitial: 'ca-app-pub-8784972752017565/1099159949',
+  interstitial: 'ca-app-pub-2445533163645300/6274720144',
   rewarded:     'ca-app-pub-3940256099942544/5224354917', // Test por defecto si no hay recompensados
-  banner:       'ca-app-pub-8784972752017565/1893366860',
+  banner:       'ca-app-pub-2445533163645300/7587801818',
 };
 
 // ¿Estamos corriendo como APK nativa (Capacitor)?

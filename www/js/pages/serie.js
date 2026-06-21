@@ -170,7 +170,7 @@ class TVPageController {
 
     // Géneros pills
     const genresHTML = details.genres.map(g => 
-      `<a href="search.html?genre=${g.id}" class="pill">${g.name}</a>`
+      `<a href="series.html?genre=${g.id}" class="pill">${g.name}</a>`
     ).join('');
 
     // Banner de expiración premium (menos de 3 días)
@@ -370,7 +370,7 @@ class TVPageController {
               ? buildTMDBImageURL(actor.profile_path, 'w185') 
               : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(actor.name)}`;
             return `
-              <a href="search.html?q=${encodeURIComponent(actor.name)}" class="flex flex--col flex--align-center text-center" style="flex: 0 0 100px; gap: 0.5rem;">
+              <a href="buscar.html?q=${encodeURIComponent(actor.name)}" class="flex flex--col flex--align-center text-center" style="flex: 0 0 100px; gap: 0.5rem;">
                 <img src="${avatar}" alt="${actor.name}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-subtle);">
                 <span style="font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${actor.name}</span>
                 <span style="font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${actor.character}</span>

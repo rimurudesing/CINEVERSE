@@ -193,8 +193,9 @@ class InfoPageController {
       metaExtra = `<span>Temporadas: <strong>${d.number_of_seasons}</strong></span><span>•</span><span>Episodios: <strong>${d.number_of_episodes}</strong></span>`;
     }
 
+    const genrePage = this.mediaType === 'tv' ? 'series.html' : 'peliculas.html';
     const genresHTML = (d.genres || []).map(g =>
-      `<a href="search.html?genre=${g.id}" class="pill" style="text-decoration:none;">${g.name}</a>`
+      `<a href="${genrePage}?genre=${g.id}" class="pill" style="text-decoration:none;">${g.name}</a>`
     ).join('');
 
     document.getElementById('info-root').innerHTML = `
@@ -309,7 +310,7 @@ class InfoPageController {
             ? buildTMDBImageURL(actor.profile_path, 'w185')
             : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(actor.name)}`;
           return `
-            <a href="search.html?q=${encodeURIComponent(actor.name)}" class="cast-card" style="text-decoration:none;color:inherit;">
+            <a href="buscar.html?q=${encodeURIComponent(actor.name)}" class="cast-card" style="text-decoration:none;color:inherit;">
               <img src="${avatar}" alt="${actor.name}" loading="lazy">
               <span class="cast-card__name">${actor.name}</span>
               <span class="cast-card__role">${actor.character || ''}</span>
