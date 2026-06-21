@@ -1,6 +1,7 @@
 /* ═══ cineverse/js/supabase.js ═══ */
 
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+import './lib/supabase-umd.js';
 
 // Validar si las credenciales han sido configuradas
 export const isSupabaseConfigured = 
@@ -10,31 +11,19 @@ export const isSupabaseConfigured =
   SUPABASE_ANON_KEY !== "TU_ANON_KEY";
 
 export let supabase = null;
-let initPromise = null;
 
-export function getSupabase() {
-  if (!isSupabaseConfigured) return Promise.resolve(null);
-  if (supabase) return Promise.resolve(supabase);
-  if (initPromise) return initPromise;
-
-  initPromise = import('https://esm.sh/@supabase/supabase-js@2')
-    .then(({ createClient }) => {
-      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      return supabase;
-    })
-    .catch(error => {
-      console.error("Error al inicializar Supabase:", error);
-      return null;
-    });
-
-  return initPromise;
+if (isSupabaseConfigured && window.supabase) {
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch (error) {
+    console.error("Error al inicializar cliente Supabase local:", error);
+  }
+} else if (!isSupabaseConfigured) {
+  console.warn("Supabase no configurado — auth y base de datos desactivados.");
 }
 
-// Iniciar la carga en segundo plano si está configurado
-if (isSupabaseConfigured) {
-  getSupabase();
-} else {
-  console.warn("Supabase no configurado — auth y base de datos desactivados.");
+export function getSupabase() {
+  return Promise.resolve(supabase);
 }
 
 export default getSupabase;
