@@ -396,7 +396,9 @@ class LiveChat {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Deshabilitado: usar la página dedicada de chat.html en la barra de navegación.
-  return;
-});
+
+// ═══ Chat flotante DESHABILITADO ═══
+// El chat está disponible en la página dedicada: chat.html
+// Este archivo se mantiene por compatibilidad pero NO inicializa ningún UI.
+// document.addEventListener('DOMContentLoaded', () => { ... });
+
