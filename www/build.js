@@ -11,7 +11,7 @@ function copyDir(src, dest) {
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
 
-    if (excludeDirs.includes(entry.name)) {
+    if (excludeDirs.includes(entry.name) || entry.name.endsWith('.apk')) {
       continue;
     }
 

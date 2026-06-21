@@ -42,9 +42,10 @@ logs/
 *.tmp
 *.temp
 
-# Los APKs de CineVerse son rastreados (necesarios para descarga en la web)
-# CineVerse-debug.apk — rastreado
-# www/CineVerse-debug.apk — rastreado
+# Ignorar todos los archivos APK para evitar limites de tamaño en Cloudflare y advertencias de GitHub
+*.apk
+dist/CineVerse-debug.apk
+www/CineVerse-debug.apk
 
 # dist/ y build.js son necesarios para Cloudflare Pages — NO ignorar
 
