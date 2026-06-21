@@ -1,33 +1,32 @@
-/* ═══ cineverse/css/skeleton.css ═══ */
+/* ═══ cineverse/css/skeleton.css — Premium Redesign ═══ */
 
+/* ── Shimmer base ── */
 .skeleton {
   background: linear-gradient(
-    90deg,
-    var(--bg-secondary) 25%,
-    rgba(229, 9, 20, 0.08) 37%,
-    var(--bg-secondary) 63%
+    105deg,
+    var(--bg-secondary) 0%,
+    var(--bg-secondary) 30%,
+    rgba(255,255,255,0.04) 50%,
+    var(--bg-secondary) 70%,
+    var(--bg-secondary) 100%
   );
-  background-size: 400% 100%;
-  animation: skeleton-shimmer 1.4s ease infinite;
+  background-size: 600% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
   border-radius: var(--radius-sm);
   display: block;
 }
 
 @keyframes skeleton-shimmer {
-  0% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-/* Skeleton Card */
+/* ── Skeleton Card ── */
 .skeleton-card {
   position: relative;
   aspect-ratio: 2/3;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid rgba(255,255,255,0.04);
   overflow: hidden;
 }
 
@@ -36,14 +35,34 @@
   height: 100%;
 }
 
-/* Skeleton Hero Spotlight */
+/* Overlay shimmer decorativo */
+.skeleton-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to top, rgba(255,255,255,0.03), transparent);
+}
+
+/* ── Skeleton Hero ── */
 .skeleton-hero {
   position: relative;
   width: 100%;
   height: 100vh;
-  background-color: var(--bg-primary);
+  background: var(--bg-primary);
   display: flex;
   align-items: center;
+  overflow: hidden;
+}
+
+/* Fondo simulado */
+.skeleton-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(229,9,20,0.04) 0%, transparent 60%);
 }
 
 .skeleton-hero__content {
@@ -53,27 +72,32 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .skeleton-hero__badge {
-  width: 80px;
-  height: 24px;
+  width: 100px;
+  height: 28px;
+  border-radius: var(--radius-full);
 }
 
 .skeleton-hero__title {
-  width: 70%;
-  height: 80px;
+  width: 65%;
+  height: 90px;
   border-radius: var(--radius-md);
 }
 
 .skeleton-hero__meta {
-  width: 45%;
-  height: 20px;
+  width: 40%;
+  height: 22px;
+  border-radius: var(--radius-sm);
 }
 
 .skeleton-hero__overview {
-  width: 90%;
-  height: 60px;
+  width: 88%;
+  height: 72px;
+  border-radius: var(--radius-sm);
 }
 
 .skeleton-hero__actions {
@@ -82,17 +106,17 @@
 }
 
 .skeleton-hero__btn {
-  width: 140px;
-  height: 45px;
+  width: 145px;
+  height: 50px;
   border-radius: var(--radius-md);
 }
 
-/* Skeleton Detalles (Layout 2 Col) */
+/* ── Skeleton Detalles ── */
 .skeleton-details {
   display: grid;
   grid-template-columns: 300px 1fr;
   gap: 3rem;
-  padding-top: 100px;
+  padding-top: 110px;
 }
 
 .skeleton-details__left {
@@ -109,7 +133,7 @@
 
 .skeleton-details__btn {
   width: 100%;
-  height: 45px;
+  height: 50px;
   border-radius: var(--radius-md);
 }
 
@@ -117,17 +141,19 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  padding-top: 1rem;
 }
 
 .skeleton-details__title {
-  width: 50%;
-  height: 60px;
+  width: 55%;
+  height: 70px;
   border-radius: var(--radius-md);
 }
 
 .skeleton-details__meta {
-  width: 30%;
-  height: 25px;
+  width: 32%;
+  height: 26px;
+  border-radius: var(--radius-sm);
 }
 
 .skeleton-details__pills {
@@ -136,14 +162,15 @@
 }
 
 .skeleton-details__pill {
-  width: 80px;
-  height: 30px;
+  width: 85px;
+  height: 32px;
   border-radius: var(--radius-full);
 }
 
 .skeleton-details__text {
   width: 100%;
-  height: 120px;
+  height: 130px;
+  border-radius: var(--radius-sm);
 }
 
 @media (max-width: 1024px) {
@@ -152,7 +179,7 @@
     gap: 2rem;
   }
   .skeleton-details__poster {
-    width: 200px;
+    width: 210px;
     margin: 0 auto;
   }
 }
