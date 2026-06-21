@@ -1,5 +1,6 @@
 /* ═══ cineverse/js/pages/estrenos.js ═══ */
 
+import '../admob.js';
 import { api } from '../api.js';
 import { createMovieCard } from '../components/movieCard.js';
 import { initPageTransition, navigateTo } from '../utils.js';

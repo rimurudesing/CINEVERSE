@@ -149,18 +149,29 @@ export async function hideBannerAd() {
 }
 
 // Auto-inicializar cuando el DOM esté listo
+// El banner AdMob se muestra en todas las páginas excepto watch (que usa interstitial)
 document.addEventListener('DOMContentLoaded', () => {
   initAdMob().then(initialized => {
-    if (initialized) {
-      // Mostrar banner en páginas que no sean watch.html
-      const isWatchPage = window.location.pathname.includes('watch');
-      if (!isWatchPage) {
-        // Solo mostrar banner a usuarios Free (el check de premium lo maneja cada página)
-        const isPremium = JSON.parse(localStorage.getItem('cineverse_is_premium') || 'false');
-        if (!isPremium) {
-          showBannerAd();
-        }
+    if (!initialized) return;
+
+    const isWatchPage = window.location.pathname.includes('watch');
+    if (isWatchPage) {
+      // En watch.html el banner no se muestra (se usa interstitial en su lugar)
+      // El banner se muestra después de que el usuario termine de ver el contenido
+      return;
+    }
+
+    // En todas las demás páginas: mostrar banner a usuarios Free
+    // Intentamos leer el estado Premium desde localStorage (caché del perfil de Supabase)
+    try {
+      const cachedProfile = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
+      const isPremium = !!(cachedProfile.is_premium || false);
+      if (!isPremium) {
+        showBannerAd();
       }
+    } catch (_) {
+      // Si falla la lectura, mostrar el banner por defecto (usuario free)
+      showBannerAd();
     }
   });
 });

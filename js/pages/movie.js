@@ -1,5 +1,6 @@
 /* ═══ cineverse/js/pages/movie.js ═══ */
 
+import '../admob.js';
 import { api } from '../api.js';
 import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { getCurrentUser } from '../auth.js';
