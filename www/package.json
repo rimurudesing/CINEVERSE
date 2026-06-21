@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "sync": "rsync -av --delete --exclude='.git' --exclude='node_modules' --exclude='android' --exclude='www' ./ www/",
+    "sync": "node build.js",
     "cap-sync": "npm run sync && npx cap sync android",
     "build:apk": "npm run cap-sync && cd android && JAVA_HOME=/opt/android-studio/jbr ./gradlew assembleDebug && cp app/build/outputs/apk/debug/app-debug.apk ../CineVerse-debug.apk && cp app/build/outputs/apk/debug/app-debug.apk ../www/CineVerse-debug.apk",
-    "build": "echo 'No build step required'"
+    "build": "node build.js"
   },
   "repository": {
     "type": "git",

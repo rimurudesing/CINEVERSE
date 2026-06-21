@@ -45,3 +45,8 @@ logs/
 # Los APKs de CineVerse son rastreados (necesarios para descarga en la web)
 # CineVerse-debug.apk — rastreado
 # www/CineVerse-debug.apk — rastreado
+
+# Ignorar carpeta temporal dist de compilacion y script build.js
+dist/
+build.js
+
