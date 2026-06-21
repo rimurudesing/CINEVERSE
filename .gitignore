@@ -46,7 +46,5 @@ logs/
 # CineVerse-debug.apk — rastreado
 # www/CineVerse-debug.apk — rastreado
 
-# Ignorar carpeta temporal dist de compilacion y script build.js
-dist/
-build.js
+# dist/ y build.js son necesarios para Cloudflare Pages — NO ignorar
 
