@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Icono y Favicon de la Web -->
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVerse — Información</title>
+  <meta name="description" content="Toda la información sobre esta película o serie en CineVerse.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hojas de Estilo -->
+  <link rel="stylesheet" href="css/variables.css?v=2.0.0">
+  <link rel="stylesheet" href="css/reset.css?v=2.0.0">
+  <link rel="stylesheet" href="css/layout.css?v=2.0.0">
+  <link rel="stylesheet" href="css/components.css?v=2.0.0">
+  <link rel="stylesheet" href="css/navbar.css?v=2.0.0">
+  <link rel="stylesheet" href="css/hero.css?v=2.0.0">
+  <link rel="stylesheet" href="css/modal.css?v=2.0.0">
+  <link rel="stylesheet" href="css/skeleton.css?v=2.0.0">
+  <link rel="stylesheet" href="css/forms.css?v=2.0.0">
+  <link rel="stylesheet" href="css/animations.css?v=2.0.0">
+  <link rel="stylesheet" href="css/ads.css?v=2.0.0">
+  <link rel="stylesheet" href="css/responsive.css?v=2.0.0">
+
+  <style>
+    /* ── Estilos locales de info.html ─── */
+    body {
+      min-height: 100vh;
+      background: var(--bg-void);
+    }
+
+    /* Hero backdrop */
+    .info-hero {
+      position: relative;
+      width: 100%;
+      min-height: 55vh;
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .info-hero__overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(7, 7, 10, 0.3) 0%,
+        rgba(7, 7, 10, 0.6) 50%,
+        rgba(7, 7, 10, 1) 100%
+      );
+    }
+
+    .info-hero__content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      padding: 3rem 2rem 2rem;
+    }
+
+    /* Tarjeta principal de info */
+    .info-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    /* Layout de 2 columnas en desktop */
+    .info-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 0;
+    }
+
+    /* Sidebar izquierda */
+    .info-sidebar {
+      background: var(--bg-secondary);
+      padding: 2rem 1.5rem;
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .info-poster {
+      width: 100%;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-red);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.7);
+      display: block;
+    }
+
+    /* Columna derecha principal */
+    .info-main {
+      padding: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      overflow: hidden;
+    }
+
+    /* Título */
+    .info-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      word-break: break-word;
+    }
+
+    .info-tagline {
+      font-family: var(--font-body);
+      font-style: italic;
+      color: var(--accent-red);
+      font-size: clamp(0.95rem, 2vw, 1.25rem);
+    }
+
+    /* Meta chips */
+    .info-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .info-meta-row strong {
+      color: var(--text-primary);
+    }
+
+    /* Géneros */
+    .info-genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    /* Sinopsis */
+    .info-section-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+    }
+
+    .info-overview {
+      font-family: var(--font-body);
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Rating ring section */
+    .info-rating-block {
+      background: var(--bg-void);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* Reparto: grid de tarjetas */
+    .cast-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .cast-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .cast-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .cast-card img {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border-subtle);
+      transition: border-color 0.2s;
+    }
+
+    .cast-card:hover img {
+      border-color: var(--accent-red);
+    }
+
+    .cast-card__name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      line-height: 1.2;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .cast-card__role {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+    }
+
+    /* Tabla de Equipo */
+    .crew-table {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .crew-item h4 {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .crew-item p {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    /* Proveedores */
+    .providers-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .provider-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      padding: 0.4rem 0.8rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .provider-chip img {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+    }
+
+    /* Botones de acción en sidebar */
+    .action-btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.9rem 1rem;
+      background: var(--accent-red);
+      color: white;
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      letter-spacing: 0.03em;
+    }
+
+    .action-btn-primary:hover {
+      background: hsl(355, 90%, 55%);
+      transform: translateY(-1px);
+    }
+
+    .action-btn-secondary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+
+    .action-btn-secondary:hover {
+      border-color: var(--accent-red);
+      transform: translateY(-1px);
+    }
+
+    /* Back button */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0.5rem 0;
+      transition: color 0.2s;
+      margin-bottom: 1.5rem;
+    }
+
+    .back-btn:hover { color: var(--text-primary); }
+
+    /* Skeleton loader */
+    .info-skeleton {
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .info-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .info-sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        padding: 1.5rem;
+      }
+
+      .info-poster-wrap {
+        width: 160px;
+        flex-shrink: 0;
+      }
+
+      .info-sidebar-actions {
+        flex: 1;
+        min-width: 200px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .info-hero { min-height: 35vh; }
+
+      .info-sidebar {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .info-poster-wrap {
+        width: 140px;
+      }
+
+      .info-sidebar-actions {
+        width: 100%;
+      }
+
+      .info-main {
+        padding: 1.5rem;
+        gap: 1.5rem;
+      }
+
+      .cast-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 1rem;
+      }
+
+      .crew-table {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Transición de página -->
+  <div class="page-transition-overlay out"></div>
+
+  <!-- Hero Backdrop -->
+  <div class="info-hero" id="info-hero-root">
+    <div class="info-hero__overlay"></div>
+    <div class="info-hero__content">
+      <!-- Vacío — el contenido está debajo -->
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <main class="container" style="margin-top: -80px; position: relative; z-index: 10; padding-bottom: 4rem;">
+
+    <!-- Botón Volver -->
+    <button class="back-btn" id="back-btn" onclick="history.back()">
+      ← Volver
+    </button>
+
+    <!-- Skeleton loader temporal -->
+    <div id="info-root">
+      <div class="info-skeleton">
+        <div class="skeleton" style="height: 30px; width: 40%; border-radius: var(--radius-md);"></div>
+        <div class="skeleton" style="height: 20px; width: 60%; border-radius: var(--radius-md);"></div>
+        <div class="skeleton" style="height: 180px; border-radius: var(--radius-md);"></div>
+        <div class="skeleton" style="height: 120px; border-radius: var(--radius-md);"></div>
+      </div>
+    </div>
+
+    <!-- Anuncio Adsterra — Inferior -->
+    <div class="adsterra-banner adsterra-banner--desktop" style="margin-top: 3rem;">
+      <script>
+        atOptions = {
+          'key' : '1e641c652913ad7208ae96f454ffed02',
+          'format' : 'iframe',
+          'height' : 90,
+          'width' : 728,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/1e641c652913ad7208ae96f454ffed02/invoke.js"></script>
+    </div>
+    <div class="adsterra-banner adsterra-banner--mobile" style="margin-top: 3rem;">
+      <script>
+        atOptions = {
+          'key' : '0fb10f90384450b9db33fa72a94fa189',
+          'format' : 'iframe',
+          'height' : 50,
+          'width' : 320,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/0fb10f90384450b9db33fa72a94fa189/invoke.js"></script>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer style="background-color: var(--bg-void); border-top: 1px solid var(--border-subtle); padding: 2rem 0; font-family: var(--font-ui);">
+    <div class="container text-center" style="color: var(--text-muted); font-size: 0.85rem;">
+      <p>© 2025 CINEVERSE. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/pages/info.js?v=2.0.0"></script>
+  <!-- Chat en Vivo en Tiempo Real -->
+</body>
+</html>

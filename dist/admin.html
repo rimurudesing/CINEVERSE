@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Icono y Favicon de la Web -->
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVerse — Panel de Administración</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hojas de Estilo -->
+  <link rel="stylesheet" href="css/variables.css?v=2.0.0">
+  <link rel="stylesheet" href="css/reset.css?v=2.0.0">
+  <link rel="stylesheet" href="css/layout.css?v=2.0.0">
+  <link rel="stylesheet" href="css/components.css?v=2.0.0">
+  <link rel="stylesheet" href="css/navbar.css?v=2.0.0">
+  <link rel="stylesheet" href="css/hero.css?v=2.0.0">
+  <link rel="stylesheet" href="css/modal.css?v=2.0.0">
+  <link rel="stylesheet" href="css/forms.css?v=2.0.0">
+  <link rel="stylesheet" href="css/animations.css?v=2.0.0">
+  <link rel="stylesheet" href="css/responsive.css?v=2.0.0">
+
+  <style>
+    body {
+      background-color: var(--bg-void);
+      padding-top: 100px;
+    }
+    
+    .admin-card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .admin-title {
+      font-family: var(--font-display);
+      font-size: 2.25rem;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.5rem;
+      letter-spacing: 1px;
+    }
+    
+    .admin-subtitle {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-red);
+      margin-bottom: 1rem;
+    }
+
+    /* Tablas adaptadas a estilo oscuro CineVerse */
+    .admin-table-container {
+      overflow-x: auto;
+      margin-top: 1rem;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    .admin-table th {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-weight: 700;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .admin-table td {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      color: var(--text-secondary);
+      vertical-align: middle;
+    }
+
+    .admin-table tr:hover {
+      background-color: rgba(255, 255, 255, 0.01);
+    }
+    
+    .code-badge {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-subtle);
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Transición de página -->
+  <div class="page-transition-overlay out"></div>
+
+  <!-- Contenedor Principal Dashboard Admin -->
+  <main class="container" style="padding-bottom: 5rem;">
+    
+    <!-- Botón Volver -->
+    <a href="perfil.html" class="btn btn--secondary" style="margin-bottom: 1.5rem; display: inline-flex; align-items: center; gap: 0.5rem; width: fit-content; text-decoration: none;">
+      ← Volver al Perfil
+    </a>
+
+    <div style="margin-bottom: 2rem;">
+      <h1 style="font-family: var(--font-display); font-size: 3.5rem; color: var(--text-primary); margin-bottom: 0.25rem;">
+        🛡️ Panel de <span style="color: var(--accent-red)">Administración</span>
+      </h1>
+      <p style="color: var(--text-secondary); font-size: 0.95rem;">Generación de licencias de suscripción y control de usuarios en CineVerse.</p>
+    </div>
+
+    <div class="grid grid--2" style="grid-template-columns: 1fr 1.5fr; gap: 2rem; align-items: start;">
+      
+      <!-- COLUMNA IZQUIERDA: Generador de códigos y asignador de premium -->
+      <div class="flex flex--col flex--gap-md">
+        
+        <!-- Tarjeta 1: Generador de códigos -->
+        <div class="admin-card">
+          <h2 class="admin-subtitle">🎟️ Generar Códigos Premium</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.4;">
+            Crea códigos de suscripción de 30 días para enviar a los usuarios que realicen el pago.
+          </p>
+          <form id="generator-form" class="flex flex--col flex--gap-sm">
+            <div class="form-group">
+              <label class="form-label" for="generator-qty">Cantidad a Generar</label>
+              <input type="number" id="generator-qty" class="form-input" min="1" max="100" value="5" required style="max-width: 120px;">
+            </div>
+            <button type="submit" class="btn btn--primary" id="generator-submit-btn" style="margin-top: 0.5rem; align-self: flex-start;">
+              ⚡ Generar y Subir
+            </button>
+          </form>
+        </div>
+
+        <!-- Tarjeta 2: Asignación Manual Directa -->
+        <div class="admin-card">
+          <h2 class="admin-subtitle">👑 Otorgar Premium Directo</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.4;">
+            Asigna estatus Premium a un usuario de forma directa buscando por su Nombre de Usuario.
+          </p>
+          <form id="grant-manual-form" class="flex flex--col flex--gap-sm">
+            <div class="form-group">
+              <label class="form-label" for="grant-username">Nombre de Usuario</label>
+              <input type="text" id="grant-username" class="form-input" placeholder="nombre_usuario" required>
+            </div>
+            <button type="submit" class="btn btn--primary" id="grant-submit-btn" style="margin-top: 0.5rem; align-self: flex-start; background-color: var(--accent-ember); border-color: var(--accent-ember);">
+              Otorgar 30 días
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- COLUMNA DERECHA: Listado y control de códigos -->
+      <div class="admin-card" style="height: 100%;">
+        <div class="flex flex--justify-between flex--align-center flex--wrap" style="gap: 1rem; margin-bottom: 1rem;">
+          <h2 class="admin-subtitle" style="margin-bottom: 0;">📋 Listado de Códigos de Activación</h2>
+          <div class="flex flex--gap-xs" style="align-items: center;">
+            <input type="text" id="search-codes-input" class="form-input" placeholder="Buscar código..." style="padding: 0.35rem 0.75rem; font-size: 0.8rem; width: 180px;">
+          </div>
+        </div>
+
+        <!-- Tabla de códigos -->
+        <div class="admin-table-container" style="max-height: 500px; overflow-y: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Estado</th>
+                <th>Usuario / Correo</th>
+                <th>Canjeado el</th>
+                <th style="text-align: right;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="codes-list-tbody">
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">Cargando códigos...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SECCIÓN INFERIOR: Gestión de usuarios premium activos -->
+    <div class="admin-card" style="margin-top: 2rem;">
+      <h2 class="admin-subtitle">👥 Usuarios Premium Activos</h2>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+        Listado de usuarios con suscripción Premium activa. Aquí puedes ver sus fechas de expiración o revocar el Premium.
+      </p>
+
+      <div class="admin-table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Display Name</th>
+              <th>Premium Hasta</th>
+              <th>Código Usado</th>
+              <th style="text-align: right;">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="premium-users-tbody">
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">Cargando usuarios premium...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer style="background-color: var(--bg-void); border-top: 1px solid var(--border-subtle); padding: 2rem 0; font-family: var(--font-ui);">
+    <div class="container text-center" style="color: var(--text-muted); font-size: 0.85rem;">
+      <p>© 2025 CINEVERSE. Panel de Control de Administración.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/pages/admin.js?v=2.0.0"></script>
+  <!-- Chat en Vivo en Tiempo Real -->
+</body>
+</html>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 562" width="1000" height="562">
+  <rect width="1000" height="562" fill="#111111" stroke="#1e1e1e" stroke-width="4"/>
+  <rect width="980" height="542" x="10" y="10" fill="#0a0a0a" rx="15"/>
+  <path d="M500,220 C470,220 450,240 450,270 C450,300 470,320 500,320 C530,320 550,300 550,270 C550,240 530,220 500,220 Z" fill="#E50914" opacity="0.3"/>
+  <path d="M500,240 C485,240 470,252 470,270 C470,288 485,300 500,300 C515,300 530,288 530,270 C530,252 515,240 500,240 Z" fill="#E50914"/>
+  <text x="500" y="370" font-family="'Outfit', sans-serif" font-size="24" font-weight="600" fill="#555555" text-anchor="middle">IMAGEN NO DISPONIBLE</text>
+  <text x="500" y="415" font-family="'Bebas Neue', sans-serif" font-size="36" font-weight="bold" fill="#E50914" text-anchor="middle" letter-spacing="2">CINEVERSE</text>
+</svg>

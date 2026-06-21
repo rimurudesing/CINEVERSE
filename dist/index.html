@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- v3.0.0 — 2026-06-21 -->
+  <!-- Icono y Favicon de la Web -->
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVerse — Descubrimiento de Películas y Series</title>
+  <meta name="description" content="Explora las películas y series más populares, valoradas y en tendencia. Crea tu perfil, guarda favoritos y sigue tu historial en CineVerse.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hojas de Estilo Modularizados -->
+  <link rel="stylesheet" href="css/variables.css?v=3.0.0">
+  <link rel="stylesheet" href="css/reset.css?v=3.0.0">
+  <link rel="stylesheet" href="css/layout.css?v=3.0.0">
+  <link rel="stylesheet" href="css/components.css?v=3.0.0">
+  <link rel="stylesheet" href="css/navbar.css?v=3.0.0">
+  <link rel="stylesheet" href="css/hero.css?v=3.0.0">
+  <link rel="stylesheet" href="css/carousel.css?v=3.0.0">
+  <link rel="stylesheet" href="css/modal.css?v=3.0.0">
+  <link rel="stylesheet" href="css/skeleton.css?v=3.0.0">
+  <link rel="stylesheet" href="css/forms.css?v=3.0.0">
+  <link rel="stylesheet" href="css/animations.css?v=3.0.0">
+  <link rel="stylesheet" href="css/ads.css?v=3.0.0">
+  <link rel="stylesheet" href="css/responsive.css?v=3.0.0">
+</head>
+<body>
+
+  <!-- Transición de página roja -->
+  <div class="page-transition-overlay out"></div>
+
+  <!-- Hero Spotlight Root Section -->
+  <section class="hero" id="hero-spotlight-root"></section>
+
+  <!-- Contenido Principal -->
+  <main class="container" style="margin-top: 4rem;">
+    
+    <!-- Anuncio Adsterra — Superior -->
+    <!-- Banner 728x90 (Escritorio) -->
+    <div class="adsterra-banner adsterra-banner--desktop">
+      <script>
+        atOptions = {
+          'key' : '1e641c652913ad7208ae96f454ffed02',
+          'format' : 'iframe',
+          'height' : 90,
+          'width' : 728,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/1e641c652913ad7208ae96f454ffed02/invoke.js"></script>
+    </div>
+    <!-- Banner 320x50 (Móvil) -->
+    <div class="adsterra-banner adsterra-banner--mobile">
+      <script>
+        atOptions = {
+          'key' : '0fb10f90384450b9db33fa72a94fa189',
+          'format' : 'iframe',
+          'height' : 50,
+          'width' : 320,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/0fb10f90384450b9db33fa72a94fa189/invoke.js"></script>
+    </div>
+    
+    <!-- Carrusel 1: Trending Semanal -->
+    <div id="trending-carousel"></div>
+
+    <!-- Carrusel 2: En Cartelera Ahora -->
+    <div id="nowplaying-carousel"></div>
+
+    <!-- Carrusel 3: Series En Emisión -->
+    <div id="onair-carousel"></div>
+
+    <!-- Carrusel 4: Próximos Estrenos -->
+    <div id="upcoming-carousel"></div>
+
+    <!-- Anuncio Adsterra — Intermedio -->
+    <!-- Banner 728x90 (Escritorio) -->
+    <div class="adsterra-banner adsterra-banner--desktop">
+      <script>
+        atOptions = {
+          'key' : '1e641c652913ad7208ae96f454ffed02',
+          'format' : 'iframe',
+          'height' : 90,
+          'width' : 728,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/1e641c652913ad7208ae96f454ffed02/invoke.js"></script>
+    </div>
+    <!-- Banner 320x50 (Móvil) -->
+    <div class="adsterra-banner adsterra-banner--mobile">
+      <script>
+        atOptions = {
+          'key' : '0fb10f90384450b9db33fa72a94fa189',
+          'format' : 'iframe',
+          'height' : 50,
+          'width' : 320,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/0fb10f90384450b9db33fa72a94fa189/invoke.js"></script>
+    </div>
+ 
+    <!-- Rejilla: Top Películas -->
+    <section class="carousel-section">
+      <div class="carousel-section__header">
+        <h2 class="carousel-section__title">Películas Más Valoradas</h2>
+      </div>
+      <div class="grid grid--4" id="top-movies-grid" style="margin-bottom: 2rem;"></div>
+      <div class="flex flex--justify-center">
+        <button class="btn btn--outline-red" id="load-more-movie-btn">Cargar más Películas</button>
+      </div>
+    </section>
+
+    <!-- Rejilla: Top Series -->
+    <section class="carousel-section" style="margin-top: 4rem;">
+      <div class="carousel-section__header">
+        <h2 class="carousel-section__title">Series Más Valoradas</h2>
+      </div>
+      <div class="grid grid--4" id="top-tv-grid" style="margin-bottom: 2rem;"></div>
+      <div class="flex flex--justify-center">
+        <button class="btn btn--outline-red" id="load-more-tv-btn">Cargar más Series</button>
+      </div>
+    </section>
+
+    <!-- Explorador por Géneros -->
+    <section class="carousel-section" style="margin-top: 5rem; margin-bottom: 5rem;">
+      <div class="carousel-section__header">
+        <div>
+          <h2 class="carousel-section__title" style="margin-bottom: 0.25rem;">Explora por Género</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">Selecciona una categoría para filtrar las producciones más populares.</p>
+        </div>
+      </div>
+      <div id="genre-filter-root"></div>
+      <div class="grid grid--4" id="genre-explore-grid"></div>
+    </section>
+
+  </main>
+
+  <!-- Footer Compartido -->
+  <footer style="background-color: var(--bg-void); border-top: 1px solid var(--border-subtle); padding: 4rem 0 2rem 0; margin-top: 5rem; font-family: var(--font-ui);">
+    <div class="container grid grid--4" style="gap: 2rem; margin-bottom: 3rem;">
+      <div>
+        <h3 style="font-family: var(--font-display); font-size: 2rem; color: var(--text-primary); margin-bottom: 1rem;">CINE<span style="color: var(--accent-red)">VERSE</span></h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">Tu portal definitivo de descubrimiento multimedia. Explora reseñas, valoraciones reales y entérate de dónde ver tus películas preferidas.</p>
+      </div>
+      <div>
+        <h4 style="font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; font-size: 0.85rem; color: var(--accent-red);">Navegación</h4>
+        <ul style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+          <li><a href="index.html" style="hover: color: var(--text-primary);">Inicio</a></li>
+          <li><a href="buscar.html?type=movie" style="hover: color: var(--text-primary);">Películas</a></li>
+          <li><a href="buscar.html?type=tv" style="hover: color: var(--text-primary);">Series de TV</a></li>
+          <li><a href="buscar.html?filter=upcoming" style="hover: color: var(--text-primary);">Estrenos</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 style="font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; font-size: 0.85rem; color: var(--accent-red);">Comunidad</h4>
+        <ul style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+          <li><a href="perfil.html" style="hover: color: var(--text-primary);">Mi Perfil</a></li>
+          <li><a href="perfil.html?tab=favorites" style="hover: color: var(--text-primary);">Mis Favoritos</a></li>
+          <li><a href="perfil.html?tab=reviews" style="hover: color: var(--text-primary);">Reseñas Escritas</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 style="font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; font-size: 0.85rem; color: var(--accent-red);">Contacto</h4>
+        <ul style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+          <li><a href="login.html" style="color: inherit;">Únete a CineVerse</a></li>
+          <li><a href="buscar.html" style="color: inherit;">Explorar catálogo</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container text-center" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem; color: var(--text-muted); font-size: 0.85rem;">
+      <p>© 2025 CINEVERSE. Todos los derechos reservados. Desarrollado con ❤️ para amantes del cine.</p>
+    </div>
+  </footer>
+
+  <!-- Controlador principal de la página -->
+  <script type="module" src="js/pages/home.js?v=3.0.0"></script>
+</body>
+</html>

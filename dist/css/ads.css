@@ -1,0 +1,71 @@
+/* ═══ cineverse/css/ads.css ═══ */
+
+/* Contenedor principal de Banners Adsterra */
+.adsterra-banner {
+  margin: 2rem auto;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50px;
+  overflow: hidden;
+  z-index: 2;
+  position: relative;
+}
+
+/* Mostrar banner de 728x90 en pantallas grandes */
+.adsterra-banner--desktop {
+  display: block;
+  min-width: 728px;
+  min-height: 90px;
+}
+
+/* Ocultar banner de 320x50 en pantallas grandes */
+.adsterra-banner--mobile {
+  display: none;
+  min-width: 320px;
+  min-height: 50px;
+}
+
+/* Contenedor de Anuncios Nativos */
+.adsterra-native-container {
+  margin: 3rem auto;
+  max-width: 1100px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  z-index: 2;
+  position: relative;
+}
+
+.adsterra-native-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  display: block;
+  font-family: var(--font-ui);
+}
+
+/* Responsivo para móviles y tablets */
+@media (max-width: 768px) {
+  .adsterra-banner {
+    margin: 1.5rem auto;
+  }
+  
+  .adsterra-banner--desktop {
+    display: none !important;
+  }
+  
+  .adsterra-banner--mobile {
+    display: block !important;
+  }
+
+  .adsterra-native-container {
+    padding: 1rem;
+    margin: 2rem auto;
+  }
+}

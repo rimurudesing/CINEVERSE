@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Icono y Favicon de la Web -->
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVerse — Reproductor</title>
+  <meta name="description" content="Reproduce películas y series directamente en CineVerse con el mejor reproductor online.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hojas de Estilo -->
+  <link rel="stylesheet" href="css/variables.css?v=2.0.0">
+  <link rel="stylesheet" href="css/reset.css?v=2.0.0">
+  <link rel="stylesheet" href="css/layout.css?v=2.0.0">
+  <link rel="stylesheet" href="css/components.css?v=2.0.0">
+  <link rel="stylesheet" href="css/navbar.css?v=2.0.0">
+  <link rel="stylesheet" href="css/hero.css?v=2.0.0">
+  <link rel="stylesheet" href="css/carousel.css?v=2.0.0">
+  <link rel="stylesheet" href="css/modal.css?v=2.0.0">
+  <link rel="stylesheet" href="css/skeleton.css?v=2.0.0">
+  <link rel="stylesheet" href="css/forms.css?v=2.0.0">
+  <link rel="stylesheet" href="css/animations.css?v=2.0.0">
+  <link rel="stylesheet" href="css/responsive.css?v=2.0.0">
+
+
+  <style>
+    /* Player page específico */
+    .watch-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      align-items: flex-start;
+    }
+    @media (max-width: 1024px) {
+      .watch-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    .watch-sidebar-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+    .watch-sidebar-card h3 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--accent-red);
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .watch-meta-box {
+      margin-top: 1.5rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+    }
+  </style>
+</head>
+<body style="padding-top: 100px;">
+
+  <!-- Transición de página -->
+  <div class="page-transition-overlay out"></div>
+
+  <!-- Contenido Principal -->
+  <main class="container" style="padding-bottom: 4rem;">
+
+    <div class="watch-layout">
+
+      <!-- ══ Columna Principal: Player ══ -->
+      <section>
+        <!-- Player root — JS inyecta el iframe de Vimeus aquí -->
+        <div id="player-area-root">
+          <div style="aspect-ratio:16/9;width:100%;background:var(--bg-secondary);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;border:1px solid var(--border-subtle);">
+            <div class="spinner"></div>
+          </div>
+        </div>
+
+        <!-- Meta información -->
+        <div class="watch-meta-box">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border-subtle);">
+            <div>
+              <h1 id="watch-meta-title" style="font-size:1.75rem;font-weight:700;line-height:1.2;margin-bottom:0.35rem;">Cargando...</h1>
+              <span id="watch-meta-year" style="font-size:0.9rem;color:var(--text-secondary);font-family:var(--font-mono);"></span>
+            </div>
+            <span id="watch-meta-rating" style="font-family:var(--font-display);font-size:1.5rem;color:var(--gold);white-space:nowrap;flex-shrink:0;">★ —</span>
+          </div>
+          <p id="watch-meta-overview" style="font-family:var(--font-body);font-size:1.05rem;color:var(--text-secondary);line-height:1.65;"></p>
+          <a id="watch-more-info-link" href="#" class="btn btn--outline-red" style="margin-top: 1.25rem; display: inline-flex; width: fit-content; text-decoration: none;">
+            ℹ️ Más información
+          </a>
+        </div>
+      </section>
+
+      <!-- ══ Sidebar ══ -->
+      <aside style="display:flex;flex-direction:column;gap:1.25rem;">
+
+        <!-- Plataformas de Streaming -->
+        <div class="watch-sidebar-card">
+          <h3>¿Dónde Ver?</h3>
+          <div id="watch-providers-container">
+            <div class="skeleton" style="height:20px;border-radius:var(--radius-sm);margin-bottom:0.5rem;"></div>
+            <div class="skeleton" style="height:20px;border-radius:var(--radius-sm);width:80%;"></div>
+          </div>
+        </div>
+
+        <!-- Reparto Principal -->
+        <div class="watch-sidebar-card">
+          <h3>Reparto Principal</h3>
+          <div id="watch-cast-list">
+            <div class="skeleton" style="height:40px;border-radius:var(--radius-sm);margin-bottom:0.5rem;"></div>
+            <div class="skeleton" style="height:40px;border-radius:var(--radius-sm);margin-bottom:0.5rem;"></div>
+            <div class="skeleton" style="height:40px;border-radius:var(--radius-sm);"></div>
+          </div>
+        </div>
+
+      </aside>
+
+    </div>
+  </main>
+
+  <footer style="background-color:var(--bg-void);border-top:1px solid var(--border-subtle);padding:2rem 0;margin-top:2rem;font-family:var(--font-ui);">
+    <div class="container text-center" style="color:var(--text-muted);font-size:0.85rem;">
+      <p>© 2025 CINEVERSE. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/pages/watch.js?v=2.0.0"></script>
+  <!-- Chat en Vivo en Tiempo Real -->
+</body>
+</html>

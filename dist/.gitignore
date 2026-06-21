@@ -1,0 +1,50 @@
+# Dependencias de Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build Android (ignorar artefactos intermedios pero no el APK final)
+android/app/build/
+android/.gradle/
+android/local.properties
+*.aab
+# Nota: CineVerse-debug.apk se rastrea explicitamente para publicacion en la web
+
+# Build www (generado por cap sync)
+# www/ — NO ignorar, es necesario para el proyecto
+
+# Sistema operativo
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V7
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Variables de entorno locales
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Los APKs de CineVerse son rastreados (necesarios para descarga en la web)
+# CineVerse-debug.apk — rastreado
+# www/CineVerse-debug.apk — rastreado
+
+# dist/ y build.js son necesarios para Cloudflare Pages — NO ignorar
+

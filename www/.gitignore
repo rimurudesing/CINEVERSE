@@ -45,3 +45,6 @@ logs/
 # Los APKs de CineVerse son rastreados (necesarios para descarga en la web)
 # CineVerse-debug.apk — rastreado
 # www/CineVerse-debug.apk — rastreado
+
+# dist/ y build.js son necesarios para Cloudflare Pages — NO ignorar
+

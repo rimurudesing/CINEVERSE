@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Descargar CineVerse para Android - APK Oficial</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/variables.css?v=2.0.0">
+  <link rel="stylesheet" href="css/reset.css?v=2.0.0">
+  <link rel="stylesheet" href="css/layout.css?v=2.0.0">
+  <link rel="stylesheet" href="css/navbar.css?v=2.0.0">
+  <link rel="stylesheet" href="css/components.css?v=2.0.0">
+  <link rel="stylesheet" href="css/animations.css?v=2.0.0">
+  
+  <style>
+    /* Estilos específicos para la página de descarga */
+    .download-section {
+      padding-top: 120px;
+      min-height: 100vh;
+      background-color: var(--bg-void);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Ambient Glows */
+    .glow-circle {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(140px);
+      z-index: 1;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+    
+    .glow-circle--red {
+      width: 450px;
+      height: 450px;
+      background: var(--accent-red);
+      top: 5%;
+      left: -150px;
+    }
+
+    .glow-circle--purple {
+      width: 500px;
+      height: 500px;
+      background: #7C3AED;
+      bottom: 10%;
+      right: -150px;
+    }
+
+    .download-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 3rem;
+      align-items: center;
+      max-width: 1100px;
+      width: 100%;
+      z-index: 2;
+      margin-bottom: 5rem;
+    }
+
+    @media (max-width: 768px) {
+      .download-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+      }
+    }
+
+    /* Lado Izquierdo: Mockup Teléfono */
+    .mockup-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .phone-mockup {
+      width: 280px;
+      height: 570px;
+      background: #000;
+      border: 10px solid #1a1a1a;
+      border-radius: 40px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(229, 9, 20, 0.2);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phone-screen {
+      flex: 1;
+      background: linear-gradient(180deg, #111111 0%, #050505 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .phone-logo {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      color: #fff;
+      margin-bottom: 1rem;
+    }
+
+    .phone-logo span {
+      color: var(--accent-red);
+    }
+
+    .phone-badge {
+      font-size: 0.72rem;
+      font-family: var(--font-ui);
+      background: linear-gradient(135deg, var(--gold) 0%, #B49410 100%);
+      color: #000;
+      font-weight: 800;
+      padding: 0.25rem 0.6rem;
+      border-radius: 12px;
+      text-transform: uppercase;
+      box-shadow: 0 0 10px rgba(245, 197, 24, 0.4);
+    }
+
+    .phone-app-img {
+      width: 130px;
+      height: 130px;
+      border-radius: var(--radius-lg);
+      margin: 2rem 0;
+      box-shadow: 0 15px 30px rgba(229, 9, 20, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .phone-glow {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      background: var(--accent-red);
+      border-radius: 50%;
+      filter: blur(50px);
+      opacity: 0.3;
+      z-index: 0;
+    }
+
+    /* Lado Derecho: Descarga */
+    .download-card {
+      background: rgba(15, 15, 15, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    }
+
+    .app-title {
+      font-family: var(--font-ui);
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 0;
+    }
+
+    .meta-list {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      font-family: var(--font-ui);
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-download {
+      background: linear-gradient(135deg, var(--accent-red) 0%, #900A0A 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 1rem 2rem;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 8px 25px rgba(229, 9, 20, 0.35);
+    }
+
+    .btn-download:hover {
+      transform: scale(1.03) translateY(-2px);
+      box-shadow: 0 10px 30px rgba(229, 9, 20, 0.55);
+      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    }
+
+    .btn-download:active {
+      transform: scale(0.98);
+    }
+
+    .features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 1.25rem;
+    }
+
+    .features-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .features-list li::before {
+      content: '✓';
+      color: var(--accent-red);
+      font-weight: bold;
+    }
+
+    /* Sección de Pasos de Instalación */
+    .steps-section {
+      width: 100%;
+      max-width: 1100px;
+      z-index: 2;
+      margin-bottom: 5rem;
+    }
+
+    .section-title {
+      font-family: var(--font-ui);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 2rem;
+      text-align: center;
+      border-bottom: 2px solid var(--border-subtle);
+      padding-bottom: 0.75rem;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .step-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius-md);
+      padding: 1.75rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .step-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--border-red);
+      transform: translateY(-5px);
+    }
+
+    .step-num {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent-red);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-weight: 800;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem auto;
+      box-shadow: 0 0 10px rgba(229, 9, 20, 0.4);
+    }
+
+    .step-card h3 {
+      font-family: var(--font-ui);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.6rem;
+    }
+
+    .step-card p {
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Estilo de Contenedores de Anuncios Web (Monetización) */
+    .cv-ad-banner {
+      margin: 2.5rem auto;
+      max-width: 728px;
+      width: 100%;
+      min-height: 90px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 10px;
+      z-index: 2;
+    }
+
+    .cv-ad-label {
+      position: absolute;
+      top: 3px;
+      right: 8px;
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .cv-ad-placeholder-text {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      font-family: var(--font-ui);
+      text-align: center;
+    }
+
+    .cv-ad-placeholder-subtext {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Glows -->
+  <div class="glow-circle glow-circle--red"></div>
+  <div class="glow-circle glow-circle--purple"></div>
+
+  <main class="download-section">
+    <div class="container download-grid">
+      
+      <!-- Lado Izquierdo: Teléfono Mockup -->
+      <div class="mockup-container">
+        <div class="phone-mockup">
+          <div class="phone-glow" style="top: 20%; left: 10%;"></div>
+          <div class="phone-glow" style="bottom: 10%; right: 10%; background: #7C3AED;"></div>
+          <div class="phone-screen" style="z-index: 1;">
+            <div class="phone-logo">CINE<span>VERSE</span></div>
+            <div class="phone-badge">App Móvil</div>
+            <img class="phone-app-img" src="assets/icon.png" alt="CineVerse Logo Icon">
+            <p style="color: var(--text-secondary); font-size: 0.8rem; font-family: var(--font-ui); margin-top: 0.5rem; line-height: 1.4;">Lleva tus películas y series favoritas en tu bolsillo.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lado Derecho: Descarga e Información -->
+      <div class="download-card">
+        <div>
+          <span style="color: var(--accent-red); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; font-family: var(--font-ui);">Descarga Oficial</span>
+          <h1 class="app-title">CineVerse para Android</h1>
+        </div>
+        
+        <div class="meta-list">
+          <div class="meta-item">
+            <span>📦</span>
+            <span>Versión: <strong>1.1.0</strong></span>
+          </div>
+          <div class="meta-item">
+            <span>💾</span>
+            <span>Tamaño: <strong>71 MB</strong></span>
+          </div>
+          <div class="meta-item">
+            <span>🤖</span>
+            <span>SO: <strong>Android 8.0+</strong></span>
+          </div>
+        </div>
+
+        <p style="color: var(--text-secondary); font-family: var(--font-ui); font-size: 0.95rem; line-height: 1.6; margin: 0;">
+          Disfruta de la mejor experiencia de CineVerse optimizada para tu teléfono. Accede a todo el catálogo, chatea en el canal global en vivo, y reproduce avances sin límites.
+        </p>
+
+        <!-- Botón principal: Google Drive -->
+        <a href="https://drive.google.com/drive/folders/1zhrrTww6QC6Lg6Zee8G5SRMSv23PCO-r?usp=drive_link" target="_blank" rel="noopener" class="btn-download" style="text-decoration: none;">
+          <svg style="width: 22px; height: 22px; fill: white; flex-shrink:0;" viewBox="0 0 24 24">
+            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+          </svg>
+          Descargar APK — Google Drive
+        </a>
+
+        <ul class="features-list">
+          <li>Experiencia de visualización fluida y nativa en Android.</li>
+          <li>Chat global en tiempo real completamente integrado.</li>
+          <li>Soporte de Banners e Interstitials de Google AdMob.</li>
+          <li>Totalmente compatible con Smart TVs y cajas Android TV.</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Anuncio Adsterra — Superior -->
+    <!-- Banner 728x90 (Escritorio) -->
+    <div class="adsterra-banner adsterra-banner--desktop">
+      <script>
+        atOptions = {
+          'key' : '1e641c652913ad7208ae96f454ffed02',
+          'format' : 'iframe',
+          'height' : 90,
+          'width' : 728,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/1e641c652913ad7208ae96f454ffed02/invoke.js"></script>
+    </div>
+    <!-- Banner 320x50 (Móvil) -->
+    <div class="adsterra-banner adsterra-banner--mobile">
+      <script>
+        atOptions = {
+          'key' : '0fb10f90384450b9db33fa72a94fa189',
+          'format' : 'iframe',
+          'height' : 50,
+          'width' : 320,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/0fb10f90384450b9db33fa72a94fa189/invoke.js"></script>
+    </div>
+
+    <!-- Pasos de Instalación -->
+    <section class="steps-section">
+      <h2 class="section-title">Cómo Instalar la APK en tu Android</h2>
+      
+      <div class="steps-grid">
+        <!-- Paso 1 -->
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <h3>Descarga el Archivo</h3>
+          <p>Presiona el botón de descarga superior y guarda el archivo <strong>CineVerse-debug.apk</strong> en la memoria de tu dispositivo.</p>
+        </div>
+        <!-- Paso 2 -->
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <h3>Permite Orígenes</h3>
+          <p>Ve a Ajustes > Seguridad (o los permisos de tu navegador) y asegúrate de activar la casilla de <strong>"Permitir la instalación de fuentes desconocidas"</strong>.</p>
+        </div>
+        <!-- Paso 3 -->
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <h3>Instala la App</h3>
+          <p>Abre tu administrador de archivos, selecciona el APK descargado, presiona <strong>Instalar</strong> y ¡listo! Inicia sesión para empezar.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Anuncio Adsterra — Inferior -->
+    <!-- Banner 728x90 (Escritorio) -->
+    <div class="adsterra-banner adsterra-banner--desktop" style="margin-bottom: 5rem;">
+      <script>
+        atOptions = {
+          'key' : '1e641c652913ad7208ae96f454ffed02',
+          'format' : 'iframe',
+          'height' : 90,
+          'width' : 728,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/1e641c652913ad7208ae96f454ffed02/invoke.js"></script>
+    </div>
+    <!-- Banner 320x50 (Móvil) -->
+    <div class="adsterra-banner adsterra-banner--mobile" style="margin-bottom: 5rem;">
+      <script>
+        atOptions = {
+          'key' : '0fb10f90384450b9db33fa72a94fa189',
+          'format' : 'iframe',
+          'height' : 50,
+          'width' : 320,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/0fb10f90384450b9db33fa72a94fa189/invoke.js"></script>
+    </div>
+  </main>
+
+  <!-- JS -->
+  <script type="module" src="js/components/navbar.js?v=2.0.0"></script>
+</body>
+</html>

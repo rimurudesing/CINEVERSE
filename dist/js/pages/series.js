@@ -1,0 +1,307 @@
+/* ═══ cineverse/js/pages/series.js ═══ */
+
+import { api } from '../api.js';
+import { createMovieCard } from '../components/movieCard.js';
+import { initPageTransition, navigateTo, debounce } from '../utils.js';
+import { initCustomCursor } from '../cursor.js';
+import '../components/navbar.js';
+import { skeleton } from '../components/skeleton.js';
+
+class SeriesPageController {
+  constructor() {
+    this.results = [];
+    this.page = 1;
+    this.totalPages = 1;
+    this.loading = false;
+    this.viewMode = 'grid'; // 'grid' o 'list'
+    this.observer = null;
+    
+    // Filtros activos (solo para series)
+    this.filters = {
+      genres: [],
+      year: 2026, // 2026 es el máximo (significa "Todos")
+      rating: 0,
+      sort: 'popularity.desc'
+    };
+  }
+
+  async init() {
+    initPageTransition();
+    initCustomCursor();
+
+    this.cacheDOM();
+    this.bindEvents();
+    
+    // Cargar checkboxes de géneros de TV/Series
+    await this.loadGenres();
+
+    // Leer parámetros de la URL (por ejemplo, género)
+    this.readURLParams();
+
+    // Ejecutar discover inicial
+    this.triggerSearch(true);
+  }
+
+  readURLParams() {
+    const params = new URLSearchParams(window.location.search);
+    const genre = params.get('genre');
+    if (genre) {
+      const id = parseInt(genre);
+      if (!isNaN(id)) {
+        this.filters.genres = [id];
+        // También marcar el checkbox correspondiente
+        const cb = document.querySelector(`.genre-checkbox[value="${id}"]`);
+        if (cb) {
+          cb.checked = true;
+        }
+      }
+    }
+  }
+
+  cacheDOM() {
+    this.resultsCounter = document.getElementById('results-counter');
+    this.resultsGrid = document.getElementById('search-results-grid');
+    this.emptyState = document.getElementById('search-empty-state');
+    this.filterToggleBtn = document.getElementById('filter-toggle-btn');
+    this.filterSidebar = document.getElementById('search-sidebar');
+    this.applyFiltersBtn = document.getElementById('apply-filters-btn');
+    this.clearFiltersBtn = document.getElementById('clear-filters-btn');
+    
+    // Sliders
+    this.yearRange = document.getElementById('filter-year');
+    this.yearLabel = document.getElementById('year-val');
+    this.ratingRange = document.getElementById('filter-rating');
+    this.ratingLabel = document.getElementById('rating-val');
+    this.sortSelect = document.getElementById('filter-sort');
+    
+    // Contenedor de checkboxes géneros
+    this.genresContainer = document.getElementById('genres-checkboxes-container');
+    
+    // Grid/List toggle
+    this.viewGridBtn = document.getElementById('view-grid-btn');
+    this.viewListBtn = document.getElementById('view-list-btn');
+
+    // Loader centinela para scroll infinito
+    this.sentinel = document.getElementById('infinite-scroll-sentinel');
+  }
+
+  bindEvents() {
+    // Filtros expandibles en mobile
+    if (this.filterToggleBtn) {
+      this.filterToggleBtn.addEventListener('click', () => {
+        const isActive = this.filterSidebar.classList.toggle('active');
+        this.filterToggleBtn.textContent = isActive ? 'Cerrar Filtros -' : 'Filtros +';
+      });
+    }
+
+    // Actualizar valor de año en vivo
+    if (this.yearRange) {
+      this.yearRange.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        this.yearLabel.textContent = val === 2026 ? 'Todos' : val;
+      });
+    }
+
+    // Actualizar valor de rating en vivo
+    if (this.ratingRange) {
+      this.ratingRange.addEventListener('input', (e) => {
+        this.ratingLabel.textContent = parseFloat(e.target.value).toFixed(1);
+      });
+    }
+
+    // Botón Aplicar Filtros
+    if (this.applyFiltersBtn) {
+      this.applyFiltersBtn.addEventListener('click', () => {
+        this.readFilters();
+        if (window.innerWidth <= 768) {
+          this.filterSidebar.classList.remove('active');
+          if (this.filterToggleBtn) this.filterToggleBtn.textContent = 'Filtros +';
+        }
+        this.triggerSearch(true);
+      });
+    }
+
+    // Botón Limpiar Filtros
+    if (this.clearFiltersBtn) {
+      this.clearFiltersBtn.addEventListener('click', () => {
+        this.resetFiltersDOM();
+        this.triggerSearch(true);
+      });
+    }
+
+    // Toggles de vista (Cuadrícula / Lista)
+    if (this.viewGridBtn && this.viewListBtn) {
+      this.viewGridBtn.addEventListener('click', () => this.setViewMode('grid'));
+      this.viewListBtn.addEventListener('click', () => this.setViewMode('list'));
+    }
+  }
+
+  async loadGenres() {
+    if (!this.genresContainer) return;
+
+    try {
+      const genres = await api.getTVGenres();
+      if (!genres || genres.length === 0) {
+        this.genresContainer.innerHTML = '<p style="color:var(--text-muted)">No se cargaron los géneros.</p>';
+        return;
+      }
+
+      this.genresContainer.innerHTML = genres.map(g => `
+        <label class="form-checkbox-wrapper" style="margin-bottom: 0.5rem;">
+          <input type="checkbox" class="form-checkbox genre-checkbox" value="${g.id}">
+          <span class="form-checkbox-custom"></span>
+          <span>${g.name}</span>
+        </label>
+      `).join('');
+
+    } catch (e) {
+      this.genresContainer.innerHTML = '<p style="color:var(--text-muted)">Error al cargar géneros.</p>';
+    }
+  }
+
+  readFilters() {
+    const checked = [];
+    document.querySelectorAll('.genre-checkbox:checked').forEach(cb => {
+      checked.push(parseInt(cb.value));
+    });
+    this.filters.genres = checked;
+    this.filters.year = parseInt(this.yearRange.value);
+    this.filters.rating = parseFloat(this.ratingRange.value);
+    this.filters.sort = this.sortSelect.value;
+  }
+
+  resetFiltersDOM() {
+    this.yearRange.value = 2026;
+    this.yearLabel.textContent = 'Todos';
+    this.ratingRange.value = 0;
+    this.ratingLabel.textContent = '0.0';
+    this.sortSelect.value = 'popularity.desc';
+    
+    document.querySelectorAll('.genre-checkbox').forEach(cb => {
+      cb.checked = false;
+    });
+
+    this.filters.genres = [];
+    this.filters.year = 2026;
+    this.filters.rating = 0;
+    this.filters.sort = 'popularity.desc';
+  }
+
+  setViewMode(mode) {
+    if (this.viewMode === mode) return;
+    this.viewMode = mode;
+
+    if (mode === 'grid') {
+      this.viewGridBtn.classList.add('btn--primary');
+      this.viewGridBtn.classList.remove('btn--secondary');
+      this.viewListBtn.classList.remove('btn--primary');
+      this.viewListBtn.classList.add('btn--secondary');
+
+      this.resultsGrid.className = 'grid grid--4';
+    } else {
+      this.viewListBtn.classList.add('btn--primary');
+      this.viewListBtn.classList.remove('btn--secondary');
+      this.viewGridBtn.classList.remove('btn--primary');
+      this.viewGridBtn.classList.add('btn--secondary');
+
+      this.resultsGrid.className = 'flex flex--col flex--gap-md';
+    }
+
+    const currentItems = [...this.results];
+    this.resultsGrid.innerHTML = '';
+    this.renderResults(currentItems);
+  }
+
+  async triggerSearch(reset = false) {
+    if (reset) {
+      this.page = 1;
+      this.results = [];
+      this.resultsGrid.innerHTML = skeleton.cards(8);
+      this.emptyState.style.display = 'none';
+    }
+
+    if (this.loading) return;
+    this.loading = true;
+
+    try {
+      const discoverParams = {
+        page: this.page,
+        sort_by: this.filters.sort,
+        'vote_average.gte': this.filters.rating
+      };
+
+      if (this.filters.genres.length > 0) {
+        discoverParams.with_genres = this.filters.genres.join(',');
+      }
+
+      // Si no es el máximo (2026), filtramos por año de primera emisión
+      if (this.filters.year < 2026) {
+        discoverParams.first_air_date_year = this.filters.year;
+      }
+
+      const data = await api.discoverTV(discoverParams);
+      this.loading = false;
+
+      if (!data || !data.results || data.results.length === 0) {
+        if (reset) {
+          this.resultsGrid.innerHTML = '';
+          this.resultsCounter.textContent = '0 series encontradas';
+          this.emptyState.style.display = 'block';
+        }
+        return;
+      }
+
+      this.totalPages = data.total_pages || 1;
+      const newItems = data.results;
+
+      if (reset) {
+        this.resultsGrid.innerHTML = '';
+      }
+
+      this.results = [...this.results, ...newItems];
+      this.resultsCounter.textContent = `${data.total_results || this.results.length} series encontradas`;
+
+      this.renderResults(newItems);
+      this.setupInfiniteScroll();
+
+    } catch (err) {
+      console.error("Error al buscar series:", err);
+      this.loading = false;
+    }
+  }
+
+  renderResults(items) {
+    items.forEach(item => {
+      const isList = this.viewMode === 'list';
+      const card = createMovieCard(item, { 
+        size: isList ? 'lg' : 'md', 
+        showType: false 
+      });
+
+      if (isList) {
+        card.classList.add('movie-card--list-layout');
+      }
+
+      this.resultsGrid.appendChild(card);
+    });
+  }
+
+  setupInfiniteScroll() {
+    if (!this.sentinel) return;
+    if (this.observer) this.observer.disconnect();
+
+    this.observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !this.loading && this.page < this.totalPages) {
+          this.page++;
+          this.triggerSearch(false);
+        }
+      });
+    }, { rootMargin: '200px' });
+
+    this.observer.observe(this.sentinel);
+  }
+}
+
+const controller = new SeriesPageController();
+document.addEventListener('DOMContentLoaded', () => controller.init());

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Icono y Favicon de la Web -->
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVerse — Catálogo de Películas</title>
+  <meta name="description" content="Explora y filtra las mejores películas en CineVerse por género, año y valoración.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hojas de Estilo -->
+  <link rel="stylesheet" href="css/variables.css?v=2.0.0">
+  <link rel="stylesheet" href="css/reset.css?v=2.0.0">
+  <link rel="stylesheet" href="css/layout.css?v=2.0.0">
+  <link rel="stylesheet" href="css/components.css?v=2.0.0">
+  <link rel="stylesheet" href="css/navbar.css?v=2.0.0">
+  <link rel="stylesheet" href="css/hero.css?v=2.0.0">
+  <link rel="stylesheet" href="css/modal.css?v=2.0.0">
+  <link rel="stylesheet" href="css/skeleton.css?v=2.0.0">
+  <link rel="stylesheet" href="css/forms.css?v=2.0.0">
+  <link rel="stylesheet" href="css/animations.css?v=2.0.0">
+  <link rel="stylesheet" href="css/ads.css?v=2.0.0">
+  <link rel="stylesheet" href="css/responsive.css?v=2.0.0">
+</head>
+<body style="padding-top: 100px;">
+
+  <!-- Transición de página -->
+  <div class="page-transition-overlay out"></div>
+
+  <main class="container">
+    
+    <!-- Título de Sección -->
+    <section class="flex flex--col flex--align-center text-center" style="margin-top: 2rem; margin-bottom: 3rem; width: 100%;">
+      <h1 style="font-family: var(--font-display); font-size: 3.5rem; letter-spacing: 1px; margin-bottom: 1rem;">
+        Catálogo de <span style="color: var(--accent-red)">Películas</span>
+      </h1>
+      <p style="color: var(--text-secondary); max-width: 600px; font-size: 1.1rem; line-height: 1.5;">
+        Filtra y ordena el mejor cine a tu gusto. Encuentra clásicos, éxitos de taquilla y novedades.
+      </p>
+    </section>
+
+    <!-- Anuncio Adsterra — Superior -->
+    <div class="adsterra-banner adsterra-banner--desktop">
+      <script>
+        atOptions = {
+          'key' : '1e641c652913ad7208ae96f454ffed02',
+          'format' : 'iframe',
+          'height' : 90,
+          'width' : 728,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/1e641c652913ad7208ae96f454ffed02/invoke.js"></script>
+    </div>
+    <div class="adsterra-banner adsterra-banner--mobile">
+      <script>
+        atOptions = {
+          'key' : '0fb10f90384450b9db33fa72a94fa189',
+          'format' : 'iframe',
+          'height' : 50,
+          'width' : 320,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/0fb10f90384450b9db33fa72a94fa189/invoke.js"></script>
+    </div>
+
+    <!-- Botón Toggle de Filtros en Mobile -->
+    <div class="flex flex--justify-center" style="margin-bottom: 1rem;">
+      <button class="btn btn--secondary search-filter-toggle" id="filter-toggle-btn" style="width: 100%; display: none;">Filtros +</button>
+    </div>
+
+    <!-- Layout principal -->
+    <div class="flex flex--gap-lg search-page" style="align-items: flex-start;">
+      
+      <!-- Filtros Lateral (Sidebar) -->
+      <aside 
+        class="search-sidebar" 
+        id="search-sidebar"
+        style="width: 300px; flex-shrink: 0; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-lg); position: sticky; top: 100px;"
+      >
+        <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--text-primary);">Filtros</h3>
+
+        <!-- Ordenar -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label">Ordenar por</label>
+          <select id="filter-sort" class="form-select">
+            <option value="popularity.desc">Más popular</option>
+            <option value="vote_average.desc">Más valoradas</option>
+            <option value="primary_release_date.desc">Más nuevas</option>
+            <option value="title.ascii">Alfabético</option>
+          </select>
+        </div>
+
+        <!-- Rango de Año -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <div class="flex flex--justify-between">
+            <label class="form-label">Año de Lanzamiento</label>
+            <span id="year-val" style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-red);">Todos</span>
+          </div>
+          <input type="range" id="filter-year" class="form-range" min="1970" max="2026" value="2026">
+          <div class="form-range-labels">
+            <span>1970</span>
+            <span>Todos</span>
+          </div>
+        </div>
+
+        <!-- Puntuación Mínima -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <div class="flex flex--justify-between">
+            <label class="form-label">Rating Mínimo</label>
+            <span id="rating-val" style="font-family: var(--font-mono); font-weight: 700; color: var(--gold);">0.0</span>
+          </div>
+          <input type="range" id="filter-rating" class="form-range" min="0" max="10" step="0.5" value="0">
+          <div class="form-range-labels">
+            <span>0.0</span>
+            <span>10.0</span>
+          </div>
+        </div>
+
+        <!-- Géneros -->
+        <div class="form-group" style="margin-bottom: 1.75rem;">
+          <label class="form-label">Géneros</label>
+          <div id="genres-checkboxes-container" style="max-height: 220px; overflow-y: auto; padding-right: 0.5rem;">
+            Cargando géneros...
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="flex flex--col flex--gap-sm">
+          <button class="btn btn--primary" id="apply-filters-btn" style="width: 100%;">Aplicar Filtros</button>
+          <button class="btn btn--outline" id="clear-filters-btn" style="width: 100%;">Limpiar Filtros</button>
+        </div>
+      </aside>
+
+      <!-- Panel de Resultados -->
+      <section style="flex: 1; min-width: 0;">
+        
+        <!-- Header de Resultados -->
+        <div class="flex flex--align-center flex--justify-between" style="margin-bottom: 1.5rem; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 0.75rem 1.25rem; border-radius: var(--radius-md);">
+          <span id="results-counter" style="font-weight: 600; color: var(--text-secondary);">Cargando películas...</span>
+          
+          <div class="flex flex--gap-sm">
+            <button class="btn btn--primary btn--icon" id="view-grid-btn" data-tooltip="Vista Cuadrícula" style="width: 32px; height: 32px; font-size: 0.8rem;">田</button>
+            <button class="btn btn--secondary btn--icon" id="view-list-btn" data-tooltip="Vista Lista" style="width: 32px; height: 32px; font-size: 0.8rem;">☰</button>
+          </div>
+        </div>
+
+        <!-- Grid de Películas -->
+        <div class="grid grid--4" id="search-results-grid"></div>
+
+        <!-- Centinela para Scroll Infinito -->
+        <div id="infinite-scroll-sentinel" style="height: 100px; width: 100%; margin-top: 2rem;"></div>
+
+        <!-- Estado Vacío -->
+        <div id="search-empty-state" style="display: none; text-align: center; padding: 5rem 2rem; background-color: var(--bg-secondary); border: 1px dashed var(--border-subtle); border-radius: var(--radius-lg);">
+          <svg style="width: 80px; height: 80px; fill: var(--text-muted); margin-bottom: 1.5rem;" viewBox="0 0 24 24">
+            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+          </svg>
+          <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">No se encontraron películas</h3>
+          <p style="color: var(--text-secondary); max-width: 400px; margin: 0 auto 1.5rem auto;">Intenta cambiar los filtros seleccionados para encontrar más contenido.</p>
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer style="background-color: var(--bg-void); border-top: 1px solid var(--border-subtle); padding: 4rem 0 2rem 0; margin-top: 5rem; font-family: var(--font-ui);">
+    <div class="container text-center" style="color: var(--text-muted); font-size: 0.85rem;">
+      <p>© 2025 CINEVERSE. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/pages/peliculas.js?v=2.0.0"></script>
+  <!-- Chat en Vivo en Tiempo Real -->
+</body>
+</html>
