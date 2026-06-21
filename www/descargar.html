@@ -216,6 +216,36 @@
       transform: scale(0.98);
     }
 
+    .btn-download-wa {
+      background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 1rem 2rem;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 8px 25px rgba(37, 211, 102, 0.35);
+    }
+
+    .btn-download-wa:hover {
+      transform: scale(1.03) translateY(-2px);
+      box-shadow: 0 10px 30px rgba(37, 211, 102, 0.55);
+      background: linear-gradient(135deg, #2ae771 0%, #14a090 100%);
+    }
+
+    .btn-download-wa:active {
+      transform: scale(0.98);
+    }
+
     .features-list {
       display: flex;
       flex-direction: column;
@@ -408,12 +438,12 @@
           Disfruta de la mejor experiencia de CineVerse optimizada para tu teléfono. Accede a todo el catálogo, chatea en el canal global en vivo, y reproduce avances sin límites.
         </p>
 
-        <!-- Botón principal: Google Drive -->
-        <a href="https://drive.google.com/drive/folders/1zhrrTww6QC6Lg6Zee8G5SRMSv23PCO-r?usp=drive_link" target="_blank" rel="noopener" class="btn-download" style="text-decoration: none;">
-          <svg style="width: 22px; height: 22px; fill: white; flex-shrink:0;" viewBox="0 0 24 24">
-            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+        <!-- Botón principal: WhatsApp Channel -->
+        <a href="https://whatsapp.com/channel/0029Vb7pYDm5PO1A2Sq56443" target="_blank" rel="noopener" class="btn-download-wa" id="download-btn" style="text-decoration: none;">
+          <svg style="width: 22px; height: 22px; fill: white; flex-shrink: 0;" viewBox="0 0 24 24">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.59-4.846c1.6.95 3.197 1.487 4.85 1.488 5.437 0 9.861-4.424 9.864-9.863.002-2.634-1.02-5.11-2.881-6.974C16.56 1.94 14.08 .917 11.45 .917c-5.44 0-9.866 4.425-9.868 9.867-.001 1.77.475 3.498 1.38 5.061L1.936 21.05l5.248-1.376z"/>
           </svg>
-          Descargar APK — Google Drive
+          Descargar APK vía WhatsApp
         </a>
 
         <ul class="features-list">
@@ -462,8 +492,8 @@
         <!-- Paso 1 -->
         <div class="step-card">
           <div class="step-num">1</div>
-          <h3>Descarga el Archivo</h3>
-          <p>Presiona el botón de descarga superior y guarda el archivo <strong>CineVerse-debug.apk</strong> en la memoria de tu dispositivo.</p>
+          <h3>Únete al Canal</h3>
+          <p>Presiona el botón de descarga superior, únete a nuestro canal y descarga el archivo <strong>CineVerse-debug.apk</strong> desde el mensaje fijado.</p>
         </div>
         <!-- Paso 2 -->
         <div class="step-card">
@@ -511,5 +541,108 @@
 
   <!-- JS -->
   <script type="module" src="js/components/navbar.js?v=3.0.0"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const downloadBtn = document.getElementById('download-btn');
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          
+          // Crear overlay y modal con efectos premium
+          const overlay = document.createElement('div');
+          overlay.style.position = 'fixed';
+          overlay.style.top = '0';
+          overlay.style.left = '0';
+          overlay.style.width = '100%';
+          overlay.style.height = '100%';
+          overlay.style.backgroundColor = 'rgba(10, 10, 10, 0.85)';
+          overlay.style.backdropFilter = 'blur(15px)';
+          overlay.style.display = 'flex';
+          overlay.style.justifyContent = 'center';
+          overlay.style.alignItems = 'center';
+          overlay.style.zIndex = '9999';
+          overlay.style.opacity = '0';
+          overlay.style.transition = 'opacity 0.3s ease';
+          
+          const modal = document.createElement('div');
+          modal.style.background = 'linear-gradient(135deg, rgba(20, 20, 20, 0.9) 0%, rgba(10, 10, 10, 0.95) 100%)';
+          modal.style.border = '1px solid rgba(37, 211, 102, 0.2)';
+          modal.style.borderRadius = '16px';
+          modal.style.padding = '2.5rem';
+          modal.style.maxWidth = '420px';
+          modal.style.width = '90%';
+          modal.style.textAlign = 'center';
+          modal.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(37, 211, 102, 0.1)';
+          modal.style.transform = 'scale(0.9)';
+          modal.style.transition = 'transform 0.3s ease';
+          
+          modal.innerHTML = `
+            <div style="margin-bottom: 1.5rem; display: inline-flex; justify-content: center; align-items: center; width: 60px; height: 60px; border-radius: 50%; background: rgba(37, 211, 102, 0.1); border: 1px solid rgba(37, 211, 102, 0.3);">
+              <svg style="width: 32px; height: 32px; fill: #25D366;" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.59-4.846c1.6.95 3.197 1.487 4.85 1.488 5.437 0 9.861-4.424 9.864-9.863.002-2.634-1.02-5.11-2.881-6.974C16.56 1.94 14.08 .917 11.45 .917c-5.44 0-9.866 4.425-9.868 9.867-.001 1.77.475 3.498 1.38 5.061L1.936 21.05l5.248-1.376z"/>
+              </svg>
+            </div>
+            <h3 style="font-family: var(--font-ui); color: #fff; font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem;">Preparando Enlace</h3>
+            <p style="font-family: var(--font-ui); color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.4;">Redirigiendo al canal oficial de WhatsApp para descargar <strong>CineVerse-debug.apk</strong> de forma segura...</p>
+            
+            <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; overflow: hidden; margin-bottom: 1rem;">
+              <div id="download-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #25D366, #128C7E); border-radius: 10px; transition: width 0.1s linear;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-family: var(--font-ui); font-size: 0.8rem; color: var(--text-secondary);">
+              <span id="download-status-text">Verificando seguridad...</span>
+              <span id="download-percentage">0%</span>
+            </div>
+          `;
+          
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+          
+          // Animación de entrada
+          overlay.offsetHeight;
+          overlay.style.opacity = '1';
+          modal.style.transform = 'scale(1)';
+          
+          const progressBar = overlay.querySelector('#download-progress-bar');
+          const statusText = overlay.querySelector('#download-status-text');
+          const percentageText = overlay.querySelector('#download-percentage');
+          
+          const steps = [
+            { progress: 20, text: 'Verificando seguridad del enlace...' },
+            { progress: 50, text: 'Preparando descarga en WhatsApp...' },
+            { progress: 80, text: 'Abriendo canal de descargas CineVerse...' },
+            { progress: 100, text: 'Redirigiendo...' }
+          ];
+          
+          let currentProgress = 0;
+          let stepIdx = 0;
+          
+          const interval = setInterval(() => {
+            if (currentProgress < 100) {
+              currentProgress += 4;
+              if (currentProgress > 100) currentProgress = 100;
+              progressBar.style.width = currentProgress + '%';
+              percentageText.textContent = currentProgress + '%';
+              
+              if (stepIdx < steps.length && currentProgress >= steps[stepIdx].progress) {
+                statusText.textContent = steps[stepIdx].text;
+                stepIdx++;
+              }
+            } else {
+              clearInterval(interval);
+              setTimeout(() => {
+                overlay.style.opacity = '0';
+                modal.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                  document.body.removeChild(overlay);
+                  window.open('https://whatsapp.com/channel/0029Vb7pYDm5PO1A2Sq56443', '_blank');
+                }, 300);
+              }, 400);
+            }
+          }, 60);
+        });
+      }
+    });
+  </script>
 </body>
 </html>
