@@ -15,6 +15,7 @@ import { initCustomCursor } from '../cursor.js';
 import '../components/navbar.js';
 
 import { showInterstitialAd } from '../admob.js';
+import { getGlobalSettings } from '../settings.js';
 
 // ── Configuración de Vimeus ──────────────────────────────────────────────────
 const VIMEUS_VIEW_KEY = 'SIdNplTsfvK71V6ZRXUI1tti-rS3EwKRolj0mmqedZ4';
@@ -96,21 +97,37 @@ class WatchPageController {
   }
 
   // ── Vimeus Player ──────────────────────────────────────────────────────────
-  renderPlayer() {
+  async renderPlayer() {
     const playerRoot = document.getElementById('player-area-root');
     if (!playerRoot) return;
 
     const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
 
     // Comprobar estado Premium
-    const profile = this.currentUser ? (this.currentUser.profile || {}) : {};
+    const profile   = this.currentUser ? (this.currentUser.profile || {}) : {};
     const isPremium = !!profile.is_premium;
 
-    if (!isPremium) {
-      this.renderAd(playerRoot, vimeusURL);
-    } else {
+    // Si el usuario es Premium siempre va directo al reproductor
+    if (isPremium) {
       this.renderActualPlayer(playerRoot, vimeusURL);
+      return;
     }
+
+    // Si los anuncios están desactivados globalmente, también va directo al reproductor
+    try {
+      const settings    = await getGlobalSettings();
+      const adsEnabled  = settings.global_ads_enabled !== false;
+      if (!adsEnabled) {
+        console.log('[watch] Anuncios globalmente desactivados — reproducción directa.');
+        this.renderActualPlayer(playerRoot, vimeusURL);
+        return;
+      }
+    } catch (e) {
+      // Si falla la consulta, mostrar el anuncio (fail-open)
+    }
+
+    // Usuario Free con anuncios activos
+    this.renderAd(playerRoot, vimeusURL);
   }
 
   renderActualPlayer(playerRoot, vimeusURL) {

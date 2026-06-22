@@ -1,11 +1,11 @@
 /* ═══ cineverse/js/admob.js ═══ */
 /**
  * CineVerse AdMob Manager
- * 
+ *
  * Gestiona todos los anuncios de la aplicación móvil.
  * - En la APK: usa Google AdMob real con interstitials de 30 segundos.
  * - En el navegador web: usa el sistema de anuncios simulados existente.
- * 
+ *
  * IDs DE PRUEBA (Google):
  * Antes de publicar en Play Store, reemplaza con tus IDs reales de AdMob.
  * App ID: ca-app-pub-3940256099942544~3347511713 (test)
@@ -13,6 +13,8 @@
  * Rewarded:     ca-app-pub-3940256099942544/5224354917 (test)
  * Banner:       ca-app-pub-3940256099942544/6300978111 (test)
  */
+
+import { getGlobalSettings } from './settings.js';
 
 // ────────────────────────────────────────────────────────────
 // IDs de AdMob — CAMBIA ESTOS POR LOS REALES AL PUBLICAR
@@ -30,11 +32,31 @@ const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePla
 let AdMob = null;
 
 /**
+ * Verificar si la publicidad global está habilitada
+ */
+async function areAdsEnabled() {
+  try {
+    const settings = await getGlobalSettings();
+    return settings.global_ads_enabled !== false;
+  } catch (e) {
+    // Fail-open: si no se puede saber, mostrar anuncios
+    return true;
+  }
+}
+
+/**
  * Inicializar el plugin de AdMob
  */
 export async function initAdMob() {
   if (!IS_NATIVE) {
     console.log('[AdMob] No es plataforma nativa. Se usará el sistema web.');
+    return false;
+  }
+
+  // Verificar si los anuncios están habilitados globalmente
+  const adsEnabled = await areAdsEnabled();
+  if (!adsEnabled) {
+    console.log('[AdMob] Publicidad desactivada globalmente. AdMob no se inicializará.');
     return false;
   }
 
@@ -44,8 +66,8 @@ export async function initAdMob() {
 
     await AdMob.initialize({
       requestTrackingAuthorization: true,
-      testingDevices: [], // Agrega aquí tu Device ID de prueba si quieres
-      initializeForTesting: false, // Cambiar a false al publicar en producción
+      testingDevices: [],
+      initializeForTesting: false,
     });
 
     console.log('[AdMob] Inicializado correctamente.');
@@ -63,14 +85,17 @@ export async function initAdMob() {
  */
 export async function showInterstitialAd() {
   if (!IS_NATIVE || !AdMob) {
-    // En navegador, el sistema de anuncio simulado en watch.js se encarga
     return false;
   }
 
+  // Respetar control global
+  const adsEnabled = await areAdsEnabled();
+  if (!adsEnabled) return false;
+
   try {
     await AdMob.prepareInterstitial({
-      adId: ADMOB_IDS.interstitial,
-      isTesting: false, // Cambiar a false en producción
+      adId:      ADMOB_IDS.interstitial,
+      isTesting: false,
     });
 
     await AdMob.showInterstitial();
@@ -92,6 +117,9 @@ export async function showRewardedAd() {
     return false;
   }
 
+  const adsEnabled = await areAdsEnabled();
+  if (!adsEnabled) return false;
+
   return new Promise(async (resolve) => {
     try {
       AdMob.addListener('onRewardedVideoAdRewarded', () => {
@@ -100,7 +128,7 @@ export async function showRewardedAd() {
       });
 
       await AdMob.prepareRewardVideoAd({
-        adId: ADMOB_IDS.rewarded,
+        adId:      ADMOB_IDS.rewarded,
         isTesting: false,
       });
 
@@ -116,17 +144,18 @@ export async function showRewardedAd() {
  * Mostrar un banner de anuncio en la parte inferior (solo en APK)
  */
 export async function showBannerAd() {
-  if (!IS_NATIVE || !AdMob) {
-    return false;
-  }
+  if (!IS_NATIVE || !AdMob) return false;
+
+  const adsEnabled = await areAdsEnabled();
+  if (!adsEnabled) return false;
 
   try {
     const { BannerAdSize, BannerAdPosition } = await import('@capacitor-community/admob');
     await AdMob.showBanner({
-      adId: ADMOB_IDS.banner,
-      adSize: BannerAdSize.ADAPTIVE_BANNER,
+      adId:     ADMOB_IDS.banner,
+      adSize:   BannerAdSize.ADAPTIVE_BANNER,
       position: BannerAdPosition.BOTTOM_CENTER,
-      margin: 0,
+      margin:   0,
       isTesting: false,
     });
     return true;
@@ -149,20 +178,14 @@ export async function hideBannerAd() {
 }
 
 // Auto-inicializar cuando el DOM esté listo
-// El banner AdMob se muestra en todas las páginas excepto watch (que usa interstitial)
 document.addEventListener('DOMContentLoaded', () => {
   initAdMob().then(initialized => {
     if (!initialized) return;
 
     const isWatchPage = window.location.pathname.includes('watch');
-    if (isWatchPage) {
-      // En watch.html el banner no se muestra (se usa interstitial en su lugar)
-      // El banner se muestra después de que el usuario termine de ver el contenido
-      return;
-    }
+    if (isWatchPage) return; // watch.html usa interstitial, no banner aquí
 
     // En todas las demás páginas: mostrar banner a usuarios Free
-    // Intentamos leer el estado Premium desde localStorage (caché del perfil de Supabase)
     try {
       const cachedProfile = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
       const isPremium = !!(cachedProfile.is_premium || false);
@@ -170,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showBannerAd();
       }
     } catch (_) {
-      // Si falla la lectura, mostrar el banner por defecto (usuario free)
       showBannerAd();
     }
   });
