@@ -1,6 +1,11 @@
 /* ═══ cineverse/css/navbar.css — Premium Redesign ═══ */
 
-/* ── Base ── */
+/* Bloquear scroll de fondo cuando el menú móvil está abierto */
+body.menu-open {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
 .navbar {
   position: fixed;
   top: 0;

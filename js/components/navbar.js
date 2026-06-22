@@ -58,7 +58,7 @@ export function renderNavbar() {
     <a href="descargar.html" class="navbar__mobile-link" data-link="download">Descargar App</a>
   `;
 
-  // Estructura completa de la navbar
+  // Estructura de la navbar sin el menú móvil dentro
   header.innerHTML = `
     <div class="container navbar__container">
       <a href="index.html" class="navbar__logo">CINE<span>VERSE</span></a>
@@ -82,20 +82,28 @@ export function renderNavbar() {
         </button>
       </div>
     </div>
-
-    <!-- Menú móvil -->
-    <div class="navbar__mobile-menu">
-      <a href="index.html"     class="navbar__mobile-link" data-link="home">Inicio</a>
-      <a href="peliculas.html" class="navbar__mobile-link" data-link="movie">Películas</a>
-      <a href="series.html"    class="navbar__mobile-link" data-link="tv">Series</a>
-      <a href="estrenos.html"  class="navbar__mobile-link" data-link="upcoming">Estrenos</a>
-      <a href="chat.html"      class="navbar__mobile-link" data-link="chat">Chat</a>
-      ${downloadLinkMobile}
-      <a href="perfil.html"    class="navbar__mobile-link" data-link="profile">Perfil</a>
-    </div>
   `;
 
+  // Eliminar menú móvil anterior si existe para evitar duplicados al recargar
+  document.getElementById('navbar-mobile-menu')?.remove();
+
+  // Crear el menú móvil como un elemento independiente fuera de la navbar
+  const mobileMenu = document.createElement('div');
+  mobileMenu.id = 'navbar-mobile-menu';
+  mobileMenu.className = 'navbar__mobile-menu';
+  mobileMenu.innerHTML = `
+    <a href="index.html"     class="navbar__mobile-link" data-link="home">Inicio</a>
+    <a href="peliculas.html" class="navbar__mobile-link" data-link="movie">Películas</a>
+    <a href="series.html"    class="navbar__mobile-link" data-link="tv">Series</a>
+    <a href="estrenos.html"  class="navbar__mobile-link" data-link="upcoming">Estrenos</a>
+    <a href="chat.html"      class="navbar__mobile-link" data-link="chat">Chat</a>
+    ${downloadLinkMobile}
+    <a href="perfil.html"    class="navbar__mobile-link" data-link="profile">Perfil</a>
+  `;
+
+  // Agregar la navbar y el menú móvil al body
   document.body.prepend(header);
+  document.body.appendChild(mobileMenu);
 
   // ── 1. Control de scroll ──
   const handleScroll = () => {
@@ -109,19 +117,31 @@ export function renderNavbar() {
 
   // ── 3. Menú móvil ──
   const hamburger = header.querySelector('.navbar__hamburger');
-  const mobileMenu = header.querySelector('.navbar__mobile-menu');
   hamburger.addEventListener('click', () => {
     const isActive = hamburger.classList.toggle('active');
     mobileMenu.classList.toggle('active', isActive);
-    // Bloquear scroll del body cuando el menú está abierto
-    document.body.style.overflow = isActive ? 'hidden' : '';
+    
+    // Bloquear scroll de la página en móvil
+    if (isActive) {
+      document.body.classList.add('menu-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('menu-open');
+      document.body.style.overflow = '';
+    }
   });
+
+  // Evitar scroll por arrastre táctil dentro del menú móvil
+  mobileMenu.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+  }, { passive: false });
 
   // Cerrar menú al hacer click en un link móvil
   mobileMenu.querySelectorAll('.navbar__mobile-link').forEach(link => {
     link.addEventListener('click', () => {
       hamburger.classList.remove('active');
       mobileMenu.classList.remove('active');
+      document.body.classList.remove('menu-open');
       document.body.style.overflow = '';
     });
   });
