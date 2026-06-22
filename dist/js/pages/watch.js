@@ -172,21 +172,95 @@ class WatchPageController {
   }
 
   async renderAd(playerRoot, vimeusURL) {
-    // Si estamos en la APK nativa, intentamos mostrar el anuncio intersticial de AdMob a pantalla completa
+    // 1. Verificar primero si los anuncios globales están deshabilitados
     try {
-      const adShown = await showInterstitialAd();
-      if (adShown) {
-        console.log('[AdMob] Interstitial real mostrado con éxito.');
-        // Si el anuncio de AdMob se mostró, podemos saltar directamente al reproductor real 
-        // o reducir el tiempo de espera. Saltamos directamente al reproductor ya que vio el interstitial real.
+      const { getGlobalSettings } = await import('../settings.js');
+      const settings = await getGlobalSettings();
+      if (settings.global_ads_enabled === false) {
+        console.log('[Ads] Publicidad global desactivada. Saltando pre-roll.');
         this.renderActualPlayer(playerRoot, vimeusURL);
         return;
       }
     } catch (e) {
-      console.error('[AdMob] Error intentando mostrar anuncio nativo:', e);
+      console.warn('[Ads] No se pudo comprobar el ajuste global de anuncios:', e);
     }
 
-    // Un trailer cinematográfico genérico de YouTube sin controles interactivos directos (simulado para web)
+    // 2. Mostrar overlay con botón de reproducir para evitar bloqueo de popups del Smartlink
+    playerRoot.innerHTML = `
+      <div class="vimeus-player-wrap" id="ad-play-overlay" style="
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16/9;
+        background: #0d0d0d;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5rem;
+        cursor: pointer;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        transition: border-color 0.3s;
+      ">
+        <div class="play-btn-circle" style="
+          width: 85px;
+          height: 85px;
+          border-radius: 50%;
+          background: var(--accent-red);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.2s, box-shadow 0.2s;
+          box-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
+        ">
+          <svg style="width: 38px; height: 38px; fill: white; margin-left: 6px;" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </div>
+        <div style="text-align: center; font-family: var(--font-ui);">
+          <h4 style="color: white; font-weight: 700; margin: 0 0 0.5rem; font-size: 1.3rem;">Reproducir Contenido en HD</h4>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0; padding: 0 1rem;">Presiona reproducir para iniciar (Contiene 1 anuncio pre-roll de 30s)</p>
+        </div>
+      </div>
+    `;
+
+    // Efecto hover
+    const overlay = document.getElementById('ad-play-overlay');
+    const playCircle = overlay.querySelector('.play-btn-circle');
+    
+    // Configurar estilos iniciales inline para las transiciones
+    playCircle.style.transform = 'scale(1)';
+    playCircle.style.boxShadow = '0 0 20px rgba(229, 9, 20, 0.5)';
+    overlay.style.borderColor = 'var(--border-subtle)';
+
+    overlay.addEventListener('mouseenter', () => {
+      playCircle.style.transform = 'scale(1.1)';
+      playCircle.style.boxShadow = '0 0 30px rgba(229, 9, 20, 0.8)';
+      overlay.style.borderColor = 'var(--accent-red)';
+    });
+    overlay.addEventListener('mouseleave', () => {
+      playCircle.style.transform = 'scale(1)';
+      playCircle.style.boxShadow = '0 0 20px rgba(229, 9, 20, 0.5)';
+      overlay.style.borderColor = 'var(--border-subtle)';
+    });
+
+    overlay.addEventListener('click', () => {
+      // Abrir el Smartlink de Adsterra de forma segura por acción de click
+      try {
+        const smartlink = 'https://www.effectivecpmnetwork.com/n8bfacm3rn?key=dae2ae5c2f289ded4d55b6217baeed0c';
+        window.open(smartlink, '_blank');
+      } catch (err) {
+        console.error('Error abriendo smartlink:', err);
+      }
+
+      // Iniciar el trailer simulado y la cuenta atrás
+      this.startCountdownAd(playerRoot, vimeusURL);
+    });
+  }
+
+  startCountdownAd(playerRoot, vimeusURL) {
     const adTrailerUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&controls=0&mute=1&loop=1&playlist=dQw4w9WgXcQ";
 
     playerRoot.innerHTML = `
@@ -270,7 +344,6 @@ class WatchPageController {
       <div id="ad-episode-bar-placeholder"></div>
     `;
 
-    // Configurar temporizador
     let timeLeft = 30;
     const timerEl = document.getElementById('ad-timer');
     
