@@ -162,9 +162,105 @@ function highlightActiveLink() {
   });
 }
 
+/**
+ * Inyecta dinámicamente el banner de promoción viral para conseguir Premium gratis
+ * en el contenedor principal de la página, visible para usuarios no Premium.
+ */
+export function injectGlobalPromoBanner() {
+  const path = window.location.pathname.toLowerCase();
+  const excludes = ['watch', 'login', 'admin', 'perfil'];
+  if (excludes.some(ex => path.includes(ex))) {
+    return;
+  }
+
+  // Verificar si el usuario ya es Premium leyendo la caché local
+  const profileCached = localStorage.getItem('cineverse_profile');
+  let isPremium = false;
+  if (profileCached) {
+    try {
+      const profile = JSON.parse(profileCached);
+      isPremium = !!profile.is_premium;
+    } catch(e) {}
+  }
+  if (isPremium) return;
+
+  // Buscar el contenedor principal de la página
+  const target = document.querySelector('main') || document.querySelector('.search-page-wrap') || document.querySelector('.container');
+  if (!target) return;
+
+  // Evitar duplicados
+  if (document.getElementById('global-viral-promo-banner')) return;
+
+  // Inyectar estilos para el banner de manera dinámica si no existen
+  const styleId = 'global-promo-banner-styles';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      @keyframes promoGlow {
+        0%, 100% { border-color: rgba(229, 9, 20, 0.4); box-shadow: 0 4px 15px rgba(229, 9, 20, 0.15); }
+        50% { border-color: rgba(245, 197, 24, 0.6); box-shadow: 0 4px 20px rgba(245, 197, 24, 0.25); }
+      }
+      .global-viral-promo-banner {
+        margin: 1.5rem auto 2.5rem auto;
+        max-width: 1200px;
+        width: calc(100% - 2rem);
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, rgba(229, 9, 20, 0.08) 0%, rgba(245, 197, 24, 0.04) 100%);
+        border: 1.5px dashed rgba(229, 9, 20, 0.4);
+        border-radius: var(--radius-md);
+        font-family: var(--font-ui);
+        position: relative;
+        z-index: 10;
+        box-sizing: border-box;
+        animation: promoGlow 4s ease-in-out infinite;
+        transition: all 0.3s ease;
+      }
+      .global-viral-promo-banner:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, rgba(229, 9, 20, 0.12) 0%, rgba(245, 197, 24, 0.06) 100%);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const promoDiv = document.createElement('div');
+  promoDiv.id = 'global-viral-promo-banner';
+  promoDiv.className = 'global-viral-promo-banner';
+  promoDiv.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 1.25rem; width: 100%; flex-wrap: wrap;">
+      <div style="font-size: 2.2rem; line-height: 1; flex-shrink: 0;">🚀</div>
+      <div style="flex: 1; min-width: 280px;">
+        <h4 style="color: #FFD700; font-size: 1.05rem; font-weight: 800; margin: 0 0 0.35rem 0; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem;">
+          ¡CONSIGUE PREMIUM GRATIS DE REGALO!
+        </h4>
+        <p style="color: var(--text-primary); font-size: 0.88rem; margin: 0 0 0.35rem 0; line-height: 1.45;">
+          ¿Quieres CineVerse Premium sin publicidad por unos días? ¡Comparte nuestra app en tus estados de WhatsApp o publica un video recomendándola en TikTok, Instagram o X!
+        </p>
+        <p style="color: var(--text-secondary); font-size: 0.82rem; margin: 0; line-height: 1.45;">
+          Envíanos tus pruebas (captura o link del video) al correo: 
+          <strong style="color: white; font-family: var(--font-mono); font-size: 0.88rem;">rimuruweb02@gmail.com</strong>
+          y te mandaremos tu código Premium. ¡Así de rápido! 🎁✨
+        </p>
+      </div>
+    </div>
+  `;
+
+  // Insertar al principio del contenedor principal
+  if (target.firstChild) {
+    target.insertBefore(promoDiv, target.firstChild);
+  } else {
+    target.appendChild(promoDiv);
+  }
+}
+
 // Auto-mount
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', renderNavbar);
+  document.addEventListener('DOMContentLoaded', () => {
+    renderNavbar();
+    setTimeout(injectGlobalPromoBanner, 50);
+  });
 } else {
   renderNavbar();
+  setTimeout(injectGlobalPromoBanner, 50);
 }
