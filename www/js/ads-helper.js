@@ -1,6 +1,7 @@
 /* ═══ cineverse/js/ads-helper.js ═══ */
 
 import { getGlobalSettings } from './settings.js';
+import { getCurrentUser } from './auth.js';
 
 const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
 
@@ -16,10 +17,19 @@ export async function initWebAds() {
   // 1. Verificar si el usuario es Premium
   let isPremium = false;
   try {
-    const profile = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
+    let profile = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
     isPremium = !!(profile.is_premium || false);
+
+    // Si en caché no es premium, verificar con la sesión viva de Supabase
+    if (!isPremium) {
+      const userObj = await getCurrentUser();
+      if (userObj && userObj.profile) {
+        profile = userObj.profile;
+        isPremium = !!profile.is_premium;
+      }
+    }
   } catch (e) {
-    console.error('[Ads] Error al parsear el perfil de usuario:', e);
+    console.error('[Ads] Error al verificar estado Premium:', e);
   }
 
   if (isPremium) {

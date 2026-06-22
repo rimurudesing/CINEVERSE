@@ -84,6 +84,7 @@ export async function signInWithGoogle() {
  */
 export async function signOut() {
   if (!isSupabaseConfigured) return;
+  localStorage.removeItem('cineverse_profile');
   const client = await getClient();
   if (!client) return;
   const { error } = await client.auth.signOut();
@@ -164,6 +165,7 @@ export async function getCurrentUser() {
     
     // Aplicar tema dinámico si es premium, si no revertir a rojo
     if (profile) {
+      localStorage.setItem('cineverse_profile', JSON.stringify(profile));
       if (profile.is_premium) {
         const themeToApply = profile.theme_color || 'red';
         localStorage.setItem('cineverse_theme_color', themeToApply);
@@ -173,6 +175,7 @@ export async function getCurrentUser() {
         applyUserTheme('red');
       }
     } else {
+      localStorage.removeItem('cineverse_profile');
       localStorage.setItem('cineverse_theme_color', 'red');
       applyUserTheme('red');
     }
@@ -249,6 +252,7 @@ export function onAuthStateChange(cb) {
           }
           
           if (profile) {
+            localStorage.setItem('cineverse_profile', JSON.stringify(profile));
             if (profile.is_premium) {
               const themeToApply = profile.theme_color || 'red';
               localStorage.setItem('cineverse_theme_color', themeToApply);
@@ -258,6 +262,7 @@ export function onAuthStateChange(cb) {
               applyUserTheme('red');
             }
           } else {
+            localStorage.removeItem('cineverse_profile');
             localStorage.setItem('cineverse_theme_color', 'red');
             applyUserTheme('red');
           }
@@ -268,6 +273,7 @@ export function onAuthStateChange(cb) {
           cb(event, session, null);
         }
       } else {
+        localStorage.removeItem('cineverse_profile');
         localStorage.setItem('cineverse_theme_color', 'red');
         applyUserTheme('red');
         cb(event, null, null);
@@ -321,6 +327,14 @@ export async function updateProfile(data) {
     .eq('id', user.id);
     
   if (error) throw error;
+
+  try {
+    const currentCached = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
+    const updatedProfile = { ...currentCached, ...data };
+    localStorage.setItem('cineverse_profile', JSON.stringify(updatedProfile));
+  } catch (e) {
+    console.error("Error al actualizar cineverse_profile en localStorage:", e);
+  }
 }
 
 /**

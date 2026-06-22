@@ -12,6 +12,7 @@
 
 import { getGlobalSettings } from './settings.js';
 import { showApkBanner, hideApkBanner } from './ads-helper.js';
+import { getCurrentUser } from './auth.js';
 
 const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
 
@@ -50,8 +51,17 @@ export async function showInterstitialAd() {
 
   // 2. Respetar estado Premium
   try {
-    const cachedProfile = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
-    const isPremium = !!(cachedProfile.is_premium || false);
+    let profile = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
+    let isPremium = !!(profile.is_premium || false);
+
+    if (!isPremium) {
+      const userObj = await getCurrentUser();
+      if (userObj && userObj.profile) {
+        profile = userObj.profile;
+        isPremium = !!profile.is_premium;
+      }
+    }
+
     if (isPremium) {
       console.log('[Adsterra Adapter] Usuario Premium detectado. Omitiendo interstitial.');
       return false;
@@ -90,8 +100,17 @@ export async function showBannerAd() {
   if (!adsEnabled) return false;
 
   try {
-    const cachedProfile = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
-    const isPremium = !!(cachedProfile.is_premium || false);
+    let profile = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
+    let isPremium = !!(profile.is_premium || false);
+
+    if (!isPremium) {
+      const userObj = await getCurrentUser();
+      if (userObj && userObj.profile) {
+        profile = userObj.profile;
+        isPremium = !!profile.is_premium;
+      }
+    }
+
     if (isPremium) return false;
 
     showApkBanner();
