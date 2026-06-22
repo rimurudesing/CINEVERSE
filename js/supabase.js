@@ -14,7 +14,17 @@ export let supabase = null;
 
 if (isSupabaseConfigured && window.supabase) {
   try {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        lock: async (name, acquireTimeout, fn) => {
+          // Evitar navigator.locks para prevenir deadlocks en entornos WebView/Capacitor
+          return await fn();
+        }
+      }
+    });
   } catch (error) {
     console.error("Error al inicializar cliente Supabase local:", error);
   }
