@@ -85,6 +85,8 @@ export async function signInWithGoogle() {
 export async function signOut() {
   if (!isSupabaseConfigured) return;
   localStorage.removeItem('cineverse_profile');
+  localStorage.removeItem('cineverse_theme_color');
+  applyUserTheme('red');
   const client = await getClient();
   if (!client) return;
   const { error } = await client.auth.signOut();
@@ -366,4 +368,48 @@ export async function uploadAvatar(file) {
     
   return publicUrl;
 }
+
+// ═════════════════════════════════════════════════════════════════════════
+// VALIDACIÓN DE SESIÓN Y ESTADO PREMIUM EN SEGUNDO PLANO
+// ═════════════════════════════════════════════════════════════════════════
+if (typeof window !== 'undefined') {
+  // Retrasar la ejecución para no afectar el renderizado inicial de la página
+  setTimeout(() => {
+    let wasPremium = false;
+    let hadProfile = false;
+    try {
+      const cached = localStorage.getItem('cineverse_profile');
+      if (cached) {
+        hadProfile = true;
+        const profile = JSON.parse(cached);
+        wasPremium = !!profile.is_premium;
+      }
+    } catch (e) {
+      console.error('[Auth System] Error al leer caché en segundo plano:', e);
+    }
+
+    getCurrentUser().then(userObj => {
+      if (userObj && userObj.profile) {
+        const isPremiumNow = !!userObj.profile.is_premium;
+        // Si el estado premium ha cambiado (ej. revocado por admin), forzar recarga de página
+        if (wasPremium !== isPremiumNow) {
+          console.log(`[Auth System] Estado Premium cambió de ${wasPremium} a ${isPremiumNow}. Recargando...`);
+          window.location.reload();
+        }
+      } else {
+        // Si ya no hay sesión activa pero existía perfil en caché
+        if (hadProfile) {
+          console.warn('[Auth System] Sesión expirada o cerrada. Limpiando caché...');
+          localStorage.removeItem('cineverse_profile');
+          localStorage.removeItem('cineverse_theme_color');
+          applyUserTheme('red');
+          window.location.reload();
+        }
+      }
+    }).catch(err => {
+      console.error('[Auth System] Error al validar sesión en segundo plano:', err);
+    });
+  }, 2000); // 2 segundos
+}
+
 

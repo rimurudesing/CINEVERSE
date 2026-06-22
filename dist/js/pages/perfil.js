@@ -150,19 +150,21 @@ class ProfilePageController {
     if (bioEl)  bioEl.textContent  = bio;
 
     // Banner de fondo
-    if (isPremium && profile.banner_url) {
-      const bannerBg = document.getElementById('profile-banner-bg');
-      if (bannerBg) {
+    const bannerBg = document.getElementById('profile-banner-bg');
+    if (bannerBg) {
+      if (isPremium && profile.banner_url) {
         bannerBg.style.backgroundImage = `url('${profile.banner_url}')`;
         bannerBg.style.backgroundSize   = 'cover';
         bannerBg.style.backgroundPosition = 'center';
+      } else {
+        bannerBg.style.backgroundImage = 'linear-gradient(135deg, var(--accent-dark-red) 0%, var(--bg-primary) 80%)';
       }
     }
 
     // Mostrar botón de cambiar banner si es premium
     const bannerUploadBtn = document.getElementById('banner-upload-btn');
-    if (bannerUploadBtn && isPremium) {
-      bannerUploadBtn.style.display = 'block';
+    if (bannerUploadBtn) {
+      bannerUploadBtn.style.display = isPremium ? 'block' : 'none';
     }
 
     // Badge Premium
