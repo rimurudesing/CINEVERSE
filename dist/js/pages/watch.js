@@ -358,31 +358,35 @@ class WatchPageController {
           padding:1.1rem 1.15rem;
           margin-bottom:1rem;
         ">
-          <p style="font-size:0.73rem;font-weight:800;color:#039BE5;margin:0 0 1rem;text-transform:uppercase;letter-spacing:0.7px;">📋 Guía rápida — Sigue estos pasos</p>
+          <p style="font-size:0.73rem;font-weight:800;color:#039BE5;margin:0 0 1rem;text-transform:uppercase;letter-spacing:0.7px;">📋 Guía rápida — Evita cortes por anuncio</p>
 
           <!-- Paso 1 -->
-          <div style="display:flex;gap:0.8rem;align-items:flex-start;margin-bottom:0.9rem;">
+          <div style="display:flex;gap:0.8rem;align-items:flex-start;margin-bottom:1.1rem;">
             <span style="width:24px;height:24px;border-radius:50%;background:#039BE5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;font-weight:900;color:white;margin-top:1px;">1</span>
             <p style="font-size:0.83rem;color:var(--text-secondary);margin:0;line-height:1.4;">
-              Toca el botón azul de arriba. <strong style="color:var(--text-primary);">Web Video Caster abrirá</strong> con el reproductor de la película/serie cargado.
+              Toca el botón azul de arriba. <strong style="color:var(--text-primary);">Web Video Caster abrirá</strong> cargando la película/serie.
             </p>
           </div>
 
           <!-- Paso 2 -->
-          <div style="display:flex;gap:0.8rem;align-items:flex-start;margin-bottom:0.9rem;">
+          <div style="display:flex;gap:0.8rem;align-items:flex-start;margin-bottom:1.1rem;">
             <span style="width:24px;height:24px;border-radius:50%;background:#039BE5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;font-weight:900;color:white;margin-top:1px;">2</span>
             <p style="font-size:0.83rem;color:var(--text-secondary);margin:0;line-height:1.4;">
-              <strong style="color:var(--text-primary);">Espera que el video empiece a reproducirse</strong> en tu celular dentro de WVC. Puede haber un breve anuncio del reproductor al inicio, déjalo terminar.
+              <strong style="color:#FFC107;">⚠️ ESPERA EL ANUNCIO EN TU CELULAR:</strong> Si aparece un anuncio de Vimeus en tu celular, **no intentes transmitir todavía**. Espera a que termine por completo en tu pantalla y comience la película/serie.
             </p>
           </div>
 
-          <!-- Paso 3 — CRÍTICO en amarillo -->
-          <div style="display:flex;gap:0.8rem;align-items:flex-start;background:rgba(255,193,7,0.1);border:1.5px solid rgba(255,193,7,0.4);border-radius:10px;padding:0.75rem 0.85rem;margin-bottom:0.9rem;">
+          <!-- Paso 3 — PROBLEMA DE DESCONEXIÓN EXPLICADO -->
+          <div style="display:flex;gap:0.8rem;align-items:flex-start;background:rgba(255,193,7,0.08);border:1.5px solid rgba(255,193,7,0.35);border-radius:10px;padding:0.85rem;margin-bottom:1.1rem;">
             <span style="width:24px;height:24px;border-radius:50%;background:#FFC107;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;font-weight:900;color:#000;margin-top:1px;">3</span>
             <div>
-              <p style="font-size:0.85rem;font-weight:800;color:#FFC107;margin:0 0 0.3rem;">⚡ IMPORTANTE — Toca el ícono de cast en WVC</p>
+              <p style="font-size:0.85rem;font-weight:800;color:#FFC107;margin:0 0 0.35rem;">🎬 ¿Se desconectó al acabar el anuncio?</p>
               <p style="font-size:0.8rem;color:var(--text-secondary);margin:0;line-height:1.45;">
-                Cuando la película esté corriendo, busca el ícono <strong style="color:var(--text-primary);">(cuadrado con señal wifi 📡)</strong> en la <strong style="color:var(--text-primary);">barra superior derecha</strong> de Web Video Caster y tócalo. Ese es el botón para enviar el video a tu TV.
+                Si el anuncio se transmitió y la pantalla de tu TV se quedó en negro o desconectada al terminar:
+                <br><br>
+                1. Toca el <strong>botón de lista de videos detectados</strong> (es un <strong>círculo amarillo de Play ▶️</strong> en la barra superior o inferior de WVC).
+                <br>
+                2. Selecciona la opción que corresponde a la película o serie (la reconocerás porque dura más tiempo, ej: <strong>1:45:00</strong> o <strong>45:00</strong>) para enviarla a tu TV.
               </p>
             </div>
           </div>
@@ -391,7 +395,7 @@ class WatchPageController {
           <div style="display:flex;gap:0.8rem;align-items:flex-start;">
             <span style="width:24px;height:24px;border-radius:50%;background:#039BE5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;font-weight:900;color:white;margin-top:1px;">4</span>
             <p style="font-size:0.83rem;color:var(--text-secondary);margin:0;line-height:1.4;">
-              Selecciona tu dispositivo (Chromecast, Smart TV, Roku…) y <strong style="color:#4CAF50;">¡el video se transmitirá en tu TV! 🎬</strong>
+              Conéctate a tu TV pulsando el ícono de cast <strong style="color:var(--text-primary);">(📡 WiFi)</strong> de la barra superior derecha, ¡y listo!
             </p>
           </div>
         </div>
