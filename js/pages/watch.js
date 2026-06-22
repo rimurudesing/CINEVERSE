@@ -17,6 +17,9 @@ import '../components/navbar.js';
 import { showInterstitialAd } from '../admob.js';
 import { getGlobalSettings } from '../settings.js';
 
+// ── Detección de plataforma nativa (APK Capacitor) ──────────────────────────
+const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
+
 // ── Configuración de Vimeus ──────────────────────────────────────────────────
 const VIMEUS_VIEW_KEY = 'SIdNplTsfvK71V6ZRXUI1tti-rS3EwKRolj0mmqedZ4';
 
@@ -161,14 +164,243 @@ class WatchPageController {
         ></iframe>
       </div>
 
+      <!-- Botón de Cast a TV con Web Video Caster -->
+      ${this.buildCastButton(vimeusURL)}
+
       <!-- Barra inferior de opciones del player (solo series) -->
       ${this.mediaType === 'tv' ? this.buildEpisodeBar() : ''}
     `;
+
+    // Vincular eventos del botón de Cast
+    this.bindCastButton(vimeusURL);
 
     // Vincular eventos del selector de episodios (series)
     if (this.mediaType === 'tv') {
       this.bindEpisodeBarEvents();
     }
+  }
+
+  // ── Web Video Caster — Cast a TV ───────────────────────────────────────────
+  buildCastButton(vimeusURL) {
+    return `
+      <div id="wvc-cast-bar" style="
+        margin-top: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: linear-gradient(135deg, rgba(3,155,229,0.1) 0%, rgba(0,100,200,0.06) 100%);
+        border: 1px solid rgba(3,155,229,0.3);
+        border-radius: var(--radius-md);
+        padding: 0.9rem 1.25rem;
+        flex-wrap: wrap;
+      ">
+        <!-- Icono TV -->
+        <svg style="width:28px;height:28px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#039BE5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <polyline points="8 21 12 17 16 21"/>
+          <circle cx="12" cy="10" r="2" fill="#039BE5" stroke="none"/>
+          <path d="M8 10 Q10 7 12 10 Q14 13 16 10" stroke="#039BE5" fill="none"/>
+        </svg>
+        <div style="flex:1;min-width:0;">
+          <p style="font-size:0.82rem;color:var(--text-secondary);margin:0;font-family:var(--font-ui);">
+            <strong style="color:var(--text-primary);">¿Quieres verlo en tu TV?</strong> Usa Web Video Caster para transmitir a Chromecast, Roku, Smart TV y más.
+          </p>
+        </div>
+        <button id="wvc-cast-btn" style="
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: linear-gradient(135deg, #0277BD 0%, #039BE5 100%);
+          color: white;
+          border: none;
+          border-radius: var(--radius-sm);
+          padding: 0.6rem 1.2rem;
+          font-family: var(--font-ui);
+          font-size: 0.85rem;
+          font-weight: 700;
+          cursor: pointer;
+          white-space: nowrap;
+          box-shadow: 0 4px 12px rgba(3,155,229,0.35);
+          transition: all 0.2s ease;
+          flex-shrink: 0;
+        ">
+          <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="white">
+            <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2C12 12.94 7.06 8 1 10zm20-7H3C1.9 3 1 3.9 1 5v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+          </svg>
+          Enviar a TV
+        </button>
+      </div>
+    `;
+  }
+
+  bindCastButton(vimeusURL) {
+    const btn = document.getElementById('wvc-cast-btn');
+    if (!btn) return;
+
+    // Efectos hover
+    btn.addEventListener('mouseenter', () => {
+      btn.style.transform = 'translateY(-1px)';
+      btn.style.boxShadow = '0 6px 16px rgba(3,155,229,0.5)';
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = 'translateY(0)';
+      btn.style.boxShadow = '0 4px 12px rgba(3,155,229,0.35)';
+    });
+
+    btn.addEventListener('click', () => this.castToTV(vimeusURL));
+  }
+
+  castToTV(vimeusURL) {
+    const title   = this.mediaDetails?.title || this.mediaDetails?.name || 'CineVerse';
+    const poster  = this.mediaDetails?.poster_path
+      ? buildTMDBImageURL(this.mediaDetails.poster_path, 'w500')
+      : '';
+
+    // Añadir episodio al título si es serie
+    let displayTitle = title;
+    if (this.mediaType === 'tv' && this.season && this.episode) {
+      displayTitle = `${title} — T${this.season} E${this.episode}`;
+    }
+
+    const encodedURL   = encodeURIComponent(vimeusURL);
+    const encodedTitle = encodeURIComponent(displayTitle);
+    const encodedPoster = encodeURIComponent(poster);
+
+    if (IS_NATIVE) {
+      // ── APK Android: Intent directo a Web Video Caster ──────────────────
+      // Usar el esquema wvc-x-callback que funciona tanto en web como en APK
+      const intentURL = `intent://open?url=${encodedURL}&title=${encodedTitle}&poster=${encodedPoster}#Intent;scheme=wvc-x-callback;package=com.instantbits.cast.webvideo;end`;
+      try {
+        const anchor = document.createElement('a');
+        anchor.href = intentURL;
+        anchor.click();
+        showToast('📺 Abriendo Web Video Caster...', 'success');
+      } catch (e) {
+        // Fallback: abrir en Play Store si no está instalada
+        window.open('https://play.google.com/store/apps/details?id=com.instantbits.cast.webvideo', '_blank');
+        showToast('Instala Web Video Caster para transmitir a tu TV', 'info');
+      }
+    } else {
+      // ── Web: URL Scheme wvc-x-callback ──────────────────────────────────
+      const wvcURL = `wvc-x-callback://open?url=${encodedURL}&title=${encodedTitle}&poster=${encodedPoster}`;
+
+      // Mostrar modal de instrucciones en escritorio (el URL scheme es para móvil)
+      this.showCastModal(wvcURL, vimeusURL, displayTitle);
+    }
+  }
+
+  showCastModal(wvcURL, vimeusURL, title) {
+    // Eliminar modal anterior si existe
+    document.getElementById('wvc-modal')?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'wvc-modal';
+    modal.style.cssText = `
+      position: fixed; inset: 0; z-index: 99999;
+      background: rgba(0,0,0,0.88);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem; backdrop-filter: blur(8px);
+    `;
+    modal.innerHTML = `
+      <div style="
+        background: var(--bg-elevated);
+        border: 1px solid rgba(3,155,229,0.35);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        max-width: 480px;
+        width: 100%;
+        font-family: var(--font-ui);
+        position: relative;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(3,155,229,0.12);
+      ">
+        <!-- Cerrar -->
+        <button id="wvc-modal-close" style="
+          position:absolute;top:1rem;right:1rem;
+          background:none;border:none;color:var(--text-muted);
+          font-size:1.4rem;cursor:pointer;line-height:1;
+        ">✕</button>
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+          <div style="
+            width:52px;height:52px;border-radius:var(--radius-md);
+            background:linear-gradient(135deg,#0277BD,#039BE5);
+            display:flex;align-items:center;justify-content:center;
+            flex-shrink:0;box-shadow:0 4px 15px rgba(3,155,229,0.4);
+          ">
+            <svg style="width:28px;height:28px;" viewBox="0 0 24 24" fill="white">
+              <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2C12 12.94 7.06 8 1 10zm20-7H3C1.9 3 1 3.9 1 5v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 style="font-size:1.15rem;font-weight:800;margin:0 0 0.2rem;color:var(--text-primary);">Enviar a TV con Web Video Caster</h3>
+            <p style="font-size:0.8rem;color:var(--text-secondary);margin:0;">Transmite a Chromecast, Roku, Smart TV, Fire TV y más</p>
+          </div>
+        </div>
+
+        <!-- Opciones -->
+        <div style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem;">
+
+          <!-- Opción 1: Abrir con la app (móvil/APK) -->
+          <a href="${wvcURL}" style="
+            display:flex;align-items:center;gap:1rem;
+            background:linear-gradient(135deg,rgba(3,155,229,0.12) 0%,rgba(2,119,189,0.08) 100%);
+            border:1px solid rgba(3,155,229,0.3);
+            border-radius:var(--radius-md);
+            padding:1rem 1.25rem;
+            text-decoration:none;
+            color:var(--text-primary);
+            transition:all 0.2s;
+          " id="wvc-direct-link">
+            <div style="font-size:1.8rem;">📱</div>
+            <div>
+              <p style="font-size:0.9rem;font-weight:700;margin:0 0 0.15rem;">Abrir en Web Video Caster (Móvil)</p>
+              <p style="font-size:0.75rem;color:var(--text-secondary);margin:0;">Si tienes la app instalada en tu celular, toca aquí para transmitir directamente.</p>
+            </div>
+          </a>
+
+          <!-- Opción 2: Descargar la app -->
+          <a href="https://play.google.com/store/apps/details?id=com.instantbits.cast.webvideo" target="_blank" style="
+            display:flex;align-items:center;gap:1rem;
+            background:rgba(255,255,255,0.03);
+            border:1px solid var(--border-subtle);
+            border-radius:var(--radius-md);
+            padding:1rem 1.25rem;
+            text-decoration:none;
+            color:var(--text-primary);
+            transition:all 0.2s;
+          ">
+            <div style="font-size:1.8rem;">⬇️</div>
+            <div>
+              <p style="font-size:0.9rem;font-weight:700;margin:0 0 0.15rem;">Descargar Web Video Caster</p>
+              <p style="font-size:0.75rem;color:var(--text-secondary);margin:0;">Gratis en Google Play Store y App Store.</p>
+            </div>
+          </a>
+        </div>
+
+        <!-- Instrucciones rápidas -->
+        <div style="
+          background:rgba(3,155,229,0.06);
+          border:1px solid rgba(3,155,229,0.15);
+          border-radius:var(--radius-sm);
+          padding:1rem;
+        ">
+          <p style="font-size:0.78rem;font-weight:700;color:#039BE5;margin:0 0 0.5rem;text-transform:uppercase;letter-spacing:0.5px;">📡 ¿Cómo funciona?</p>
+          <ol style="font-size:0.8rem;color:var(--text-secondary);padding-left:1.1rem;margin:0;line-height:1.7;">
+            <li>Descarga <strong style="color:var(--text-primary);">Web Video Caster</strong> en tu celular.</li>
+            <li>Toca <strong style="color:var(--text-primary);">"Abrir en Web Video Caster"</strong> de arriba.</li>
+            <li>Elige tu dispositivo (Chromecast, TV, etc.) dentro de la app.</li>
+            <li>¡Disfruta <strong style="color:var(--text-primary);">${title}</strong> en la pantalla grande! 🎬</li>
+          </ol>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Cerrar al hacer click fuera o en X
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    document.getElementById('wvc-modal-close')?.addEventListener('click', () => modal.remove());
   }
 
   async renderAd(playerRoot, vimeusURL) {
@@ -597,3 +829,4 @@ class WatchPageController {
 // Inicializar
 const controller = new WatchPageController();
 document.addEventListener('DOMContentLoaded', () => controller.init());
+
