@@ -262,137 +262,154 @@ class WatchPageController {
       displayTitle = `${title} — T${this.season} E${this.episode}`;
     }
 
-    const encodedURL   = encodeURIComponent(vimeusURL);
-    const encodedTitle = encodeURIComponent(displayTitle);
+    const encodedURL    = encodeURIComponent(vimeusURL);
+    const encodedTitle  = encodeURIComponent(displayTitle);
     const encodedPoster = encodeURIComponent(poster);
 
-    if (IS_NATIVE) {
-      // ── APK Android: Intent directo a Web Video Caster ──────────────────
-      // Usar el esquema wvc-x-callback que funciona tanto en web como en APK
-      const intentURL = `intent://open?url=${encodedURL}&title=${encodedTitle}&poster=${encodedPoster}#Intent;scheme=wvc-x-callback;package=com.instantbits.cast.webvideo;end`;
-      try {
-        const anchor = document.createElement('a');
-        anchor.href = intentURL;
-        anchor.click();
-        showToast('📺 Abriendo Web Video Caster...', 'success');
-      } catch (e) {
-        // Fallback: abrir en Play Store si no está instalada
-        window.open('https://play.google.com/store/apps/details?id=com.instantbits.cast.webvideo', '_blank');
-        showToast('Instala Web Video Caster para transmitir a tu TV', 'info');
-      }
-    } else {
-      // ── Web: URL Scheme wvc-x-callback ──────────────────────────────────
-      const wvcURL = `wvc-x-callback://open?url=${encodedURL}&title=${encodedTitle}&poster=${encodedPoster}`;
-
-      // Mostrar modal de instrucciones en escritorio (el URL scheme es para móvil)
-      this.showCastModal(wvcURL, vimeusURL, displayTitle);
-    }
+    // Siempre mostrar el modal con instrucciones claras (tanto en web como en APK)
+    // En APK el botón principal usará el Intent de Android
+    this.showCastModal(vimeusURL, displayTitle, encodedURL, encodedTitle, encodedPoster);
   }
 
-  showCastModal(wvcURL, vimeusURL, title) {
+  showCastModal(vimeusURL, title, encodedURL, encodedTitle, encodedPoster) {
     // Eliminar modal anterior si existe
     document.getElementById('wvc-modal')?.remove();
+
+    // URL scheme para móvil/web y el intent para APK
+    const wvcSchemeURL = `wvc-x-callback://open?url=${encodedURL}&title=${encodedTitle}&poster=${encodedPoster}`;
+    const intentURL    = `intent://open?url=${encodedURL}&title=${encodedTitle}&poster=${encodedPoster}#Intent;scheme=wvc-x-callback;package=com.instantbits.cast.webvideo;end`;
+    const openURL      = IS_NATIVE ? intentURL : wvcSchemeURL;
 
     const modal = document.createElement('div');
     modal.id = 'wvc-modal';
     modal.style.cssText = `
       position: fixed; inset: 0; z-index: 99999;
-      background: rgba(0,0,0,0.88);
+      background: rgba(0,0,0,0.9);
       display: flex; align-items: center; justify-content: center;
-      padding: 1.5rem; backdrop-filter: blur(8px);
+      padding: 1.5rem; backdrop-filter: blur(10px);
     `;
     modal.innerHTML = `
       <div style="
         background: var(--bg-elevated);
-        border: 1px solid rgba(3,155,229,0.35);
+        border: 1px solid rgba(3,155,229,0.4);
         border-radius: var(--radius-lg);
-        padding: 2rem;
-        max-width: 480px;
+        padding: 1.75rem;
+        max-width: 500px;
         width: 100%;
         font-family: var(--font-ui);
         position: relative;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(3,155,229,0.12);
+        box-shadow: 0 24px 70px rgba(0,0,0,0.9), 0 0 50px rgba(3,155,229,0.1);
+        max-height: 92vh;
+        overflow-y: auto;
       ">
         <!-- Cerrar -->
         <button id="wvc-modal-close" style="
           position:absolute;top:1rem;right:1rem;
-          background:none;border:none;color:var(--text-muted);
-          font-size:1.4rem;cursor:pointer;line-height:1;
+          background:rgba(255,255,255,0.08);border:none;color:var(--text-muted);
+          width:30px;height:30px;border-radius:50%;
+          font-size:1rem;cursor:pointer;line-height:1;
+          display:flex;align-items:center;justify-content:center;
+          transition:background 0.2s;
         ">✕</button>
 
         <!-- Header -->
         <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
           <div style="
-            width:52px;height:52px;border-radius:var(--radius-md);
+            width:50px;height:50px;border-radius:var(--radius-md);
             background:linear-gradient(135deg,#0277BD,#039BE5);
             display:flex;align-items:center;justify-content:center;
-            flex-shrink:0;box-shadow:0 4px 15px rgba(3,155,229,0.4);
+            flex-shrink:0;box-shadow:0 4px 15px rgba(3,155,229,0.45);
           ">
-            <svg style="width:28px;height:28px;" viewBox="0 0 24 24" fill="white">
+            <svg style="width:26px;height:26px;" viewBox="0 0 24 24" fill="white">
               <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2C12 12.94 7.06 8 1 10zm20-7H3C1.9 3 1 3.9 1 5v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
             </svg>
           </div>
           <div>
-            <h3 style="font-size:1.15rem;font-weight:800;margin:0 0 0.2rem;color:var(--text-primary);">Enviar a TV con Web Video Caster</h3>
-            <p style="font-size:0.8rem;color:var(--text-secondary);margin:0;">Transmite a Chromecast, Roku, Smart TV, Fire TV y más</p>
+            <h3 style="font-size:1.1rem;font-weight:800;margin:0 0 0.15rem;color:var(--text-primary);">Enviar a TV · Web Video Caster</h3>
+            <p style="font-size:0.78rem;color:var(--text-secondary);margin:0;">Chromecast · Roku · Smart TV · Fire TV</p>
           </div>
         </div>
 
-        <!-- Opciones -->
-        <div style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem;">
-
-          <!-- Opción 1: Abrir con la app (móvil/APK) -->
-          <a href="${wvcURL}" style="
-            display:flex;align-items:center;gap:1rem;
-            background:linear-gradient(135deg,rgba(3,155,229,0.12) 0%,rgba(2,119,189,0.08) 100%);
-            border:1px solid rgba(3,155,229,0.3);
-            border-radius:var(--radius-md);
-            padding:1rem 1.25rem;
-            text-decoration:none;
-            color:var(--text-primary);
-            transition:all 0.2s;
-          " id="wvc-direct-link">
-            <div style="font-size:1.8rem;">📱</div>
-            <div>
-              <p style="font-size:0.9rem;font-weight:700;margin:0 0 0.15rem;">Abrir en Web Video Caster (Móvil)</p>
-              <p style="font-size:0.75rem;color:var(--text-secondary);margin:0;">Si tienes la app instalada en tu celular, toca aquí para transmitir directamente.</p>
-            </div>
-          </a>
-
-          <!-- Opción 2: Descargar la app -->
-          <a href="https://play.google.com/store/apps/details?id=com.instantbits.cast.webvideo" target="_blank" style="
-            display:flex;align-items:center;gap:1rem;
-            background:rgba(255,255,255,0.03);
-            border:1px solid var(--border-subtle);
-            border-radius:var(--radius-md);
-            padding:1rem 1.25rem;
-            text-decoration:none;
-            color:var(--text-primary);
-            transition:all 0.2s;
-          ">
-            <div style="font-size:1.8rem;">⬇️</div>
-            <div>
-              <p style="font-size:0.9rem;font-weight:700;margin:0 0 0.15rem;">Descargar Web Video Caster</p>
-              <p style="font-size:0.75rem;color:var(--text-secondary);margin:0;">Gratis en Google Play Store y App Store.</p>
-            </div>
-          </a>
-        </div>
-
-        <!-- Instrucciones rápidas -->
-        <div style="
-          background:rgba(3,155,229,0.06);
-          border:1px solid rgba(3,155,229,0.15);
-          border-radius:var(--radius-sm);
-          padding:1rem;
+        <!-- Botón principal: Abrir WVC -->
+        <a href="${openURL}" id="wvc-direct-link" style="
+          display:flex;align-items:center;gap:0.9rem;
+          background:linear-gradient(135deg,#0277BD 0%,#039BE5 100%);
+          border-radius:var(--radius-md);
+          padding:1rem 1.2rem;
+          text-decoration:none;
+          color:white;
+          margin-bottom:1.25rem;
+          box-shadow:0 6px 22px rgba(3,155,229,0.45);
         ">
-          <p style="font-size:0.78rem;font-weight:700;color:#039BE5;margin:0 0 0.5rem;text-transform:uppercase;letter-spacing:0.5px;">📡 ¿Cómo funciona?</p>
-          <ol style="font-size:0.8rem;color:var(--text-secondary);padding-left:1.1rem;margin:0;line-height:1.7;">
-            <li>Descarga <strong style="color:var(--text-primary);">Web Video Caster</strong> en tu celular.</li>
-            <li>Toca <strong style="color:var(--text-primary);">"Abrir en Web Video Caster"</strong> de arriba.</li>
-            <li>Elige tu dispositivo (Chromecast, TV, etc.) dentro de la app.</li>
-            <li>¡Disfruta <strong style="color:var(--text-primary);">${title}</strong> en la pantalla grande! 🎬</li>
-          </ol>
+          <svg style="width:22px;height:22px;flex-shrink:0;" viewBox="0 0 24 24" fill="white">
+            <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2C12 12.94 7.06 8 1 10zm20-7H3C1.9 3 1 3.9 1 5v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+          </svg>
+          <div>
+            <p style="font-size:0.92rem;font-weight:800;margin:0 0 0.08rem;">📱 Abrir en Web Video Caster</p>
+            <p style="font-size:0.73rem;opacity:0.85;margin:0;">Toca si ya tienes la app instalada</p>
+          </div>
+        </a>
+
+        <!-- Guía paso a paso -->
+        <div style="
+          background:rgba(3,155,229,0.05);
+          border:1px solid rgba(3,155,229,0.2);
+          border-radius:var(--radius-md);
+          padding:1.1rem 1.15rem;
+          margin-bottom:1rem;
+        ">
+          <p style="font-size:0.73rem;font-weight:800;color:#039BE5;margin:0 0 1rem;text-transform:uppercase;letter-spacing:0.7px;">📋 Guía rápida — Sigue estos pasos</p>
+
+          <!-- Paso 1 -->
+          <div style="display:flex;gap:0.8rem;align-items:flex-start;margin-bottom:0.9rem;">
+            <span style="width:24px;height:24px;border-radius:50%;background:#039BE5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;font-weight:900;color:white;margin-top:1px;">1</span>
+            <p style="font-size:0.83rem;color:var(--text-secondary);margin:0;line-height:1.4;">
+              Toca el botón azul de arriba. <strong style="color:var(--text-primary);">Web Video Caster abrirá</strong> con el reproductor de la película/serie cargado.
+            </p>
+          </div>
+
+          <!-- Paso 2 -->
+          <div style="display:flex;gap:0.8rem;align-items:flex-start;margin-bottom:0.9rem;">
+            <span style="width:24px;height:24px;border-radius:50%;background:#039BE5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;font-weight:900;color:white;margin-top:1px;">2</span>
+            <p style="font-size:0.83rem;color:var(--text-secondary);margin:0;line-height:1.4;">
+              <strong style="color:var(--text-primary);">Espera que el video empiece a reproducirse</strong> en tu celular dentro de WVC. Puede haber un breve anuncio del reproductor al inicio, déjalo terminar.
+            </p>
+          </div>
+
+          <!-- Paso 3 — CRÍTICO en amarillo -->
+          <div style="display:flex;gap:0.8rem;align-items:flex-start;background:rgba(255,193,7,0.1);border:1.5px solid rgba(255,193,7,0.4);border-radius:10px;padding:0.75rem 0.85rem;margin-bottom:0.9rem;">
+            <span style="width:24px;height:24px;border-radius:50%;background:#FFC107;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;font-weight:900;color:#000;margin-top:1px;">3</span>
+            <div>
+              <p style="font-size:0.85rem;font-weight:800;color:#FFC107;margin:0 0 0.3rem;">⚡ IMPORTANTE — Toca el ícono de cast en WVC</p>
+              <p style="font-size:0.8rem;color:var(--text-secondary);margin:0;line-height:1.45;">
+                Cuando la película esté corriendo, busca el ícono <strong style="color:var(--text-primary);">(cuadrado con señal wifi 📡)</strong> en la <strong style="color:var(--text-primary);">barra superior derecha</strong> de Web Video Caster y tócalo. Ese es el botón para enviar el video a tu TV.
+              </p>
+            </div>
+          </div>
+
+          <!-- Paso 4 -->
+          <div style="display:flex;gap:0.8rem;align-items:flex-start;">
+            <span style="width:24px;height:24px;border-radius:50%;background:#039BE5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;font-weight:900;color:white;margin-top:1px;">4</span>
+            <p style="font-size:0.83rem;color:var(--text-secondary);margin:0;line-height:1.4;">
+              Selecciona tu dispositivo (Chromecast, Smart TV, Roku…) y <strong style="color:#4CAF50;">¡el video se transmitirá en tu TV! 🎬</strong>
+            </p>
+          </div>
         </div>
+
+        <!-- Descargar WVC -->
+        <a href="https://play.google.com/store/apps/details?id=com.instantbits.cast.webvideo" target="_blank" style="
+          display:flex;align-items:center;gap:0.75rem;
+          background:rgba(255,255,255,0.03);
+          border:1px solid var(--border-subtle);
+          border-radius:var(--radius-sm);
+          padding:0.7rem 1rem;
+          text-decoration:none;
+          color:var(--text-secondary);
+          font-size:0.79rem;
+        ">
+          <span style="font-size:1.2rem;">⬇️</span>
+          <span>¿No tienes la app? <strong style="color:var(--text-primary);">Descarga Web Video Caster gratis</strong> en Google Play.</span>
+        </a>
       </div>
     `;
 
