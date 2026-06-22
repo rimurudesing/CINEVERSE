@@ -191,6 +191,33 @@ class ProfilePageController {
     const theme = profile.theme_color || 'red';
     this.applyUserTheme(theme);
 
+    // Renderizar banner viral en todas las pestañas si no es Premium
+    const viralPromoEl = document.getElementById('profile-viral-promo');
+    if (viralPromoEl) {
+      if (!isPremium) {
+        viralPromoEl.style.display = 'block';
+        viralPromoEl.innerHTML = `
+          <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(229, 9, 20, 0.1) 0%, rgba(245, 197, 24, 0.05) 100%); border: 1px dashed var(--accent-red); border-radius: var(--radius-md); font-family: var(--font-ui); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
+            <h4 style="color: #FFD700; font-size: 1.1rem; font-weight: 700; margin: 0 0 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+              🚀 ¡CONSIGUE PREMIUM GRATIS!
+            </h4>
+            <p style="color: var(--text-primary); font-size: 0.88rem; margin: 0 0 0.75rem; line-height: 1.45;">
+              ¿Quieres probar CineVerse Premium gratis por unos días? ¡Ayúdanos a crecer!
+              Comparte nuestra aplicación con tus amigos, súbela a tus estados de WhatsApp o haz un video recomendándola en TikTok, Instagram o X.
+            </p>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0; line-height: 1.45;">
+              Escríbenos con tus pruebas (capturas de pantalla, enlaces del video, etc.) al correo
+              <strong style="color: white; font-family: var(--font-mono); font-size: 0.88rem;">rimuruweb02@gmail.com</strong>
+              y te enviaremos un código Premium de activación de regalo. ¡Así de fácil! 🎁✨
+            </p>
+          </div>
+        `;
+      } else {
+        viralPromoEl.style.display = 'none';
+        viralPromoEl.innerHTML = '';
+      }
+    }
+
     // Inicializar editores inline y uploader de avatar
     this.setupInlineEditors();
     this.setupAvatarUpload();
@@ -974,20 +1001,6 @@ class ProfilePageController {
             <p style="color:var(--text-secondary);font-size:0.9rem;margin-top:0.25rem;">Disfrutas de CineVerse con anuncios pre-roll. ¡Pásate a Premium para quitarlos!</p>
           </div>
           <span style="font-size:2rem;">🍿</span>
-        </div>
-        
-        <!-- PROMO VIRAL PREMIUM GRATIS -->
-        <div style="margin-top: 1.5rem; padding: 1.25rem; background: linear-gradient(135deg, rgba(229,9,20,0.08) 0%, rgba(245,197,24,0.04) 100%); border: 1px dashed var(--accent-red); border-radius: var(--radius-sm); font-family: var(--font-ui);">
-          <h5 style="color: #FFD700; font-size: 1rem; font-weight: 700; margin: 0 0 0.5rem; display: flex; align-items: center; gap: 0.5rem;">🚀 ¡CONSIGUE PREMIUM GRATIS!</h5>
-          <p style="color: var(--text-primary); font-size: 0.85rem; margin: 0 0 0.75rem; line-height: 1.4;">
-            ¿Quieres probar CineVerse Premium gratis por unos días? ¡Ayúdanos a crecer! 
-            Comparte nuestra aplicación con tus amigos, súbela a tus estados de WhatsApp o haz un video recomendándola en TikTok, Instagram o X.
-          </p>
-          <p style="color: var(--text-secondary); font-size: 0.82rem; margin: 0; line-height: 1.4;">
-            Escríbenos con tus pruebas (capturas de pantalla, enlaces del video, etc.) al correo 
-            <strong style="color: white; font-family: var(--font-mono); font-size: 0.85rem;">rimuruweb02@gmail.com</strong> 
-            y te enviaremos un código Premium de activación de regalo. ¡Así de fácil! 🎁✨
-          </p>
         </div>`;
     }
 
