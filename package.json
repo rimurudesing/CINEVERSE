@@ -22,7 +22,6 @@
   },
   "homepage": "https://github.com/rimurudesing/CINEVERSE#readme",
   "dependencies": {
-    "@capacitor-community/admob": "^8.0.0",
     "@capacitor/android": "^8.4.0",
     "@capacitor/cli": "^8.4.0",
     "@capacitor/core": "^8.4.0"

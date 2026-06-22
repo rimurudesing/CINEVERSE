@@ -1,35 +1,19 @@
 /* ═══ cineverse/js/admob.js ═══ */
 /**
- * CineVerse AdMob Manager
+ * CineVerse Adsterra Manager (Legacy AdMob file name adapter)
  *
- * Gestiona todos los anuncios de la aplicación móvil.
- * - En la APK: usa Google AdMob real con interstitials de 30 segundos.
- * - En el navegador web: usa el sistema de anuncios simulados existente.
- *
- * IDs DE PRUEBA (Google):
- * Antes de publicar en Play Store, reemplaza con tus IDs reales de AdMob.
- * App ID: ca-app-pub-3940256099942544~3347511713 (test)
- * Interstitial: ca-app-pub-3940256099942544/1033173712 (test)
- * Rewarded:     ca-app-pub-3940256099942544/5224354917 (test)
- * Banner:       ca-app-pub-3940256099942544/6300978111 (test)
+ * Este archivo se mantiene como admob.js para preservar la compatibilidad
+ * con las importaciones existentes de las páginas, pero ahora gestiona
+ * los anuncios mediante la red de publicidad Adsterra.
+ * - Desinstala y remueve todo lo relacionado con Google AdMob.
+ * - Abre el Smartlink de Adsterra en pestañas nuevas al reproducir películas.
+ * - Invoca los banners móviles flotantes basados en HTML/CSS.
  */
 
 import { getGlobalSettings } from './settings.js';
+import { showApkBanner, hideApkBanner } from './ads-helper.js';
 
-// ────────────────────────────────────────────────────────────
-// IDs de AdMob — CAMBIA ESTOS POR LOS REALES AL PUBLICAR
-// ────────────────────────────────────────────────────────────
-export const ADMOB_IDS = {
-  // IDs REALES de AdMob creados por el usuario
-  interstitial: 'ca-app-pub-2445533163645300/6274720144',
-  rewarded:     'ca-app-pub-3940256099942544/5224354917', // Test por defecto si no hay recompensados
-  banner:       'ca-app-pub-2445533163645300/7587801818',
-};
-
-// ¿Estamos corriendo como APK nativa (Capacitor)?
 const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
-
-let AdMob = null;
 
 /**
  * Verificar si la publicidad global está habilitada
@@ -39,160 +23,101 @@ async function areAdsEnabled() {
     const settings = await getGlobalSettings();
     return settings.global_ads_enabled !== false;
   } catch (e) {
-    // Fail-open: si no se puede saber, mostrar anuncios
-    return true;
+    return true; // Fallback: activado por defecto
   }
 }
 
 /**
- * Inicializar el plugin de AdMob
+ * Inicializador (Stub compatible)
  */
 export async function initAdMob() {
-  if (!IS_NATIVE) {
-    console.log('[AdMob] No es plataforma nativa. Se usará el sistema web.');
-    return false;
-  }
-
-  // Verificar si los anuncios están habilitados globalmente
-  const adsEnabled = await areAdsEnabled();
-  if (!adsEnabled) {
-    console.log('[AdMob] Publicidad desactivada globalmente. AdMob no se inicializará.');
-    return false;
-  }
-
-  try {
-    const { AdMob: AdMobPlugin } = await import('@capacitor-community/admob');
-    AdMob = AdMobPlugin;
-
-    await AdMob.initialize({
-      requestTrackingAuthorization: true,
-      testingDevices: [],
-      initializeForTesting: false,
-    });
-
-    console.log('[AdMob] Inicializado correctamente.');
-    return true;
-  } catch (e) {
-    console.error('[AdMob] Error al inicializar:', e);
-    return false;
-  }
+  console.log('[Adsterra Adapter] Inicializando adaptador...');
+  return true;
 }
 
 /**
- * Mostrar un anuncio intersticial (pantalla completa)
+ * Mostrar un anuncio intersticial (Adsterra Smartlink en pestaña nueva)
  * Se usa antes de reproducir contenido en usuarios Free.
- * @returns {Promise<boolean>} true si se mostró, false si falló o no es nativo
+ * @returns {Promise<boolean>} true si se abrió, false si no.
  */
 export async function showInterstitialAd() {
-  if (!IS_NATIVE || !AdMob) {
+  // 1. Respetar control global
+  const adsEnabled = await areAdsEnabled();
+  if (!adsEnabled) {
+    console.log('[Adsterra Adapter] Publicidad global desactivada. Ignorando interstitial.');
     return false;
   }
 
-  // Respetar control global
-  const adsEnabled = await areAdsEnabled();
-  if (!adsEnabled) return false;
-
+  // 2. Respetar estado Premium
   try {
-    await AdMob.prepareInterstitial({
-      adId:      ADMOB_IDS.interstitial,
-      isTesting: false,
-    });
+    const cachedProfile = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
+    const isPremium = !!(cachedProfile.is_premium || false);
+    if (isPremium) {
+      console.log('[Adsterra Adapter] Usuario Premium detectado. Omitiendo interstitial.');
+      return false;
+    }
+  } catch (e) {
+    console.error('[Adsterra Adapter] Error al verificar perfil Premium:', e);
+  }
 
-    await AdMob.showInterstitial();
-    console.log('[AdMob] Interstitial mostrado.');
+  // 3. Abrir el Smartlink oficial de Adsterra
+  try {
+    const smartlink = 'https://www.effectivecpmnetwork.com/n8bfacm3rn?key=dae2ae5c2f289ded4d55b6217baeed0c';
+    window.open(smartlink, '_blank');
+    console.log('[Adsterra Adapter] Smartlink abierto en nueva pestaña.');
     return true;
   } catch (e) {
-    console.error('[AdMob] Error al mostrar interstitial:', e);
+    console.error('[Adsterra Adapter] Error al abrir Smartlink:', e);
     return false;
   }
 }
 
 /**
- * Mostrar un anuncio recompensado (el usuario gana algo por verlo)
- * Útil para: "Ve un anuncio y mira este capítulo sin anuncio por 1 hora"
- * @returns {Promise<boolean>}
+ * Mostrar anuncio recompensado (Stub compatible)
  */
 export async function showRewardedAd() {
-  if (!IS_NATIVE || !AdMob) {
-    return false;
-  }
-
-  const adsEnabled = await areAdsEnabled();
-  if (!adsEnabled) return false;
-
-  return new Promise(async (resolve) => {
-    try {
-      AdMob.addListener('onRewardedVideoAdRewarded', () => {
-        console.log('[AdMob] Usuario ganó la recompensa.');
-        resolve(true);
-      });
-
-      await AdMob.prepareRewardVideoAd({
-        adId:      ADMOB_IDS.rewarded,
-        isTesting: false,
-      });
-
-      await AdMob.showRewardVideoAd();
-    } catch (e) {
-      console.error('[AdMob] Error en anuncio recompensado:', e);
-      resolve(false);
-    }
-  });
+  // Por compatibilidad, abrimos el Smartlink y retornamos true
+  return await showInterstitialAd();
 }
 
 /**
- * Mostrar un banner de anuncio en la parte inferior (solo en APK)
+ * Mostrar banner de anuncios en la APK
  */
 export async function showBannerAd() {
-  if (!IS_NATIVE || !AdMob) return false;
+  if (!IS_NATIVE) return false;
 
   const adsEnabled = await areAdsEnabled();
   if (!adsEnabled) return false;
 
   try {
-    const { BannerAdSize, BannerAdPosition } = await import('@capacitor-community/admob');
-    await AdMob.showBanner({
-      adId:     ADMOB_IDS.banner,
-      adSize:   BannerAdSize.ADAPTIVE_BANNER,
-      position: BannerAdPosition.BOTTOM_CENTER,
-      margin:   0,
-      isTesting: false,
-    });
+    const cachedProfile = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
+    const isPremium = !!(cachedProfile.is_premium || false);
+    if (isPremium) return false;
+
+    showApkBanner();
     return true;
   } catch (e) {
-    console.error('[AdMob] Error al mostrar banner:', e);
+    console.error('[Adsterra Adapter] Error al mostrar banner APK:', e);
     return false;
   }
 }
 
 /**
- * Ocultar el banner de anuncio
+ * Ocultar banner de anuncios
  */
 export async function hideBannerAd() {
-  if (!IS_NATIVE || !AdMob) return;
-  try {
-    await AdMob.hideBanner();
-  } catch (e) {
-    console.error('[AdMob] Error al ocultar banner:', e);
-  }
+  if (!IS_NATIVE) return;
+  hideApkBanner();
 }
 
-// Auto-inicializar cuando el DOM esté listo
+// Inicialización automática cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-  initAdMob().then(initialized => {
-    if (!initialized) return;
+  initAdMob().then(() => {
+    const isWatchPage = window.location.pathname.includes('watch.html');
+    if (isWatchPage) return; // watch.html utiliza smartlink en lugar de banner inferior
 
-    const isWatchPage = window.location.pathname.includes('watch');
-    if (isWatchPage) return; // watch.html usa interstitial, no banner aquí
-
-    // En todas las demás páginas: mostrar banner a usuarios Free
-    try {
-      const cachedProfile = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
-      const isPremium = !!(cachedProfile.is_premium || false);
-      if (!isPremium) {
-        showBannerAd();
-      }
-    } catch (_) {
+    // En todas las demás páginas en APK: intentar mostrar el banner flotante HTML
+    if (IS_NATIVE) {
       showBannerAd();
     }
   });
