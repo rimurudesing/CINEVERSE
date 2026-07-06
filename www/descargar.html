@@ -387,6 +387,267 @@
       color: var(--text-muted);
       margin-top: 2px;
     }
+
+    /* ═══ SECCIÓN LEGAL ═══ */
+    .legal-section {
+      width: 100%;
+      max-width: 1100px;
+      z-index: 2;
+      margin-bottom: 4rem;
+      padding: 0 1rem;
+    }
+
+    .legal-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .legal-header h2 {
+      font-family: var(--font-ui);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.4rem;
+    }
+
+    .legal-header p {
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    .legal-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .legal-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .legal-cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .legal-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius-md);
+      padding: 1.4rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .legal-card:hover {
+      background: rgba(229, 9, 20, 0.06);
+      border-color: rgba(229, 9, 20, 0.25);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(229, 9, 20, 0.1);
+    }
+
+    .legal-card-icon {
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .legal-card-title {
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .legal-card-desc {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .legal-card-link {
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      color: var(--accent-red);
+      font-weight: 600;
+      margin-top: auto;
+    }
+
+    /* ═══ AVISO COMPACTO AL PIE ═══ */
+    .legal-disclaimer-bar {
+      background: rgba(229, 9, 20, 0.04);
+      border: 1px solid rgba(229, 9, 20, 0.12);
+      border-radius: var(--radius-md);
+      padding: 1.1rem 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .legal-disclaimer-bar .icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .legal-disclaimer-bar a {
+      color: var(--accent-red);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* ═══ MODAL LEGAL ═══ */
+    .legal-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 5, 5, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .legal-modal-overlay.open {
+      display: flex;
+      opacity: 0;
+    }
+
+    .legal-modal-overlay.visible {
+      opacity: 1;
+    }
+
+    .legal-modal {
+      background: #0d0d0d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      max-width: 700px;
+      width: 100%;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(229, 9, 20, 0.08);
+      transform: scale(0.94) translateY(12px);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .legal-modal-overlay.visible .legal-modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .legal-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 1.6rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      flex-shrink: 0;
+    }
+
+    .legal-modal-head h3 {
+      font-family: var(--font-ui);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .legal-modal-close {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .legal-modal-close:hover {
+      background: rgba(229, 9, 20, 0.15);
+      border-color: rgba(229, 9, 20, 0.3);
+      color: #fff;
+    }
+
+    .legal-modal-body {
+      overflow-y: auto;
+      padding: 1.6rem;
+      flex: 1;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(229, 9, 20, 0.4) transparent;
+    }
+
+    .legal-modal-body h4 {
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent-red);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    .legal-modal-body h4:first-child {
+      margin-top: 0;
+    }
+
+    .legal-modal-body p {
+      font-family: var(--font-ui);
+      font-size: 0.83rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 0.6rem;
+    }
+
+    .legal-modal-body ul {
+      font-family: var(--font-ui);
+      font-size: 0.83rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      padding-left: 1.2rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .legal-modal-body ul li {
+      margin-bottom: 0.25rem;
+    }
+
+    .legal-modal-foot {
+      padding: 1rem 1.6rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -487,14 +748,280 @@
     </section>
 
     <!-- Anuncio Adsterra — Inferior -->
-    <div class="adsterra-banner adsterra-banner--desktop" style="margin-bottom: 5rem;"></div>
-    <div class="adsterra-banner adsterra-banner--mobile" style="margin-bottom: 5rem;"></div>
+    <div class="adsterra-banner adsterra-banner--desktop" style="margin-bottom: 2rem;"></div>
+    <div class="adsterra-banner adsterra-banner--mobile" style="margin-bottom: 2rem;"></div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECCIÓN LEGAL                              -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="legal-section" aria-labelledby="legal-section-title">
+
+      <div class="legal-header">
+        <h2 id="legal-section-title">⚖️ Información Legal</h2>
+        <p>Al descargar y utilizar CineVerse, aceptas los siguientes términos y condiciones. Lee atentamente cada sección antes de instalar la aplicación.</p>
+      </div>
+
+      <div class="legal-cards-grid">
+        <!-- Card 1: Aviso Legal -->
+        <div class="legal-card" onclick="openLegalModal('aviso-legal')" role="button" tabindex="0" aria-haspopup="dialog" onkeydown="if(event.key==='Enter'||event.key===' ')openLegalModal('aviso-legal')">
+          <div class="legal-card-icon">🏛️</div>
+          <div class="legal-card-title">Aviso Legal</div>
+          <div class="legal-card-desc">Información sobre la naturaleza de la plataforma, derechos de autor y limitaciones.</div>
+          <div class="legal-card-link">Leer completo →</div>
+        </div>
+        <!-- Card 2: Términos de Uso -->
+        <div class="legal-card" onclick="openLegalModal('terminos-uso')" role="button" tabindex="0" aria-haspopup="dialog" onkeydown="if(event.key==='Enter'||event.key===' ')openLegalModal('terminos-uso')">
+          <div class="legal-card-icon">📋</div>
+          <div class="legal-card-title">Términos de Uso</div>
+          <div class="legal-card-desc">Condiciones de uso de la app, restricciones y responsabilidades del usuario.</div>
+          <div class="legal-card-link">Leer completo →</div>
+        </div>
+        <!-- Card 3: Privacidad -->
+        <div class="legal-card" onclick="openLegalModal('privacidad')" role="button" tabindex="0" aria-haspopup="dialog" onkeydown="if(event.key==='Enter'||event.key===' ')openLegalModal('privacidad')">
+          <div class="legal-card-icon">🔒</div>
+          <div class="legal-card-title">Política de Privacidad</div>
+          <div class="legal-card-desc">Cómo recopilamos, usamos y protegemos los datos personales de los usuarios.</div>
+          <div class="legal-card-link">Leer completo →</div>
+        </div>
+        <!-- Card 4: Exención -->
+        <div class="legal-card" onclick="openLegalModal('exencion')" role="button" tabindex="0" aria-haspopup="dialog" onkeydown="if(event.key==='Enter'||event.key===' ')openLegalModal('exencion')">
+          <div class="legal-card-icon">🛡️</div>
+          <div class="legal-card-title">Exención de Responsabilidad</div>
+          <div class="legal-card-desc">Límites de responsabilidad del servicio ante reclamaciones de terceros.</div>
+          <div class="legal-card-link">Leer completo →</div>
+        </div>
+      </div>
+
+      <!-- Aviso compacto de descargo -->
+      <div class="legal-disclaimer-bar" role="note">
+        <span class="icon">⚠️</span>
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.82rem;">Aviso importante antes de descargar:</strong>
+          CineVerse es una plataforma independiente de descubrimiento y catálogo de contenido. <strong>No aloja ni distribuye archivos audiovisuales protegidos por derechos de autor.</strong> Todo el contenido referenciado es enlazado desde fuentes externas de acceso público a través de reproductores de terceros. Al instalar esta aplicación confirmas que tienes al menos <strong>13 años de edad</strong>, que has leído los
+          <a onclick="openLegalModal('terminos-uso')" aria-label="Ver Términos de Uso">Términos de Uso</a>,
+          la <a onclick="openLegalModal('privacidad')" aria-label="Ver Política de Privacidad">Política de Privacidad</a>
+          y la <a onclick="openLegalModal('exencion')" aria-label="Ver Exención de Responsabilidad">Exención de Responsabilidad</a>,
+          y que los aceptas íntegramente.
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══ MODALES LEGALES ═══ -->
+
+    <!-- Modal: Aviso Legal -->
+    <div id="modal-aviso-legal" class="legal-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-aviso-legal-title">
+      <div class="legal-modal">
+        <div class="legal-modal-head">
+          <h3 id="modal-aviso-legal-title">🏛️ Aviso Legal</h3>
+          <button class="legal-modal-close" onclick="closeLegalModal('aviso-legal')" aria-label="Cerrar modal">✕</button>
+        </div>
+        <div class="legal-modal-body">
+          <h4>1. Naturaleza de la Plataforma</h4>
+          <p>CineVerse (en adelante, «la Plataforma») es un servicio web y móvil de carácter informativo y de entretenimiento que funciona como directorio y catálogo de contenido audiovisual. La Plataforma NO alberga, almacena, reproduce ni distribuye ningún archivo de vídeo, audio o material audiovisual directamente en sus propios servidores.</p>
+          <p>Todo el contenido de vídeo mostrado o reproducido dentro de CineVerse proviene exclusivamente de reproductores y fuentes de terceros alojados en dominios externos. CineVerse se limita a proporcionar una interfaz de usuario que integra dichos reproductores a través de marcos de inclusión (iframes) u otros métodos de inserción estándar disponibles en la web.</p>
+
+          <h4>2. Propiedad Intelectual</h4>
+          <p>El nombre «CineVerse», el logotipo, el diseño de la interfaz, el código fuente de la aplicación, las ilustraciones originales y demás elementos de identidad gráfica son propiedad exclusiva de sus creadores y están protegidos por la legislación aplicable en materia de propiedad intelectual e industrial.</p>
+          <p>Está expresamente prohibida la reproducción, distribución, transformación o comunicación pública de dichos elementos sin autorización escrita previa de los titulares.</p>
+          <p>Las marcas, títulos, carteles, descripciones, logotipos y cualquier otro activo perteneciente a películas, series, productoras o distribuidoras de contenido audiovisual citadas o referenciadas en la Plataforma son propiedad exclusiva de sus respectivos titulares. CineVerse no reclama ningún derecho sobre ellos y son utilizados con propósito meramente informativo, editorial o de crítica, dentro del amparo del uso legítimo (fair use / fair dealing) reconocido por distintas legislaciones.</p>
+
+          <h4>3. Contenido de Terceros y Responsabilidad</h4>
+          <p>CineVerse no controla, supervisa ni asume responsabilidad alguna por el contenido alojado en los sitios web de terceros enlazados o integrados. Cualquier reclamación relacionada con derechos de autor sobre el contenido reproducido deberá dirigirse directamente al proveedor o alojador de dicho contenido.</p>
+
+          <h4>4. Jurisdicción y Legislación Aplicable</h4>
+          <p>Este Aviso Legal se rige por la legislación internacional aplicable en materia de telecomunicaciones, servicios de la sociedad de la información y propiedad intelectual. Para cualquier controversia que no pueda resolverse amistosamente, las partes se someterán a los tribunales competentes de la jurisdicción del usuario final.</p>
+
+          <h4>5. Modificaciones</h4>
+          <p>CineVerse se reserva el derecho a modificar este Aviso Legal en cualquier momento. Las modificaciones serán publicadas en la Plataforma y entrarán en vigor desde el momento de su publicación. El uso continuado de la Plataforma tras dichas modificaciones implica la aceptación de las mismas.</p>
+        </div>
+        <div class="legal-modal-foot">Última actualización: Julio 2026 · CineVerse — Todos los derechos reservados.</div>
+      </div>
+    </div>
+
+    <!-- Modal: Términos de Uso -->
+    <div id="modal-terminos-uso" class="legal-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-terminos-uso-title">
+      <div class="legal-modal">
+        <div class="legal-modal-head">
+          <h3 id="modal-terminos-uso-title">📋 Términos de Uso</h3>
+          <button class="legal-modal-close" onclick="closeLegalModal('terminos-uso')" aria-label="Cerrar modal">✕</button>
+        </div>
+        <div class="legal-modal-body">
+          <h4>1. Aceptación de los Términos</h4>
+          <p>Al acceder, descargar o utilizar la aplicación CineVerse en cualquiera de sus versiones (web, APK para Android u otras), el usuario declara haber leído, comprendido y aceptado en su totalidad los presentes Términos de Uso, así como la Política de Privacidad y la Exención de Responsabilidad. Si no estás de acuerdo con alguno de estos términos, debes abstenerte de usar la Plataforma.</p>
+
+          <h4>2. Edad Mínima de Uso</h4>
+          <p>CineVerse está destinado a usuarios mayores de <strong>13 años</strong>. Si eres menor de edad, necesitas el consentimiento expreso de tu padre, madre o tutor legal para registrarte y utilizar la Plataforma. Nos reservamos el derecho de cancelar cuentas que incumplan este requisito.</p>
+
+          <h4>3. Cuenta de Usuario</h4>
+          <p>El registro es gratuito y voluntario. El usuario es responsable de mantener la confidencialidad de sus credenciales de acceso y de todas las actividades realizadas desde su cuenta. CineVerse no se hace responsable de los perjuicios derivados del acceso no autorizado a una cuenta por negligencia del usuario.</p>
+          <p>Está prohibido:</p>
+          <ul>
+            <li>Crear cuentas falsas, suplantando la identidad de otras personas o entidades.</li>
+            <li>Compartir las credenciales de acceso con terceros.</li>
+            <li>Utilizar bots, scripts o sistemas automatizados para acceder a la Plataforma.</li>
+            <li>Registrar más de una cuenta por persona sin autorización expresa.</li>
+          </ul>
+
+          <h4>4. Uso Permitido</h4>
+          <p>CineVerse autoriza al usuario un uso personal, privado y no comercial de la Plataforma. Queda estrictamente prohibido:</p>
+          <ul>
+            <li>Reproducir, copiar, redistribuir, vender o explotar comercialmente cualquier parte del servicio sin autorización escrita.</li>
+            <li>Realizar ingeniería inversa, descompilar o intentar extraer el código fuente de la aplicación.</li>
+            <li>Publicar contenido ofensivo, ilegal, difamatorio, obsceno o que infrinja derechos de terceros en el chat u otras funciones sociales.</li>
+            <li>Interferir con el funcionamiento de la Plataforma o de sus servidores.</li>
+            <li>Eludir las medidas técnicas de seguridad o protección implementadas.</li>
+          </ul>
+
+          <h4>5. Membresía Premium</h4>
+          <p>La suscripción Premium es un servicio de pago o por código de activación que desbloquea funciones adicionales. Los pagos realizados no son reembolsables salvo que la legislación aplicable exija lo contrario. CineVerse se reserva el derecho a modificar los beneficios de la membresía Premium con previo aviso razonable.</p>
+
+          <h4>6. Suspensión y Cancelación</h4>
+          <p>CineVerse puede suspender o cancelar el acceso de cualquier usuario que incumpla los presentes Términos, sin previo aviso y sin que ello genere derecho a indemnización alguna. El usuario también puede cancelar su cuenta en cualquier momento desde la sección de perfil.</p>
+
+          <h4>7. Modificaciones del Servicio</h4>
+          <p>CineVerse se reserva el derecho de modificar, ampliar, reducir o interrumpir el servicio en cualquier momento, con o sin previo aviso, sin que ello genere ningún tipo de responsabilidad frente al usuario.</p>
+        </div>
+        <div class="legal-modal-foot">Última actualización: Julio 2026 · CineVerse — Todos los derechos reservados.</div>
+      </div>
+    </div>
+
+    <!-- Modal: Política de Privacidad -->
+    <div id="modal-privacidad" class="legal-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-privacidad-title">
+      <div class="legal-modal">
+        <div class="legal-modal-head">
+          <h3 id="modal-privacidad-title">🔒 Política de Privacidad</h3>
+          <button class="legal-modal-close" onclick="closeLegalModal('privacidad')" aria-label="Cerrar modal">✕</button>
+        </div>
+        <div class="legal-modal-body">
+          <h4>1. Responsable del Tratamiento</h4>
+          <p>El responsable del tratamiento de los datos personales recabados a través de CineVerse es el equipo de desarrollo de la Plataforma. Para cualquier consulta relacionada con privacidad, los usuarios pueden contactar a través del canal de soporte disponible en la Plataforma.</p>
+
+          <h4>2. Datos que Recopilamos</h4>
+          <p>Al registrarte y utilizar CineVerse, podemos recopilar los siguientes datos:</p>
+          <ul>
+            <li><strong>Datos de registro:</strong> dirección de correo electrónico y nombre de usuario.</li>
+            <li><strong>Datos de perfil:</strong> nombre público, foto de avatar, biografía y preferencias de tema, proporcionados voluntariamente por el usuario.</li>
+            <li><strong>Datos de actividad:</strong> listas de favoritos, historial de visualización, valoraciones y reseñas.</li>
+            <li><strong>Datos de uso:</strong> información técnica del dispositivo (tipo de navegador o app, sistema operativo, dirección IP aproximada) con fines de diagnóstico y mejora del servicio.</li>
+            <li><strong>Mensajes de chat:</strong> los mensajes enviados al chat global son visibles para todos los usuarios y son almacenados en los servidores de la Plataforma.</li>
+          </ul>
+
+          <h4>3. Finalidad del Tratamiento</h4>
+          <p>Los datos recopilados son utilizados para:</p>
+          <ul>
+            <li>Gestionar el registro y autenticación de cuentas de usuario.</li>
+            <li>Ofrecer y personalizar las funciones de la Plataforma.</li>
+            <li>Enviar comunicaciones relacionadas con el servicio (por ejemplo, confirmación de correo, recuperación de contraseña).</li>
+            <li>Prevenir el fraude, el abuso y garantizar la seguridad del servicio.</li>
+            <li>Mejorar la experiencia de usuario a través de datos de uso agregados y anónimos.</li>
+          </ul>
+
+          <h4>4. Proveedores de Servicios Terceros</h4>
+          <p>CineVerse utiliza los siguientes proveedores de confianza para operar el servicio:</p>
+          <ul>
+            <li><strong>Supabase</strong> (base de datos y autenticación): almacena de forma segura las credenciales de usuario y los datos del perfil. Consulta la <a href="https://supabase.com/privacy" target="_blank" rel="noopener" style="color: var(--accent-red);">Política de Privacidad de Supabase</a>.</li>
+            <li><strong>TMDB (The Movie Database)</strong>: proporciona los metadatos de películas y series. No comparte datos de usuarios de CineVerse.</li>
+            <li><strong>Adsterra / Redes de Publicidad</strong>: muestran publicidad en la Plataforma. Estas redes pueden usar cookies y tecnologías similares para personalizar anuncios según la actividad de navegación del usuario.</li>
+          </ul>
+
+          <h4>5. Derechos del Usuario</h4>
+          <p>El usuario tiene derecho a acceder, rectificar y eliminar sus datos personales en cualquier momento desde la sección de perfil de la aplicación. También puede solicitar la exportación de sus datos contactando con el equipo de soporte.</p>
+
+          <h4>6. Seguridad</h4>
+          <p>CineVerse implementa medidas técnicas y organizativas razonables para proteger los datos de los usuarios frente a accesos no autorizados, pérdida o destrucción. No obstante, ningún sistema de transmisión de datos por Internet es 100% seguro, por lo que no podemos garantizar la seguridad absoluta de la información.</p>
+
+          <h4>7. Menores de Edad</h4>
+          <p>No recopilamos conscientemente datos personales de niños menores de 13 años. Si descubrimos que hemos recopilado datos de un menor sin el consentimiento parental verificado, procederemos a eliminarlos de inmediato.</p>
+
+          <h4>8. Cookies y Almacenamiento Local</h4>
+          <p>La aplicación utiliza <strong>localStorage</strong> del navegador o del dispositivo para almacenar datos de sesión y preferencias de usuario (tema, último contenido visto, etc.) de forma local. No utilizamos cookies de seguimiento propias, aunque las redes publicitarias de terceros integradas pueden hacerlo conforme a sus propias políticas.</p>
+        </div>
+        <div class="legal-modal-foot">Última actualización: Julio 2026 · CineVerse — Todos los derechos reservados.</div>
+      </div>
+    </div>
+
+    <!-- Modal: Exención de Responsabilidad -->
+    <div id="modal-exencion" class="legal-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-exencion-title">
+      <div class="legal-modal">
+        <div class="legal-modal-head">
+          <h3 id="modal-exencion-title">🛡️ Exención de Responsabilidad</h3>
+          <button class="legal-modal-close" onclick="closeLegalModal('exencion')" aria-label="Cerrar modal">✕</button>
+        </div>
+        <div class="legal-modal-body">
+          <h4>1. Contenido de Terceros</h4>
+          <p>CineVerse es un directorio de contenido que <strong>no aloja, reproduce ni distribuye material audiovisual protegido por derechos de autor</strong>. Los reproductores de vídeo integrados en la aplicación son proporcionados exclusivamente por servicios y servidores de terceros sobre los cuales CineVerse no tiene control alguno. CineVerse no es responsable de la disponibilidad, calidad, legalidad ni de cualquier otro aspecto del contenido servido por dichas plataformas externas.</p>
+          <p>Si eres titular de derechos de autor y consideras que algún contenido enlazado infringe tus derechos, por favor contacta con el proveedor del reproductor externo correspondiente o con nosotros a través del canal de soporte para que podamos gestionar la eliminación del enlace de referencia.</p>
+
+          <h4>2. Disponibilidad del Servicio</h4>
+          <p>CineVerse no garantiza la disponibilidad ininterrumpida del servicio. La Plataforma puede experimentar interrupciones, errores o períodos de mantenimiento sin previo aviso. CineVerse no será responsable de ningún daño o perjuicio directo, indirecto, incidental o consecuente derivado de la interrupción o falta de disponibilidad del servicio.</p>
+
+          <h4>3. Precisión de la Información</h4>
+          <p>Aunque CineVerse se esfuerza por mostrar información precisa y actualizada sobre películas, series y contenido audiovisual, no garantiza la exactitud, integridad o actualidad de los metadatos mostrados, los cuales provienen de bases de datos de terceros como TMDB. CineVerse no asume responsabilidad alguna por errores u omisiones en dicha información.</p>
+
+          <h4>4. Instalación de la APK</h4>
+          <p>La instalación de la aplicación CineVerse para Android (APK) requiere habilitar la opción «Instalar aplicaciones de fuentes desconocidas» en el dispositivo. El usuario reconoce y acepta que la instalación de archivos APK fuera de tiendas oficiales conlleva ciertos riesgos inherentes y que lo hace bajo su propia responsabilidad. CineVerse garantiza que el archivo APK oficial distribuido desde sus canales no contiene malware ni código malicioso, pero no puede ser responsable de versiones modificadas por terceros.</p>
+
+          <h4>5. Publicidad</h4>
+          <p>CineVerse incluye publicidad proporcionada por redes de anuncios de terceros (como Adsterra). CineVerse no es responsable del contenido de dichos anuncios ni de las prácticas de privacidad de los anunciantes. Se recomienda al usuario no hacer clic en anuncios sospechosos.</p>
+
+          <h4>6. Limitación de Responsabilidad</h4>
+          <p>En la máxima medida permitida por la ley aplicable, CineVerse, sus creadores, colaboradores, socios y proveedores no serán responsables por daños de ningún tipo, incluyendo pero no limitado a: pérdida de datos, pérdida de beneficios, interrupción del negocio, o cualquier otro daño pecuniario o no pecuniario, que surjan del uso o la imposibilidad de uso de la Plataforma.</p>
+
+          <h4>7. Reclamaciones por Derechos de Autor (DMCA / Takedown)</h4>
+          <p>CineVerse respeta los derechos de propiedad intelectual. Si eres titular de derechos de autor o actúas en nombre de dicho titular y crees que algún contenido referenciado en la Plataforma infringe tus derechos, puedes presentar una notificación de infracción a través de nuestro canal de soporte incluyendo:</p>
+          <ul>
+            <li>Tu nombre e información de contacto.</li>
+            <li>Identificación clara del contenido que alega que infringe sus derechos.</li>
+            <li>URL o identificación del enlace referenciado en CineVerse.</li>
+            <li>Declaración de buena fe de que el uso del material no está autorizado.</li>
+            <li>Firma electrónica o física del titular o representante autorizado.</li>
+          </ul>
+          <p>Gestionaremos la solicitud en el menor tiempo posible y procederemos a retirar el enlace de referencia si procede.</p>
+        </div>
+        <div class="legal-modal-foot">Última actualización: Julio 2026 · CineVerse — Todos los derechos reservados.</div>
+      </div>
+    </div>
+
   </main>
 
   <!-- JS -->
   <script type="module" src="js/components/navbar.js?v=3.0.0"></script>
   <script type="module" src="js/ads-helper.js?v=3.0.0"></script>
   
+  <!-- Script de Modales Legales -->
+  <script>
+    function openLegalModal(id) {
+      const overlay = document.getElementById('modal-' + id);
+      if (!overlay) return;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      // Activar visibilidad en el siguiente frame para la transición CSS
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => overlay.classList.add('visible'));
+      });
+      // Cerrar al hacer click fuera del modal
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeLegalModal(id);
+      }, { once: true });
+      // Cerrar con Escape
+      const escHandler = (e) => {
+        if (e.key === 'Escape') { closeLegalModal(id); document.removeEventListener('keydown', escHandler); }
+      };
+      document.addEventListener('keydown', escHandler);
+    }
+
+    function closeLegalModal(id) {
+      const overlay = document.getElementById('modal-' + id);
+      if (!overlay) return;
+      overlay.classList.remove('visible');
+      setTimeout(() => {
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+      }, 280);
+    }
+  </script>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const downloadBtn = document.getElementById('download-btn');
