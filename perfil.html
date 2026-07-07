@@ -217,21 +217,117 @@
 
       <!-- Pestaña 9: Premium -->
       <div class="profile-tab-section" id="profile-section-premium">
-        <div style="max-width: 680px; margin: 0 auto; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 2.5rem; border-radius: var(--radius-lg); font-family: var(--font-ui);">
-          <h3 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
-            <span>⭐ CineVerse Premium</span>
-          </h3>
+        <div class="premium-page-wrapper">
 
-          <!-- Estado Premium Actual -->
-          <div id="premium-status-box" style="margin-bottom: 2rem; padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--bg-void);">
-            <!-- Se carga dinámicamente por JS -->
+          <!-- HEADER PREMIUM -->
+          <div class="premium-header">
+            <div class="premium-header__glow"></div>
+            <div class="premium-header__content">
+              <div class="premium-crown-icon">👑</div>
+              <h2 class="premium-header__title">CineVerse <span>Premium</span></h2>
+              <p class="premium-header__subtitle">La experiencia definitiva del cine digital</p>
+            </div>
           </div>
 
-          <!-- Personalización Premium (visible solo para usuarios premium) -->
-          <div id="premium-customization-box" style="display: none; margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-void); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
-            <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--gold);">🎨 Personalización Exclusiva</h4>
-            
-            <!-- Selector de tema de color -->
+          <!-- ESTADO ACTUAL (cargado por JS) -->
+          <div id="premium-status-box" class="premium-status-box">
+            <!-- Se carga dinámicamente -->
+          </div>
+
+          <!-- BENEFICIOS PREMIUM -->
+          <div class="premium-benefits-section">
+            <h3 class="premium-section-title">✨ Todo lo que incluye Premium</h3>
+            <div class="premium-benefits-grid">
+
+              <div class="benefit-card">
+                <div class="benefit-card__icon">🚫</div>
+                <div class="benefit-card__body">
+                  <strong>Sin Anuncios</strong>
+                  <p>Disfruta del catálogo completo sin interrupciones ni pre-rolls.</p>
+                </div>
+              </div>
+
+              <div class="benefit-card benefit-card--new">
+                <div class="benefit-card__badge">NUEVO</div>
+                <div class="benefit-card__icon">🪪</div>
+                <div class="benefit-card__body">
+                  <strong>Tarjeta de Socio VIP</strong>
+                  <p>Credencial 3D holográfica interactiva exclusiva de tu membresía.</p>
+                </div>
+              </div>
+
+              <div class="benefit-card benefit-card--new">
+                <div class="benefit-card__badge">NUEVO</div>
+                <div class="benefit-card__icon">🎬</div>
+                <div class="benefit-card__body">
+                  <strong>Modo Sala (Watch Party)</strong>
+                  <p>Crea salas y sincroniza películas en tiempo real con amigos.</p>
+                </div>
+              </div>
+
+              <div class="benefit-card">
+                <div class="benefit-card__icon">🎨</div>
+                <div class="benefit-card__body">
+                  <strong>Personalización Total</strong>
+                  <p>Temas de color, marcos de avatar animados y banner de portada propio.</p>
+                </div>
+              </div>
+
+              <div class="benefit-card">
+                <div class="benefit-card__icon">📊</div>
+                <div class="benefit-card__body">
+                  <strong>Estadísticas Avanzadas</strong>
+                  <p>Dashboard con gráficas de géneros, actores y tu Top 10 personal.</p>
+                </div>
+              </div>
+
+              <div class="benefit-card">
+                <div class="benefit-card__icon">🏆</div>
+                <div class="benefit-card__body">
+                  <strong>Logros Exclusivos</strong>
+                  <p>Medallas y logros especiales que los usuarios Free no pueden conseguir.</p>
+                </div>
+              </div>
+
+              <div class="benefit-card">
+                <div class="benefit-card__icon">✅</div>
+                <div class="benefit-card__body">
+                  <strong>Badge de Crítico Verificado</strong>
+                  <p>Distintivo especial visible en todas tus reseñas y comentarios.</p>
+                </div>
+              </div>
+
+              <div class="benefit-card">
+                <div class="benefit-card__icon">🔥</div>
+                <div class="benefit-card__body">
+                  <strong>Racha de Actividad</strong>
+                  <p>Sistema de racha por días consecutivos con recompensas de XP.</p>
+                </div>
+              </div>
+
+              <div class="benefit-card">
+                <div class="benefit-card__icon">🚀</div>
+                <div class="benefit-card__body">
+                  <strong>Solicitudes Prioritarias</strong>
+                  <p>Tus pedidos de contenido se procesan en menos de 24 horas.</p>
+                </div>
+              </div>
+
+              <div class="benefit-card">
+                <div class="benefit-card__icon">💬</div>
+                <div class="benefit-card__body">
+                  <strong>Reseñas Sin Límite</strong>
+                  <p>Escribe críticas sin restricción de caracteres ni límites diarios.</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- PERSONALIZACIÓN (solo Premium activo) -->
+          <div id="premium-customization-box" style="display:none;" class="premium-section-card">
+            <h4 class="premium-section-title" style="font-size:1.1rem;">🎨 Personalización Exclusiva</h4>
+
             <div style="margin-bottom: 1.5rem;">
               <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.75rem; font-weight: 600;">🎨 Tema de Color</label>
               <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;" id="theme-color-picker">
@@ -243,7 +339,6 @@
               </div>
             </div>
 
-            <!-- Selector de marco de avatar -->
             <div>
               <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.75rem; font-weight: 600;">👑 Marco de Avatar</label>
               <div style="display: flex; gap: 1rem; flex-wrap: wrap;" id="avatar-frame-picker">
@@ -255,59 +350,66 @@
             </div>
           </div>
 
-          <!-- Beneficios / Formulario de Pago y Canje -->
-          <div id="premium-actions-box">
-            <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">Beneficios Premium:</h4>
-            <ul style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; color: var(--text-secondary); font-size: 0.95rem;">
-              <li>🚫 <strong>Sin Anuncios:</strong> Disfruta de todo el catálogo al instante y sin interrupciones.</li>
-              <li>📷 <strong>Personalización Completa:</strong> Avatar personalizado, banner de portada, marcos animados y temas de color.</li>
-              <li>📊 <strong>Estadísticas Avanzadas:</strong> Dashboard con gráficas de géneros, actores, actividad y tu Top 10 personal.</li>
-              <li>🏆 <strong>Logros Exclusivos:</strong> Desbloquea medallas especiales que los usuarios free no pueden conseguir.</li>
-              <li>💬 <strong>Reseñas Sin Límite:</strong> Escribe reseñas sin restricción de caracteres.</li>
-              <li>✅ <strong>Badge de Crítico Verificado:</strong> Un distintivo especial en todas tus reseñas y comentarios.</li>
-              <li>👍 <strong>Votar Reseñas:</strong> Da "Útil" o "No útil" a las reseñas de otros usuarios.</li>
-              <li>🔥 <strong>Racha de Actividad:</strong> Sistema de racha por días consecutivos activo en la plataforma.</li>
-            </ul>
+          <!-- COMPRAR / ACTIVAR -->
+          <div class="premium-section-card" id="premium-actions-box">
 
-            <!-- Sección Comprar (Ko-fi) -->
-            <div style="background-color: var(--bg-void); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; text-align: center;">
-              <p style="font-size: 1.05rem; margin-bottom: 0.8rem; color: var(--text-primary); font-weight: 700;">Adquirir Membresía Premium</p>
-              <p style="font-size: 0.88rem; margin-bottom: 1.25rem; color: var(--text-secondary); line-height: 1.4;">
-                30 días por <strong>$5 USD</strong> · 90 días por <strong>$10 USD</strong> · Vitalicio por <strong>$15 USD</strong>
-              </p>
-              <a href="https://ko-fi.com/cinevers" target="_blank" class="btn btn--primary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 700; background-color: #FF5E5B; border-color: #FF5E5B; text-decoration: none; box-shadow: 0 4px 15px rgba(255, 94, 91, 0.3);">
+            <!-- PRECIOS -->
+            <h3 class="premium-section-title">💳 Elige tu Plan</h3>
+            <div class="premium-plans-grid">
+              <div class="plan-card">
+                <div class="plan-card__name">Mensual</div>
+                <div class="plan-card__price">$5 <span>USD</span></div>
+                <div class="plan-card__duration">30 días</div>
+              </div>
+              <div class="plan-card plan-card--popular">
+                <div class="plan-card__popular-badge">⭐ MÁS POPULAR</div>
+                <div class="plan-card__name">Trimestral</div>
+                <div class="plan-card__price">$10 <span>USD</span></div>
+                <div class="plan-card__duration">90 días</div>
+              </div>
+              <div class="plan-card">
+                <div class="plan-card__name">Vitalicio</div>
+                <div class="plan-card__price">$15 <span>USD</span></div>
+                <div class="plan-card__duration">Para siempre ♾️</div>
+              </div>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 2rem;">
+              <a href="https://ko-fi.com/cinevers" target="_blank" class="btn-kofi">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;"><path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311zm6.173.478c-.928.116-1.682.028-1.682.028V7.284h1.77s1.971.551 1.971 2.638c0 1.913-.985 2.667-2.059 3.015z"/></svg>
                 ☕ Adquirir Premium en Ko-fi
               </a>
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.85rem;">Nota: Tu código llegará automáticamente a tu correo. También puedes autodetectarlo abajo.</p>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem;">Tu código llegará automáticamente. También puedes autodetectarlo abajo.</p>
             </div>
 
-            <!-- Autodetectar compra de Ko-fi -->
-            <div id="kofi-autodetect-box" style="background: linear-gradient(135deg, rgba(255,94,91,0.06) 0%, rgba(255,94,91,0.02) 100%); border: 1px dashed rgba(255,94,91,0.35); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.75rem;">
-              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                <span style="font-size: 1rem;">🔍</span>
-                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin: 0;">¿Ya pagaste en Ko-fi?</h4>
+            <!-- AUTODETECTAR Ko-fi -->
+            <div class="kofi-detect-box">
+              <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
+                <span style="font-size:1.1rem;">🔍</span>
+                <strong style="font-size:0.95rem; color:var(--text-primary);">¿Ya pagaste en Ko-fi?</strong>
               </div>
-              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">
-                Ingresa el correo que usaste al pagar y detectaremos tu código automáticamente.
-              </p>
-              <div class="flex flex--gap-sm flex--wrap" style="align-items: stretch;">
-                <input type="email" id="kofi-email-input" class="form-input" placeholder="correo@ejemplo.com" style="flex: 1; min-width: 180px;">
-                <button class="btn btn--outline-red" id="kofi-autodetect-btn" style="white-space: nowrap;">🔍 Buscar mi código</button>
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">Ingresa el correo que usaste al pagar y detectaremos tu código automáticamente.</p>
+              <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                <input type="email" id="kofi-email-input" class="form-input" placeholder="correo@ejemplo.com" style="flex:1; min-width:180px;">
+                <button class="btn btn--outline-red" id="kofi-autodetect-btn" style="white-space:nowrap;">🔍 Buscar mi código</button>
               </div>
-              <div id="kofi-autodetect-result" style="margin-top: 0.75rem; font-size: 0.82rem;"></div>
+              <div id="kofi-autodetect-result" style="margin-top:0.75rem; font-size:0.82rem;"></div>
             </div>
 
-            <!-- Formulario Canjear Código -->
+            <!-- CANJEAR CÓDIGO -->
             <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.5rem;">
-              <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">Canjear Código Premium</h4>
-              <div class="flex flex--gap-sm flex--wrap" style="align-items: stretch;">
-                <input type="text" id="premium-code-input" class="form-input" placeholder="CINE-XXXX-XXXX-XXXX" style="flex: 1; text-transform: uppercase; font-family: var(--font-mono); letter-spacing: 1px;">
-                <button class="btn btn--primary" id="claim-code-btn">Activar Premium</button>
+              <h4 style="font-size:1.05rem; font-weight:700; margin-bottom:1rem; color:var(--text-primary);">🎟️ Canjear Código Premium</h4>
+              <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                <input type="text" id="premium-code-input" class="form-input" placeholder="CINE-XXXX-XXXX-XXXX" style="flex:1; text-transform:uppercase; font-family:var(--font-mono); letter-spacing:1px; min-width:200px;">
+                <button class="btn btn--primary" id="claim-code-btn" style="white-space:nowrap;">✅ Activar Premium</button>
               </div>
             </div>
+
           </div>
+
         </div>
       </div>
+
 
       <!-- Pestaña 10: Solicitudes de Películas (Pedidos) -->
       <div class="profile-tab-section" id="profile-section-requests">
@@ -396,6 +498,249 @@
       background: var(--bg-elevated) !important;
     }
 
+    /* ══════════════════════════════════
+       PREMIUM PAGE — Nuevo Diseño
+    ══════════════════════════════════ */
+    .premium-page-wrapper {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+      font-family: var(--font-ui);
+    }
+
+    /* Header con glow */
+    .premium-header {
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      border: 1px solid rgba(245, 197, 24, 0.25);
+      text-align: center;
+      padding: 2.5rem 2rem;
+    }
+    .premium-header__glow {
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(ellipse at center, rgba(245,197,24,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .premium-header__content { position: relative; z-index: 1; }
+    .premium-crown-icon {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      animation: floatCrown 3s ease-in-out infinite;
+    }
+    @keyframes floatCrown {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .premium-header__title {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.4rem;
+    }
+    .premium-header__title span {
+      background: linear-gradient(90deg, #ffd700, #ff9f00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .premium-header__subtitle {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.6);
+      margin: 0;
+    }
+
+    /* Status box */
+    .premium-status-box {
+      padding: 1.5rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-secondary);
+    }
+
+    /* Section title */
+    .premium-section-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 1.25rem;
+    }
+
+    /* Section card */
+    .premium-section-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 2rem;
+    }
+
+    /* Benefits Grid */
+    .premium-benefits-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 2rem;
+    }
+    .premium-benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .benefit-card {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      background: var(--bg-void);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1rem 1rem;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      overflow: hidden;
+    }
+    .benefit-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(245, 197, 24, 0.3);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    .benefit-card--new {
+      border-color: rgba(229, 9, 20, 0.35);
+    }
+    .benefit-card__badge {
+      position: absolute;
+      top: 0.55rem;
+      right: 0.55rem;
+      font-size: 0.55rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      background: linear-gradient(90deg, #E50914, #ff6b35);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 99px;
+    }
+    .benefit-card__icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      line-height: 1;
+      margin-top: 2px;
+    }
+    .benefit-card__body strong {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+    .benefit-card__body p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    /* Plan cards */
+    .premium-plans-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+    .plan-card {
+      position: relative;
+      text-align: center;
+      padding: 1.5rem 1rem;
+      background: var(--bg-void);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .plan-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    }
+    .plan-card--popular {
+      border-color: rgba(245, 197, 24, 0.5);
+      background: linear-gradient(135deg, rgba(245,197,24,0.06) 0%, var(--bg-void) 100%);
+      box-shadow: 0 0 20px rgba(245,197,24,0.1);
+    }
+    .plan-card__popular-badge {
+      position: absolute;
+      top: -0.6rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      background: linear-gradient(90deg, #ffd700, #ff9f00);
+      color: #000;
+      padding: 3px 10px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+    .plan-card__name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .plan-card__price {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 0.35rem;
+    }
+    .plan-card__price span {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .plan-card__duration {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Ko-fi button */
+    .btn-kofi {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0.85rem 2rem;
+      background: linear-gradient(135deg, #FF5E5B, #ff3d3a);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      border-radius: 12px;
+      border: none;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(255,94,91,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-kofi:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(255,94,91,0.55);
+      color: #fff;
+    }
+
+    /* Ko-fi detect box */
+    .kofi-detect-box {
+      background: linear-gradient(135deg, rgba(255,94,91,0.06) 0%, rgba(255,94,91,0.02) 100%);
+      border: 1px dashed rgba(255,94,91,0.35);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
     /* 🪪 Tarjeta de Socio VIP 3D Holográfica */
     .vip-card-container {
       perspective: 1000px;
@@ -457,9 +802,7 @@
       color: #fff;
       font-weight: 700;
     }
-    .vip-logo span {
-      color: #e50914;
-    }
+    .vip-logo span { color: #e50914; }
     .vip-badge {
       font-size: 0.62rem;
       background: linear-gradient(90deg, #ffd700, #ff9f00);
@@ -517,27 +860,31 @@
       gap: 0.85rem;
     }
 
-    /* Adaptación móvil del perfil y tarjeta VIP */
+    /* ══════════════════════════════════
+       RESPONSIVE MÓVIL
+    ══════════════════════════════════ */
     @media (max-width: 680px) {
-      .profile-tab-section > div {
-        padding: 1.25rem !important;
+      .premium-page-wrapper { gap: 1.25rem; }
+      .premium-header { padding: 2rem 1.25rem; }
+      .premium-header__title { font-size: 1.5rem; }
+      .premium-crown-icon { font-size: 2.25rem; }
+      .premium-benefits-section,
+      .premium-section-card { padding: 1.25rem; }
+      .premium-benefits-grid {
+        grid-template-columns: 1fr;
       }
+      .premium-plans-grid {
+        grid-template-columns: 1fr;
+      }
+      .plan-card--popular { margin-top: 0.75rem; }
       .vip-card {
         width: 290px;
         height: 172px;
       }
-      .vip-logo {
-        font-size: 1.2rem;
-      }
-      .vip-card-number {
-        font-size: 0.65rem;
-        letter-spacing: 2px;
-      }
-      .vip-value {
-        font-size: 0.72rem;
-        max-width: 100px;
-      }
-    }
+      .vip-logo { font-size: 1.2rem; }
+      .vip-card-number { font-size: 0.65rem; letter-spacing: 2px; }
+      .vip-value { font-size: 0.72rem; max-width: 100px; }
+      .profile-tab-section > div { padding: 1.25rem !important; }
   </style>
 
   <script type="module" src="js/pages/perfil.js?v=3.0.0"></script>
