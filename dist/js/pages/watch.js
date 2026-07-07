@@ -969,7 +969,7 @@ class WatchPartyController {
         media_type: this.watchCtrl.mediaType,
         title:      this.watchCtrl.mediaDetails?.title || this.watchCtrl.mediaDetails?.name || '',
         is_playing: false,
-        current_time: 0
+        playback_time: 0
       })
       .select()
       .single();

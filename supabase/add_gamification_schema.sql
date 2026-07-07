@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS public.watch_parties (
   tmdb_id       INTEGER NOT NULL,
   media_type    TEXT NOT NULL,
   title         TEXT NOT NULL,
-  current_time  NUMERIC DEFAULT 0,
+  playback_time NUMERIC DEFAULT 0,
   is_playing    BOOLEAN DEFAULT false,
   created_at    TIMESTAMPTZ DEFAULT now()
 );
