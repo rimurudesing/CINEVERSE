@@ -754,72 +754,60 @@ function _closeUpdateNotif(el) {
   el.addEventListener('animationend', () => el.remove(), { once: true });
 }
 
-/**
- * Muestra una notificación en la parte superior cuando detecta
- * que hay una nueva versión de la APK disponible.
- * Se activa automáticamente si la versión guardada en localStorage
- * es diferente a CURRENT_APP_VER.
- *
- * Para lanzar una nueva notificación de actualización a todos los usuarios:
- * 1. Actualiza CURRENT_APP_VER en este archivo con la nueva versión.
- * 2. Compila y despliega la web/APK.
- * La próxima vez que los usuarios abran la app, verán la notificación.
- */
 export function checkForAppUpdate() {
   // Solo dentro de la APK nativa
   if (!isNativeApp) return;
 
-  const storedVersion = localStorage.getItem(APP_VERSION_KEY);
+  // Consultar la versión más reciente desde el servidor en vivo
+  fetch('https://cineverse.pages.dev/version.json')
+    .then(res => { if (!res.ok) throw new Error('No response'); return res.json(); })
+    .then(data => {
+      const remoteVersion = data.version;
+      if (!remoteVersion || remoteVersion === CURRENT_APP_VER) return;
 
-  // Primera vez (no hay versión guardada) → guardar y no mostrar
-  if (!storedVersion) {
-    localStorage.setItem(APP_VERSION_KEY, CURRENT_APP_VER);
-    return;
-  }
+      // No molestar si ya fue descartada en las últimas 24 horas
+      const dismissedAt = localStorage.getItem('cv_update_dismissed_at');
+      if (dismissedAt && (Date.now() - parseInt(dismissedAt)) < 86400000) return;
 
-  // Si la versión guardada es la misma → no hay actualización
-  if (storedVersion === CURRENT_APP_VER) return;
+      _injectUpdateNotifStyles();
 
-  // ¡Hay una nueva versión! Mostrar notificación
-  _injectUpdateNotifStyles();
+      const notif = document.createElement('div');
+      notif.id = UPDATE_NOTIF_ID;
+      notif.innerHTML = `
+        <div class="cv-update-card">
+          <div class="cv-update-icon">📲</div>
+          <div class="cv-update-content">
+            <div class="cv-update-title">¡Actualización disponible! v${remoteVersion}</div>
+            <div class="cv-update-desc">Hay una nueva versión de CineVerse. ¡Descárgala para tener todo lo nuevo!</div>
+          </div>
+          <div class="cv-update-actions">
+            <a class="cv-update-btn-primary" href="https://cineverse.pages.dev/descargar.html" target="_blank" rel="noopener" id="cv-update-download-btn">
+              Descargar ↗
+            </a>
+            <button class="cv-update-btn-dismiss" id="cv-update-dismiss-btn">Ahora no</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(notif);
 
-  const notif = document.createElement('div');
-  notif.id = UPDATE_NOTIF_ID;
+      document.getElementById('cv-update-download-btn')?.addEventListener('click', () => {
+        localStorage.setItem(APP_VERSION_KEY, remoteVersion);
+        _closeUpdateNotif(notif);
+      });
 
-  notif.innerHTML = `
-    <div class="cv-update-card">
-      <div class="cv-update-icon">📲</div>
-      <div class="cv-update-content">
-        <div class="cv-update-title">¡Nueva versión disponible! v${CURRENT_APP_VER}</div>
-        <div class="cv-update-desc">Actualiza CineVerse para disfrutar de nuevas funciones y mejoras.</div>
-      </div>
-      <div class="cv-update-actions">
-        <a class="cv-update-btn-primary" href="https://cineverse-7u5.pages.dev/descargar.html" target="_blank" rel="noopener" id="cv-update-download-btn">
-          Actualizar ↗
-        </a>
-        <button class="cv-update-btn-dismiss" id="cv-update-dismiss-btn">Ahora no</button>
-      </div>
-    </div>
-  `;
+      document.getElementById('cv-update-dismiss-btn')?.addEventListener('click', () => {
+        localStorage.setItem('cv_update_dismissed_at', Date.now().toString());
+        _closeUpdateNotif(notif);
+      });
 
-  document.body.appendChild(notif);
-
-  // Al hacer clic en "Actualizar", guardar la nueva versión para no mostrar de nuevo
-  document.getElementById('cv-update-download-btn')?.addEventListener('click', () => {
-    localStorage.setItem(APP_VERSION_KEY, CURRENT_APP_VER);
-    _closeUpdateNotif(notif);
-  });
-
-  // Descartar
-  document.getElementById('cv-update-dismiss-btn')?.addEventListener('click', () => {
-    _closeUpdateNotif(notif);
-    // No guardar la nueva versión → volverá a aparecer la próxima sesión
-  });
-
-  // Auto-descartar tras 15 segundos
-  setTimeout(() => {
-    if (document.getElementById(UPDATE_NOTIF_ID)) _closeUpdateNotif(notif);
-  }, 15000);
+      // Auto-descartar tras 15 segundos
+      setTimeout(() => {
+        if (document.getElementById(UPDATE_NOTIF_ID)) _closeUpdateNotif(notif);
+      }, 15000);
+    })
+    .catch(() => {
+      // Fallo silencioso — sin conexión o servidor no disponible
+    });
 }
 
 // Auto-mount
