@@ -834,14 +834,3 @@ if (document.readyState === 'loading') {
   setTimeout(injectGlobalPromoBanner, 50);
   setTimeout(checkForAppUpdate, 1500);
 }
-
-// Auto-mount
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    renderNavbar();
-    setTimeout(injectGlobalPromoBanner, 50);
-  });
-} else {
-  renderNavbar();
-  setTimeout(injectGlobalPromoBanner, 50);
-}
