@@ -184,14 +184,14 @@ class WatchPageController {
       </div>
 
       <!-- Botón de Cast a TV con Web Video Caster -->
-      ${this.buildCastButton(vimeusURL)}
+      ${this.buildCastButton()}
 
       <!-- Barra inferior de opciones del player (solo series) -->
       ${this.mediaType === 'tv' ? this.buildEpisodeBar() : ''}
     `;
 
     // Vincular eventos del botón de Cast
-    this.bindCastButton(vimeusURL);
+    this.bindCastButton();
 
     // Vincular eventos del selector de episodios (series)
     if (this.mediaType === 'tv') {
@@ -200,7 +200,7 @@ class WatchPageController {
   }
 
   // ── Web Video Caster — Cast a TV ───────────────────────────────────────────
-  buildCastButton(vimeusURL) {
+  buildCastButton() {
     return `
       <div id="wvc-cast-bar" style="
         margin-top: 0.75rem;
@@ -252,7 +252,7 @@ class WatchPageController {
     `;
   }
 
-  bindCastButton(vimeusURL) {
+  bindCastButton() {
     const btn = document.getElementById('wvc-cast-btn');
     if (!btn) return;
 
@@ -266,10 +266,11 @@ class WatchPageController {
       btn.style.boxShadow = '0 4px 12px rgba(3,155,229,0.35)';
     });
 
-    btn.addEventListener('click', () => this.castToTV(vimeusURL));
+    btn.addEventListener('click', () => this.castToTV());
   }
 
-  castToTV(vimeusURL) {
+  castToTV() {
+    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
     const title   = this.mediaDetails?.title || this.mediaDetails?.name || 'CineVerse';
     const poster  = this.mediaDetails?.poster_path
       ? buildTMDBImageURL(this.mediaDetails.poster_path, 'w500')
@@ -744,10 +745,17 @@ class WatchPageController {
     playBtn.addEventListener('click', () => {
       const season  = parseInt(seasonSelect.value);
       const episode = parseInt(episodeSelect.value);
+      
+      this.season = season;
+      this.episode = episode;
+
       const iframe  = document.getElementById('vimeus-iframe');
       if (iframe) {
         iframe.src = getVimeusURL(this.mediaType, this.mediaId, season, episode);
         showToast(`T${season} E${episode} cargando...`, 'info');
+        
+        // Guardar reproducción en el historial
+        this.saveToWatchHistory();
       }
     });
   }
