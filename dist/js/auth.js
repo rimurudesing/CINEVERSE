@@ -369,6 +369,70 @@ export async function uploadAvatar(file) {
   return publicUrl;
 }
 
+/**
+ * Incrementa los puntos de experiencia (XP) del usuario autenticado en la base de datos
+ * y maneja las subidas de nivel dinámicas.
+ * @param {number} amount - Cantidad de XP a sumar
+ * @returns {Promise<Object|null>} Metadata del cambio o null si no está logueado
+ */
+export async function addXP(amount) {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const client = await getClient();
+    if (!client) return null;
+    
+    const { data: { user }, error: userError } = await client.auth.getUser();
+    if (userError || !user) return null;
+    
+    // Obtener XP y Nivel actual del perfil
+    const { data: profile, error: profileError } = await client
+      .from('profiles')
+      .select('xp, level')
+      .eq('id', user.id)
+      .maybeSingle();
+      
+    if (profileError || !profile) return null;
+    
+    let newXP = (profile.xp || 0) + amount;
+    let newLevel = profile.level || 1;
+    let xpNeeded = newLevel * 100; // Nivel 1 requiere 100XP, Nivel 2 requiere 200XP, etc.
+    let leveledUp = false;
+    
+    while (newXP >= xpNeeded) {
+      newXP -= xpNeeded;
+      newLevel += 1;
+      xpNeeded = newLevel * 100;
+      leveledUp = true;
+    }
+    
+    // Actualizar base de datos
+    const { error: updateError } = await client
+      .from('profiles')
+      .update({
+        xp: newXP,
+        level: newLevel,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id);
+      
+    if (updateError) throw updateError;
+    
+    // Actualizar localStorage local
+    try {
+      const cached = JSON.parse(localStorage.getItem('cineverse_profile') || '{}');
+      cached.xp = newXP;
+      cached.level = newLevel;
+      localStorage.setItem('cineverse_profile', JSON.stringify(cached));
+    } catch(e) {}
+    
+    return { leveledUp, newLevel, newXP, xpAdded: amount };
+  } catch (err) {
+    console.error("Error en addXP:", err);
+    return null;
+  }
+}
+
+
 // ═════════════════════════════════════════════════════════════════════════
 // VALIDACIÓN DE SESIÓN Y ESTADO PREMIUM EN SEGUNDO PLANO
 // ═════════════════════════════════════════════════════════════════════════

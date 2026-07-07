@@ -270,9 +270,9 @@
   transform: translateY(-6px) scale(1.02);
   box-shadow:
     0 20px 60px rgba(0,0,0,0.8),
-    0 0 0 1px rgba(229,9,20,0.3),
-    0 0 30px rgba(229,9,20,0.1);
-  border-color: rgba(229,9,20,0.4);
+    0 0 0 1px var(--genre-glow, rgba(229,9,20,0.3)),
+    0 0 30px var(--genre-glow-dim, rgba(229,9,20,0.1));
+  border-color: var(--genre-glow, rgba(229,9,20,0.4));
 }
 
 .movie-card:hover .movie-card__img {

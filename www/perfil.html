@@ -75,9 +75,19 @@
         </div>
         <p id="profile-bio" class="profile-hero__bio" style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; cursor: pointer; margin-top: 0.4rem;" data-tooltip="Haz click para editar"></p>
         
-        <!-- Racha de actividad (oculta por defecto) -->
-        <div id="streak-display" style="display: none; margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
-          <span class="streak-flame">🔥</span> <span id="streak-count">0</span> días de racha
+        <!-- Racha y Nivel de Experiencia -->
+        <div id="streak-display" style="display: none; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.75rem;">
+          <div style="display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--font-ui); font-size: 0.85rem; font-weight: 700; color: var(--gold); background: rgba(245, 197, 24, 0.1); border: 1px solid rgba(245, 197, 24, 0.25); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm);">
+            <span class="streak-flame">🔥</span> <span id="streak-count">0</span> días de racha
+          </div>
+          <!-- Barra de Nivel & XP -->
+          <div style="display: inline-flex; align-items: center; gap: 0.6rem; font-family: var(--font-ui); font-size: 0.82rem; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-subtle); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); min-width: 200px; max-width: 320px; flex: 1;">
+            <strong style="color: var(--accent-red); font-weight: 800; white-space: nowrap;">NIVEL <span id="xp-level-badge">1</span></strong>
+            <div style="flex: 1; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 99px; overflow: hidden; position: relative;">
+              <div id="xp-progress-bar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-red), #ff7b00); transition: width 0.4s ease;"></div>
+            </div>
+            <span id="xp-progress-text" style="color: var(--text-muted); font-size: 0.72rem; font-family: var(--font-mono); white-space: nowrap;">0/100 XP</span>
+          </div>
         </div>
 
         <!-- Stats -->
@@ -259,7 +269,7 @@
             </ul>
 
             <!-- Sección Comprar (Ko-fi) -->
-            <div style="background-color: var(--bg-void); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 2rem; text-align: center;">
+            <div style="background-color: var(--bg-void); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; text-align: center;">
               <p style="font-size: 1.05rem; margin-bottom: 0.8rem; color: var(--text-primary); font-weight: 700;">Adquirir Membresía Premium</p>
               <p style="font-size: 0.88rem; margin-bottom: 1.25rem; color: var(--text-secondary); line-height: 1.4;">
                 30 días por <strong>$5 USD</strong> · 90 días por <strong>$10 USD</strong> · Vitalicio por <strong>$15 USD</strong>
@@ -267,7 +277,23 @@
               <a href="https://ko-fi.com/cinevers" target="_blank" class="btn btn--primary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 700; background-color: #FF5E5B; border-color: #FF5E5B; text-decoration: none; box-shadow: 0 4px 15px rgba(255, 94, 91, 0.3);">
                 ☕ Adquirir Premium en Ko-fi
               </a>
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.85rem;">Nota: Recibirás tu código de activación por correo electrónico tras realizar el pago.</p>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.85rem;">Nota: Tu código llegará automáticamente a tu correo. También puedes autodetectarlo abajo.</p>
+            </div>
+
+            <!-- Autodetectar compra de Ko-fi -->
+            <div id="kofi-autodetect-box" style="background: linear-gradient(135deg, rgba(255,94,91,0.06) 0%, rgba(255,94,91,0.02) 100%); border: 1px dashed rgba(255,94,91,0.35); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.75rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                <span style="font-size: 1rem;">🔍</span>
+                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin: 0;">¿Ya pagaste en Ko-fi?</h4>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">
+                Ingresa el correo que usaste al pagar y detectaremos tu código automáticamente.
+              </p>
+              <div class="flex flex--gap-sm flex--wrap" style="align-items: stretch;">
+                <input type="email" id="kofi-email-input" class="form-input" placeholder="correo@ejemplo.com" style="flex: 1; min-width: 180px;">
+                <button class="btn btn--outline-red" id="kofi-autodetect-btn" style="white-space: nowrap;">🔍 Buscar mi código</button>
+              </div>
+              <div id="kofi-autodetect-result" style="margin-top: 0.75rem; font-size: 0.82rem;"></div>
             </div>
 
             <!-- Formulario Canjear Código -->

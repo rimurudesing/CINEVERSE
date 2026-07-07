@@ -178,13 +178,35 @@ class ProfilePageController {
       this._checkVerifiedBadge();
     }
 
-    // Racha de actividad
+    // Racha de actividad, Nivel y XP
     const streakDisplay = document.getElementById('streak-display');
     const streakCount   = document.getElementById('streak-count');
+    const xpLevelBadge  = document.getElementById('xp-level-badge');
+    const xpProgressBar = document.getElementById('xp-progress-bar');
+    const xpProgressText = document.getElementById('xp-progress-text');
+
     const streak = profile.activity_streak || 0;
-    if (streakDisplay && streak > 0) {
-      streakDisplay.style.display = 'block';
-      if (streakCount) streakCount.textContent = streak;
+    const level = profile.level || 1;
+    const xp = profile.xp || 0;
+    const xpNeeded = level * 100;
+    const xpPercent = Math.min(100, Math.floor((xp / xpNeeded) * 100));
+
+    if (streakDisplay) {
+      // Mostrar siempre para reflejar el nivel del usuario
+      streakDisplay.style.display = 'flex';
+      
+      // Ocultar la píldora de racha si es 0
+      const streakPill = streakCount ? streakCount.parentElement : null;
+      if (streakPill) {
+        streakPill.style.display = streak > 0 ? 'inline-flex' : 'none';
+      }
+      if (streakCount && streak > 0) {
+        streakCount.textContent = streak;
+      }
+
+      if (xpLevelBadge) xpLevelBadge.textContent = level;
+      if (xpProgressBar) xpProgressBar.style.width = `${xpPercent}%`;
+      if (xpProgressText) xpProgressText.textContent = `${xp}/${xpNeeded} XP`;
     }
 
     // Aplicar tema de color
@@ -1035,6 +1057,87 @@ class ProfilePageController {
         } finally {
           claimBtn.disabled = false;
           claimBtn.textContent = 'Activar Premium';
+        }
+      });
+    }
+
+    // ── Autodetectar compra de Ko-fi ─────────────────────────────────────────
+    const kofiBtn        = document.getElementById('kofi-autodetect-btn');
+    const kofiEmailInput = document.getElementById('kofi-email-input');
+    const kofiResult     = document.getElementById('kofi-autodetect-result');
+
+    if (kofiBtn && !kofiBtn.dataset.bound) {
+      kofiBtn.dataset.bound = 'true';
+
+      // Prellenar con el email del usuario si ya lo conocemos
+      if (kofiEmailInput && this.currentUser?.email) {
+        kofiEmailInput.value = this.currentUser.email;
+      }
+
+      kofiBtn.addEventListener('click', async () => {
+        const email = kofiEmailInput?.value?.trim().toLowerCase();
+        if (!email || !email.includes('@')) {
+          if (kofiResult) kofiResult.innerHTML = `<span style="color:#f87171;">Por favor ingresa un email válido.</span>`;
+          return;
+        }
+
+        kofiBtn.disabled = true;
+        kofiBtn.textContent = 'Buscando...';
+        if (kofiResult) kofiResult.innerHTML = `<span style="color:var(--text-muted);">Buscando tu código...</span>`;
+
+        try {
+          // Buscar códigos no usados vinculados a ese email en Supabase
+          const { data: codes, error } = await supabase
+            .from('premium_codes')
+            .select('*')
+            .eq('purchased_by_email', email)
+            .eq('is_used', false)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (error) throw error;
+
+          if (!codes || codes.length === 0) {
+            if (kofiResult) kofiResult.innerHTML = `
+              <span style="color:#f87171;">⚠️ No encontramos códigos pendientes para este correo. Si acabas de pagar, espera unos minutos e inténtalo de nuevo.</span>
+            `;
+            return;
+          }
+
+          const found = codes[0];
+          if (kofiResult) kofiResult.innerHTML = `
+            <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:0.6rem 0.85rem;margin-top:0.25rem;">
+              <p style="color:#4ade80;font-weight:700;margin-bottom:0.25rem;">✅ ¡Código encontrado!</p>
+              <p style="font-family:var(--font-mono);font-size:0.88rem;letter-spacing:1px;color:var(--text-primary);margin-bottom:0.5rem;">${found.code}</p>
+              <button id="kofi-auto-claim-btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:white;border:none;border-radius:6px;padding:0.4rem 0.9rem;font-size:0.8rem;font-weight:700;cursor:pointer;">
+                ⚡ Activar automáticamente
+              </button>
+            </div>
+          `;
+
+          document.getElementById('kofi-auto-claim-btn')?.addEventListener('click', async () => {
+            const autoBtn = document.getElementById('kofi-auto-claim-btn');
+            if (autoBtn) { autoBtn.disabled = true; autoBtn.textContent = 'Activando...'; }
+
+            const { data: success, error: claimErr } = await supabase.rpc('claim_premium_code', { entered_code: found.code });
+            if (claimErr) throw claimErr;
+
+            if (success) {
+              showToast('🎉 ¡Premium activado automáticamente! Disfruta CineVerse sin anuncios.', 'success');
+              document.getElementById('kofi-autodetect-box')?.remove();
+              await this.loadPremium();
+              this.renderProfileHero();
+            } else {
+              if (kofiResult) kofiResult.innerHTML = `<span style="color:#f87171;">Error al activar. Canjéalo manualmente abajo.</span>`;
+            }
+          });
+
+        } catch (err) {
+          console.error('Ko-fi autodetect error:', err);
+          if (kofiResult) kofiResult.innerHTML = `<span style="color:#f87171;">Error al buscar. Intenta más tarde.</span>`;
+        } finally {
+          kofiBtn.disabled = false;
+          kofiBtn.textContent = '🔍 Buscar mi código';
         }
       });
     }

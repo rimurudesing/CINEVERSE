@@ -41,6 +41,48 @@ const GENRES_MAP = {
   10765: "Sci-Fi & Fantasy", 10766: "Telenovela", 10767: "Charla", 10768: "Guerra & Política"
 };
 
+// Diccionario de colores asociados a los géneros principales
+const GENRES_COLORS = {
+  28: "#ff2a2a",    // Acción: Rojo vibrante
+  12: "#22c55e",    // Aventura: Verde
+  16: "#ff8a00",    // Animación: Naranja
+  35: "#facc15",    // Comedia: Amarillo
+  80: "#a855f7",    // Crimen: Púrpura oscuro
+  99: "#6b7280",    // Documental: Gris
+  18: "#3b82f6",    // Drama: Azul
+  10751: "#ec4899", // Familia: Rosa
+  14: "#d946ef",    // Fantasía: Magenta
+  36: "#b45309",    // Historia: Marrón
+  27: "#991b1b",    // Terror: Rojo sangre oscuro
+  10402: "#06b6d4", // Música: Turquesa
+  9648: "#4f46e5",  // Misterio: Índigo
+  10749: "#f43f5e", // Romance: Rosado
+  878: "#00f0ff",   // Ciencia Ficción: Cyan eléctrico
+  10770: "#14b8a6", // Película de TV: Verde azulado
+  53: "#f97316",    // Suspense: Naranja fuego
+  10752: "#451a03", // Bélica: Marrón militar
+  37: "#78350f",    // Western: Sepia
+  10759: "#ff2a2a", // Acción & Aventura
+  10762: "#ec4899", // Infantil
+  10765: "#00f0ff"  // Sci-Fi & Fantasy
+};
+
+/**
+ * Convierte un color HEX a formato RGBA con opacidad personalizada.
+ */
+function hexToRgba(hex, alpha) {
+  let c;
+  if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+    c = hex.substring(1).split('');
+    if (c.length === 3) {
+      c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+    }
+    c = '0x' + c.join('');
+    return 'rgba(' + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',') + ',' + alpha + ')';
+  }
+  return hex;
+}
+
 /**
  * Crea una tarjeta HTML de película o serie interactiva.
  * @param {Object} item - Datos del elemento retornados por TMDB
@@ -70,6 +112,14 @@ export function createMovieCard(item, options = {}) {
   card.className = `movie-card ${sizeClass}`;
   card.setAttribute('data-id', item.id);
   card.setAttribute('data-type', type);
+
+  // Mapear color de glow dinámico según el género principal
+  const primaryGenreId = genreIds[0] || 0;
+  const glowHex = GENRES_COLORS[primaryGenreId] || '#e50914';
+  const glowColorBorder = hexToRgba(glowHex, 0.35);
+  const glowColorDim = hexToRgba(glowHex, 0.15);
+  card.style.setProperty('--genre-glow', glowColorBorder);
+  card.style.setProperty('--genre-glow-dim', glowColorDim);
 
   card.innerHTML = `
     <span class="movie-card__rating">★ ${rating}</span>

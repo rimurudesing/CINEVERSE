@@ -1,0 +1,163 @@
+/* ═══ cineverse/js/adblock-detector.js ═══ */
+
+import { showToast, navigateTo } from './utils.js';
+
+/**
+ * Detecta de manera robusta la presencia de un bloqueador de publicidad (AdBlocker).
+ * Combina la inserción de elementos DOM sospechosos con una petición de red señuelo (fetch).
+ * @returns {Promise<boolean>} Resolves to true if AdBlock is active, false otherwise.
+ */
+export function detectAdBlock() {
+  return new Promise((resolve) => {
+    // En APK nativa (Capacitor) no se ejecutan extensiones de navegador AdBlock, omitir
+    const isNative = window.location.protocol === 'file:' || 
+                     (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
+                     navigator.userAgent.includes('Capacitor');
+    if (isNative) {
+      resolve(false);
+      return;
+    }
+
+    // 1. Crear un elemento trampa con clases comunes bloqueadas
+    const ad = document.createElement('div');
+    ad.className = 'ad-banner adsbox ad-placement adsense-ad doubleclick-ad ad-header sponsor-ad';
+    ad.innerHTML = '&nbsp;';
+    ad.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;pointer-events:none;opacity:0;';
+    document.body.appendChild(ad);
+
+    window.setTimeout(() => {
+      const isDomBlocked = ad.offsetHeight === 0 || 
+                           ad.clientHeight === 0 || 
+                           (window.getComputedStyle && window.getComputedStyle(ad).display === 'none') ||
+                           (window.getComputedStyle && window.getComputedStyle(ad).visibility === 'hidden');
+      ad.remove();
+
+      if (isDomBlocked) {
+        resolve(true);
+      } else {
+        // 2. Método alternativo de red: hacer un fetch a un dominio publicitario conocido
+        const decoyURL = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+        fetch(decoyURL, { method: 'HEAD', mode: 'no-cors', cache: 'no-store' })
+          .then(() => {
+            resolve(false); // La petición de red tuvo éxito
+          })
+          .catch(() => {
+            resolve(true); // Falló la petición de red (común en AdBlockers)
+          });
+      }
+    }, 150);
+  });
+}
+
+/**
+ * Muestra el modal bloqueante de AdBlock con estilos premium.
+ */
+export function showAdBlockModal() {
+  // Evitar duplicados
+  if (document.getElementById('adblock-modal-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'adblock-modal-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 5, 5, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    font-family: var(--font-ui, 'Outfit', sans-serif);
+  `;
+
+  const card = document.createElement('div');
+  card.style.cssText = `
+    background: linear-gradient(135deg, #121212 0%, #0a0a0a 100%);
+    border: 1px solid rgba(229, 9, 20, 0.3);
+    border-radius: 20px;
+    padding: 3rem 2.5rem;
+    max-width: 460px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8), 0 0 40px rgba(229, 9, 20, 0.15);
+  `;
+
+  card.innerHTML = `
+    <div style="
+      width: 70px;
+      height: 70px;
+      background: rgba(229, 9, 20, 0.1);
+      border: 1.5px solid rgba(229, 9, 20, 0.4);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.75rem;
+      font-size: 2.2rem;
+      animation: pulseGlow 2s infinite ease-in-out;
+    ">
+      🚫
+    </div>
+    <style>
+      @keyframes pulseGlow {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.4); }
+        50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(229, 9, 20, 0.2); }
+      }
+    </style>
+    <h2 style="color: #fff; font-size: 1.6rem; font-weight: 800; margin: 0 0 1rem 0; letter-spacing: 0.5px;">AdBlock Detectado</h2>
+    <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.65; margin: 0 0 2.25rem 0;">
+      Hemos detectado que utilizas un bloqueador de anuncios. CineVerse se mantiene gratis gracias a la publicidad. 
+      <br><br>
+      Para continuar viendo películas y series, por favor <strong>desactiva AdBlock</strong> para este sitio o adquiere <strong>CineVerse Premium</strong> para navegar libre de anuncios.
+    </p>
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+      <button id="adblock-retry-btn" style="
+        background: #fff;
+        color: #000;
+        border: none;
+        border-radius: 10px;
+        padding: 0.9rem 1.5rem;
+        font-family: var(--font-ui);
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s, background 0.2s;
+        box-shadow: 0 4px 15px rgba(255,255,255,0.15);
+      ">
+        🔄 Ya lo desactivé, recargar
+      </button>
+      <button id="adblock-premium-btn" style="
+        background: linear-gradient(135deg, var(--accent-red) 0%, #900a0a 100%);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 0.9rem 1.5rem;
+        font-family: var(--font-ui);
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);
+      ">
+        👑 Obtener CineVerse Premium
+      </button>
+    </div>
+  `;
+
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  // Vincular eventos del modal
+  document.getElementById('adblock-retry-btn')?.addEventListener('click', () => {
+    window.location.reload();
+  });
+
+  document.getElementById('adblock-premium-btn')?.addEventListener('click', () => {
+    navigateTo('perfil.html?tab=premium');
+  });
+
+  // Bloquear el scroll en el body
+  document.body.style.overflow = 'hidden';
+}
