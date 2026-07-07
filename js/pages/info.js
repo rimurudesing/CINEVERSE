@@ -203,7 +203,7 @@ class InfoPageController {
         <div class="info-layout">
           <aside class="info-sidebar">
             <div class="info-poster-wrap" style="width:100%;">
-              <img class="info-poster" src="${poster}" alt="${title}">
+              <img class="info-poster" src="${poster}" alt="${title}" loading="lazy">
             </div>
             <div class="info-rating-block">
               <div id="rating-ring-container" style="flex-shrink:0;"></div>
@@ -359,7 +359,7 @@ class InfoPageController {
         return `<div style="margin-bottom:1rem;">
           <p style="font-size:0.75rem;text-transform:uppercase;color:var(--text-muted);font-weight:700;margin-bottom:0.5rem;">${label}</p>
           <div class="providers-row">
-            ${list.map(p => `<div class="provider-chip"><img src="${buildTMDBImageURL(p.logo_path, 'w92')}" alt="${p.provider_name}">${p.provider_name}</div>`).join('')}
+            ${list.map(p => `<div class="provider-chip"><img src="${buildTMDBImageURL(p.logo_path, 'w92')}" alt="${p.provider_name}" loading="lazy">${p.provider_name}</div>`).join('')}
           </div></div>`;
       };
       container.innerHTML = renderGroup('Incluido en suscripción', es.flatrate) + renderGroup('Alquiler', es.rent) + renderGroup('Compra', es.buy);

@@ -234,7 +234,7 @@ class TVPageController {
         <!-- Columna Izquierda -->
         <div class="flex flex--col flex--gap-md">
           <div>
-            <img class="detail-poster" src="${poster}" alt="${title}" style="border-radius: var(--radius-md); border: 1px solid var(--border-red); box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 100%;">
+            <img class="detail-poster" src="${poster}" alt="${title}" loading="lazy" style="border-radius: var(--radius-md); border: 1px solid var(--border-red); box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 100%;">
           </div>
 
           <!-- Rating SVG Ring -->
@@ -372,7 +372,7 @@ class TVPageController {
               : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(actor.name)}`;
             return `
               <a href="buscar.html?q=${encodeURIComponent(actor.name)}" class="flex flex--col flex--align-center text-center" style="flex: 0 0 100px; gap: 0.5rem;">
-                <img src="${avatar}" alt="${actor.name}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-subtle);">
+                <img src="${avatar}" alt="${actor.name}" loading="lazy" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-subtle);">
                 <span style="font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${actor.name}</span>
                 <span style="font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${actor.character}</span>
               </a>
@@ -396,7 +396,7 @@ class TVPageController {
     }
 
     container.innerHTML = networks.slice(0, 4).map(n => `
-      <img src="${buildTMDBImageURL(n.logo_path, 'w92')}" alt="${n.name}" data-tooltip="${n.name}" style="height: 25px; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.8;">
+      <img src="${buildTMDBImageURL(n.logo_path, 'w92')}" alt="${n.name}" data-tooltip="${n.name}" loading="lazy" style="height: 25px; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.8;">
     `).join('');
   }
 
@@ -472,7 +472,7 @@ class TVPageController {
           
           <div class="season-panel__content" id="season-content-${season.season_number}" style="max-height: 0; overflow: hidden; transition: max-height var(--transition-med) ease-out;">
             <div class="grid" style="grid-template-columns: 120px 1fr; gap: 1.5rem; padding: 1.5rem; border-top: 1px solid var(--border-subtle);">
-              <img src="${poster}" alt="${season.name}" style="border-radius: var(--radius-sm); width: 100%;">
+              <img src="${poster}" alt="${season.name}" loading="lazy" style="border-radius: var(--radius-sm); width: 100%;">
               <div>
                 <p style="font-family: var(--font-body); color: var(--text-secondary); font-size: 1rem; margin-bottom: 1.5rem; line-height: 1.5;">${overview}</p>
                 <div class="episodes-list" id="episodes-list-${season.season_number}">
@@ -728,7 +728,7 @@ class TVPageController {
           </div>` : '';
         return `
           <div class="review-card" style="background-color:var(--bg-secondary);border:1px solid var(--border-subtle);padding:1.5rem;border-radius:var(--radius-md);margin-bottom:1rem;display:flex;gap:1rem;">
-            <img src="${r.avatar}" alt="${r.author}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:1px solid var(--border-subtle);flex-shrink:0;">
+            <img src="${r.avatar}" alt="${r.author}" loading="lazy" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:1px solid var(--border-subtle);flex-shrink:0;">
             <div style="flex:1;">
               <div class="flex flex--align-center flex--gap-sm" style="margin-bottom:0.5rem;flex-wrap:wrap;">
                 <h4 style="font-weight:700;">${r.author}</h4>

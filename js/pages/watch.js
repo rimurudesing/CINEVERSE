@@ -820,7 +820,7 @@ class WatchPageController {
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
               ${list.map(p => `
                 <div style="display:flex;align-items:center;gap:0.4rem;background:rgba(255,255,255,0.04);padding:0.25rem 0.6rem;border-radius:var(--radius-sm);border:1px solid var(--border-subtle);">
-                  <img src="${buildTMDBImageURL(p.logo_path, 'w92')}" alt="${p.provider_name}" style="width:18px;height:18px;border-radius:3px;">
+                  <img src="${buildTMDBImageURL(p.logo_path, 'w92')}" alt="${p.provider_name}" loading="lazy" style="width:18px;height:18px;border-radius:3px;">
                   <span style="font-size:0.78rem;font-weight:600;">${p.provider_name}</span>
                 </div>
               `).join('')}
@@ -857,6 +857,7 @@ class WatchPageController {
         <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.6rem;">
           <img src="${c.profile_path ? buildTMDBImageURL(c.profile_path, 'w92') : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.name)}`}"
                alt="${c.name}"
+               loading="lazy"
                style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
           <div style="line-height:1.2;overflow:hidden;">
             <p style="font-size:0.85rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</p>

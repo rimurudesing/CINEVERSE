@@ -544,7 +544,7 @@ class ProfilePageController {
             ${items.map(item => `
               <div class="history-item" data-id="${item.id}" style="background-color:var(--bg-secondary);border:1px solid var(--border-subtle);padding:0.75rem 1.25rem;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between;">
                 <div class="flex flex--align-center flex--gap-md">
-                  <img src="${buildTMDBImageURL(item.poster_path,'w92')}" alt="${item.title}" style="width:35px;height:50px;object-fit:cover;border-radius:var(--radius-sm);">
+                  <img src="${buildTMDBImageURL(item.poster_path,'w92')}" alt="${item.title}" loading="lazy" style="width:35px;height:50px;object-fit:cover;border-radius:var(--radius-sm);">
                   <div>
                     <h4 style="font-size:0.95rem;font-weight:700;">${item.title}</h4>
                     <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">${item.media_type==='movie'?'Cine':'TV'}</span>
@@ -637,7 +637,7 @@ class ProfilePageController {
         return `
           <div class="profile-review-card" data-review-id="${r.id}" style="background-color:var(--bg-secondary);border:1px solid ${isPinned ? 'var(--gold)' : 'var(--border-subtle)'};border-radius:var(--radius-md);padding:1.5rem;margin-bottom:1.5rem;display:grid;grid-template-columns:80px 1fr;gap:1.5rem;position:relative;">
             ${isPinned ? `<div style="position:absolute;top:0.5rem;right:0.75rem;font-size:0.75rem;color:var(--gold);font-weight:700;">📌 Anclada</div>` : ''}
-            <img src="${poster}" alt="${r.title}" style="width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border-subtle);">
+            <img src="${poster}" alt="${r.title}" loading="lazy" style="width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border-subtle);">
             <div>
               <div class="flex flex--align-center flex--justify-between" style="margin-bottom:0.5rem;">
                 <div>
