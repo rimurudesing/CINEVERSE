@@ -1008,15 +1008,58 @@ class ProfilePageController {
         <div style="background:rgba(229,9,20,0.15);border:1px solid var(--accent-red);color:var(--text-primary);padding:0.75rem 1rem;border-radius:var(--radius-sm);margin-top:1rem;font-size:0.85rem;font-weight:600;">
           ⚠️ Tu suscripción Premium expira en menos de ${diffDays} día(s). ¡Renueva adquiriendo un nuevo código en nuestra página de Ko-fi!
         </div>` : '';
+
+      const displayName = profile.display_name || profile.username || 'VIP MEMBER';
+      const level = profile.level || 1;
+      const xp = profile.xp || 0;
+
       statusBox.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
-          <div>
-            <h4 style="color:#FFD700;font-size:1.25rem;font-weight:700;">👑 Estatus: Premium Activo</h4>
-            <p style="color:var(--text-secondary);font-size:0.9rem;margin-top:0.25rem;">Expira el: <strong>${formatDate(profile.premium_until)}</strong></p>
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+            <div>
+              <h4 style="color:#FFD700;font-size:1.25rem;font-weight:700;">👑 Estatus: Premium Activo</h4>
+              <p style="color:var(--text-secondary);font-size:0.9rem;margin-top:0.25rem;">Expira el: <strong>${formatDate(profile.premium_until)}</strong></p>
+            </div>
+            <span style="font-size:2rem;">💎</span>
           </div>
-          <span style="font-size:2rem;">💎</span>
+
+          <!-- Tarjeta Holográfica VIP 3D -->
+          <div class="vip-card-container">
+            <div class="vip-card" id="vip-card-3d">
+              <div class="vip-card-shine" id="vip-card-shine"></div>
+              <div class="vip-card-content">
+                <div class="vip-card-header">
+                  <span class="vip-logo">CINE<span>VERSE</span></span>
+                  <span class="vip-badge">👑 MECENAS VIP</span>
+                </div>
+                
+                <div class="vip-card-chip"></div>
+                
+                <div class="vip-card-number">SOCIO EXCLUSIVO</div>
+                
+                <div class="vip-card-footer">
+                  <div class="vip-holder">
+                    <span class="vip-label">TITULAR</span>
+                    <span class="vip-value">${displayName}</span>
+                  </div>
+                  <div class="vip-stats-group">
+                    <div class="vip-stats">
+                      <span class="vip-label">NIVEL</span>
+                      <span class="vip-value" style="text-align:center;">${level}</span>
+                    </div>
+                    <div class="vip-stats">
+                      <span class="vip-label">XP</span>
+                      <span class="vip-value" style="text-align:center;">${xp}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         ${alertBanner}`;
+
+      this.setupVipCard3DEffect();
     } else {
       statusBox.innerHTML = `
         <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
@@ -1357,6 +1400,34 @@ class ProfilePageController {
     });
   }
 
+  setupVipCard3DEffect() {
+    const card = document.getElementById('vip-card-3d');
+    const shine = document.getElementById('vip-card-shine');
+    if (!card || !shine) return;
+
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const rotateX = ((centerY - y) / centerY) * 12;
+      const rotateY = ((x - centerX) / centerX) * 12;
+      
+      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      
+      const shineX = (x / rect.width) * 100;
+      const shineY = (y / rect.height) * 100;
+      shine.style.backgroundPosition = `${shineX}% ${shineY}%`;
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      shine.style.backgroundPosition = '0% 0%';
+    });
+  }
 
   /* ─────────────────────────────────────────────────────────
      AJUSTES DE CUENTA
