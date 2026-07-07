@@ -33,7 +33,12 @@ export async function onRequestPost({ request, env }) {
     }
 
     // ── 1. Verificar el token de seguridad de Ko-fi ──────────────────────────
-    if (payload.verification_token !== env.KOFI_VERIFICATION_TOKEN) {
+    // Fallback a valores hardcoded si las env vars no están configuradas en Cloudflare
+    const KOFI_TOKEN    = env.KOFI_VERIFICATION_TOKEN || 'b4e2bb97-3dc4-42fe-9948-354a454b9954';
+    const SUPABASE_URL  = env.SUPABASE_URL             || 'https://oeibxtnltxxcaiwvpldi.supabase.co';
+    const SUPABASE_KEY  = env.SUPABASE_SERVICE_KEY     || env.SUPABASE_ANON_KEY || '';
+
+    if (payload.verification_token !== KOFI_TOKEN) {
       return new Response('Unauthorized', { status: 401 });
     }
 
@@ -83,20 +88,17 @@ export async function onRequestPost({ request, env }) {
     const isLifetime = durationDays === 36500;
 
     // ── 5. Insertar código en Supabase ────────────────────────────────────────
-    const supabaseUrl = env.SUPABASE_URL;
-    const supabaseKey = env.SUPABASE_SERVICE_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('[Ko-fi Webhook] Faltan variables de entorno de Supabase');
-      return new Response('Server config error', { status: 500 });
+    if (!SUPABASE_KEY) {
+      console.error('[Ko-fi Webhook] Falta SUPABASE_SERVICE_KEY en las variables de entorno');
+      return new Response('Server config error: missing service key', { status: 500 });
     }
 
-    const insertResponse = await fetch(`${supabaseUrl}/rest/v1/premium_codes`, {
+    const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/premium_codes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
         'Prefer': 'return=representation'
       },
       body: JSON.stringify({

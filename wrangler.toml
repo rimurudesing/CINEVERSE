@@ -1,0 +1,16 @@
+name = "cineverse"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "dist"
+
+[vars]
+# ⚠️  Estas variables son SOLO para desarrollo local con `wrangler pages dev`
+# Para producción, configúralas en el dashboard de Cloudflare Pages:
+# https://dash.cloudflare.com → Pages → cineverse → Settings → Environment variables
+
+SUPABASE_URL = "https://oeibxtnltxxcaiwvpldi.supabase.co"
+
+# ‼️  IMPORTANTE: Las siguientes claves secretas NO deben ir aquí en producción.
+# Añádelas manualmente en el dashboard de Cloudflare como "Secret" variables:
+#
+#   KOFI_VERIFICATION_TOKEN = "b4e2bb97-3dc4-42fe-9948-354a454b9954"
+#   SUPABASE_SERVICE_KEY    = "<tu service_role key de Supabase>"
