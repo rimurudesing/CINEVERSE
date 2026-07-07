@@ -20,7 +20,7 @@ export const TMDB_BACKDROP_SIZES = {
   original: "original"
 };
 
-// Configuración de Supabase (Ofuscada mediante codificación Base64)
-export const SUPABASE_URL = atob("aHR0cHM6Ly9vZWlieHRubHR4eGNhaXd2cGxkaS5zdXBhYmFzZS5jbw==");
-export const SUPABASE_ANON_KEY = atob("c2JfcHVibGlzaGFibGVfcWxKeFBIdVVuQ0QxeGh1WENKLS1rZ19uTWc0NHJDbg==");
+// Configuración de Supabase
+export const SUPABASE_URL = "https://oeibxtnltxxcaiwvpldi.supabase.co";
+export const SUPABASE_ANON_KEY = "sb_publishable_qlJxPHqUnCD1xhuXCJ--kg_nMg44rCn";
 
