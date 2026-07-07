@@ -129,6 +129,7 @@
       <button class="pill profile-tabs__btn" data-tab="achievements">🏆 Logros</button>
       <button class="pill profile-tabs__btn" data-tab="settings">⚙️ Ajustes</button>
       <button class="pill profile-tabs__btn" data-tab="premium">⭐ Premium</button>
+      <button class="pill profile-tabs__btn" data-tab="requests">📣 Pedidos</button>
     </div>
 
     <!-- Banner Viral Promo Premium (visible para no Premium) -->
@@ -307,6 +308,73 @@
           </div>
         </div>
       </div>
+
+      <!-- Pestaña 10: Solicitudes de Películas (Pedidos) -->
+      <div class="profile-tab-section" id="profile-section-requests">
+        <div style="max-width: 760px; margin: 0 auto; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 2.5rem; border-radius: var(--radius-lg); font-family: var(--font-ui);">
+          <h3 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+            <span>📣 Pedidos y Solicitudes de Contenido</span>
+          </h3>
+
+          <!-- Banner Informativo Premium / Free -->
+          <div id="request-priority-banner" style="margin-bottom: 2rem; padding: 1.25rem; border-radius: var(--radius-md); font-size: 0.9rem; line-height: 1.5;">
+            <!-- Dinámico por JS -->
+          </div>
+
+          <!-- Formulario de Solicitud -->
+          <form id="movie-request-form" style="display: flex; flex-direction: column; gap: 1.25rem; background: var(--bg-void); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 2.5rem;">
+            <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;">Nueva Solicitud</h4>
+            
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" for="req-title">Título de la Película o Serie</label>
+              <input type="text" id="req-title" class="form-input" placeholder="Ej: Deadpool & Wolverine" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group" style="margin: 0;">
+                <label class="form-label" for="req-type">Tipo de Contenido</label>
+                <select id="req-type" class="form-input" style="background-color: var(--bg-secondary); color: var(--text-primary); height: 42px;">
+                  <option value="movie">Película 🎬</option>
+                  <option value="tv">Serie / TV Show 📺</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin: 0;">
+                <label class="form-label" for="req-year">Año de Lanzamiento (Opcional)</label>
+                <input type="number" id="req-year" class="form-input" placeholder="Ej: 2024" min="1900" max="2030">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn--primary" id="submit-request-btn" style="align-self: flex-start; padding: 0.65rem 1.5rem; font-weight: 700;">
+              🚀 Enviar Solicitud
+            </button>
+          </form>
+
+          <!-- Tabla de Solicitudes Anteriores -->
+          <div>
+            <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Mis Solicitudes Anteriores</h4>
+            <div style="overflow-x: auto; background: var(--bg-void); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+              <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border-subtle); background: rgba(255,255,255,0.02); color: var(--text-muted); font-weight: 700;">
+                    <th style="padding: 0.75rem 1rem;">Título</th>
+                    <th style="padding: 0.75rem 1rem;">Tipo</th>
+                    <th style="padding: 0.75rem 1rem;">Prioridad</th>
+                    <th style="padding: 0.75rem 1rem;">Estatus</th>
+                    <th style="padding: 0.75rem 1rem;">Fecha</th>
+                  </tr>
+                </thead>
+                <tbody id="movie-requests-table-body">
+                  <tr>
+                    <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">Aún no has enviado ninguna solicitud.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
 
     </div>
   </section>

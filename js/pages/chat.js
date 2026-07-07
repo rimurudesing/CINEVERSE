@@ -121,7 +121,7 @@ class ChatPageLobby {
     try {
       const { data, error } = await this.supabase
         .from('chat_messages')
-        .select('*, profiles(username, display_name, avatar_url, is_premium)')
+        .select('*, profiles(username, display_name, avatar_url, is_premium, avatar_frame)')
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -175,9 +175,11 @@ class ChatPageLobby {
          </button>`
       : '';
 
+    const frameClass = profile.avatar_frame && profile.avatar_frame !== 'none' ? `avatar-frame-${profile.avatar_frame}` : '';
+
     return `
       <div class="chat-msg ${isOwn ? 'chat-msg--own' : ''}" data-msg-id="${msg.id}">
-        <img class="chat-avatar ${isMsgPremium ? 'premium' : ''}" src="${avatar}" alt="${authorName}">
+        <img class="chat-avatar ${frameClass} ${isMsgPremium ? 'premium' : ''}" src="${avatar}" alt="${authorName}">
         <div class="chat-msg-body">
           <div class="chat-msg-header">
             <div class="chat-msg-author-group">
@@ -205,7 +207,7 @@ class ChatPageLobby {
       // Consultar usuarios que son Premium
       const { data, error } = await this.supabase
         .from('profiles')
-        .select('username, display_name, avatar_url, is_premium')
+        .select('username, display_name, avatar_url, is_premium, avatar_frame')
         .eq('is_premium', true)
         .limit(10);
 
@@ -219,9 +221,10 @@ class ChatPageLobby {
       listContainer.innerHTML = data.map(user => {
         const name = user.display_name || user.username || 'Mecenas';
         const avatar = user.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+        const frameClass = user.avatar_frame && user.avatar_frame !== 'none' ? `avatar-frame-${user.avatar_frame}` : '';
         return `
           <div class="rank-item">
-            <img class="rank-avatar premium" src="${avatar}" alt="${name}">
+            <img class="rank-avatar ${frameClass} premium" src="${avatar}" alt="${name}">
             <div class="rank-info">
               <span class="rank-name premium">${name}</span>
               <span class="rank-badge premium">👑 Mecenas VIP</span>
@@ -304,7 +307,7 @@ class ChatPageLobby {
 
           const { data: profile } = await this.supabase
             .from('profiles')
-            .select('username, display_name, avatar_url, is_premium')
+            .select('username, display_name, avatar_url, is_premium, avatar_frame')
             .eq('id', newMsg.user_id)
             .maybeSingle();
 

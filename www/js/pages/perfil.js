@@ -67,8 +67,9 @@ class ProfilePageController {
     const initialTab = params.get('tab') || 'favorites';
     this.switchTab(initialTab);
 
-    // 7. Configurar ajustes de cuenta
+    // 7. Configurar ajustes de cuenta y solicitudes
     this.setupSettingsForm();
+    this.setupRequestsForm();
   }
 
   /* ─────────────────────────────────────────────────────────
@@ -461,6 +462,7 @@ class ProfilePageController {
     if (tab === 'stats')        this.loadStatsTab();
     if (tab === 'achievements') this.loadAchievements();
     if (tab === 'premium')      this.loadPremium();
+    if (tab === 'requests')     this.loadRequests();
   }
 
   /* ─────────────────────────────────────────────────────────
@@ -1183,6 +1185,178 @@ class ProfilePageController {
       });
     });
   }
+
+  // ── Solicitudes de Películas (Pedidos) ──────────────────────────────────────
+  async loadRequests() {
+    const banner    = document.getElementById('request-priority-banner');
+    const tableBody = document.getElementById('movie-requests-table-body');
+    if (!tableBody || !supabase) return;
+
+    const profile   = this.currentUser.profile || {};
+    const isPremium = !!profile.is_premium;
+
+    // 1. Renderizar banner informativo según nivel de suscripción
+    if (banner) {
+      if (isPremium) {
+        banner.style.cssText = `
+          background: linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(245,197,24,0.1) 100%);
+          border: 1px solid rgba(245,197,24,0.4);
+          padding: 1.25rem; border-radius: var(--radius-md);
+          font-family: var(--font-ui); font-size: 0.9rem; color: var(--text-primary);
+          box-shadow: 0 4px 15px rgba(245, 197, 24, 0.05);
+        `;
+        banner.innerHTML = `
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.4rem;">
+            <span style="font-size:1.25rem;">👑</span>
+            <strong style="color:var(--gold);text-transform:uppercase;letter-spacing:0.5px;">Estatus Premium Activo</strong>
+          </div>
+          <p style="color:var(--text-secondary);margin:0;line-height:1.4;">
+            Tus solicitudes se procesan en la **Cola de Prioridad VIP**. El contenido solicitado se añadirá a la plataforma en un plazo estimado de **24 horas**.
+          </p>
+        `;
+      } else {
+        banner.style.cssText = `
+          background: rgba(255,255,255,0.03);
+          border: 1px solid var(--border-subtle);
+          padding: 1.25rem; border-radius: var(--radius-md);
+          font-family: var(--font-ui); font-size: 0.9rem; color: var(--text-secondary);
+        `;
+        banner.innerHTML = `
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.4rem;">
+            <span style="font-size:1.25rem;">⚪</span>
+            <strong style="color:var(--text-primary);">Cola de Espera Estándar (Gratis)</strong>
+          </div>
+          <p style="margin:0;line-height:1.4;margin-bottom:0.75rem;">
+            Tus solicitudes entran en la cola de espera general. El procesamiento puede tardar de 5 a 10 días dependiendo de la demanda.
+          </p>
+          <a href="?tab=premium" style="display:inline-flex;align-items:center;gap:0.35rem;color:var(--gold);font-weight:700;text-decoration:none;font-size:0.82rem;">
+            ⭐ ¡Hazte Premium para procesamiento prioridad en 24h! →
+          </a>
+        `;
+      }
+    }
+
+    try {
+      // 2. Cargar solicitudes de la base de datos
+      const { data, error } = await supabase
+        .from('movie_requests')
+        .select('*')
+        .eq('user_id', this.currentUser.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">Aún no has enviado ninguna solicitud.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tableBody.innerHTML = data.map(req => {
+        const typeLabel = req.media_type === 'movie' ? '🎬 Película' : '📺 Serie';
+        const priorityLabel = req.is_priority 
+          ? `<span style="background:rgba(245,197,24,0.15);color:var(--gold);border:1px solid rgba(245,197,24,0.3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;font-weight:700;letter-spacing:0.3px;">⚡ PRIORIDAD VIP</span>`
+          : `<span style="background:rgba(255,255,255,0.05);color:var(--text-muted);border:1px solid rgba(255,255,255,0.1);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;">Estándar</span>`;
+        
+        let statusBadge = '';
+        if (req.status === 'pending') {
+          statusBadge = `<span style="color:#e2e8f0;background:rgba(255,255,255,0.08);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;">Pendiente</span>`;
+        } else if (req.status === 'added') {
+          statusBadge = `<span style="color:#4ade80;background:rgba(34,197,94,0.12);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;font-weight:700;">✅ Añadida</span>`;
+        } else if (req.status === 'rejected') {
+          statusBadge = `<span style="color:#f87171;background:rgba(239,68,68,0.12);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;font-weight:700;">❌ No disponible</span>`;
+        }
+
+        const dateFormatted = new Date(req.created_at).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' });
+
+        return `
+          <tr style="border-bottom:1px solid var(--border-subtle);transition:background 0.2s;">
+            <td style="padding:0.85rem 1rem;font-weight:600;color:var(--text-primary);">${req.title} ${req.year ? `<span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(${req.year})</span>` : ''}</td>
+            <td style="padding:0.85rem 1rem;color:var(--text-secondary);">${typeLabel}</td>
+            <td style="padding:0.85rem 1rem;">${priorityLabel}</td>
+            <td style="padding:0.85rem 1rem;">${statusBadge}</td>
+            <td style="padding:0.85rem 1rem;color:var(--text-muted);font-size:0.8rem;">${dateFormatted}</td>
+          </tr>
+        `;
+      }).join('');
+
+    } catch (err) {
+      console.error('Error al cargar solicitudes:', err);
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" style="padding:2rem;text-align:center;color:#f87171;">Error al conectar con la base de datos de solicitudes.</td>
+        </tr>
+      `;
+    }
+  }
+
+  setupRequestsForm() {
+    const form = document.getElementById('movie-request-form');
+    if (!form || form.dataset.bound) return;
+    form.dataset.bound = 'true';
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const titleInput = document.getElementById('req-title');
+      const typeSelect = document.getElementById('req-type');
+      const yearInput = document.getElementById('req-year');
+      const submitBtn = document.getElementById('submit-request-btn');
+
+      const title = titleInput.value.trim();
+      const media_type = typeSelect.value;
+      const year = yearInput.value.trim() || null;
+
+      if (!title) return;
+
+      const profile = this.currentUser.profile || {};
+      const isPremium = !!profile.is_premium;
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Enviando...';
+      }
+
+      try {
+        const { error } = await supabase
+          .from('movie_requests')
+          .insert({
+            user_id: this.currentUser.id,
+            title: title,
+            media_type: media_type,
+            year: year,
+            is_priority: isPremium,
+            status: 'pending'
+          });
+
+        if (error) throw error;
+
+        showToast(
+          isPremium 
+            ? '🚀 ¡Solicitud Prioritaria enviada! Se procesará en menos de 24 horas.' 
+            : '👍 Solicitud registrada en la cola general.', 
+          'success'
+        );
+
+        titleInput.value = '';
+        yearInput.value = '';
+        
+        await this.loadRequests();
+
+      } catch (err) {
+        console.error('Error al guardar la solicitud:', err);
+        showToast('No se pudo enviar la solicitud. Intenta más tarde.', 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '🚀 Enviar Solicitud';
+        }
+      }
+    });
+  }
+
 
   /* ─────────────────────────────────────────────────────────
      AJUSTES DE CUENTA
