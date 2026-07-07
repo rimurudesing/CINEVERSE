@@ -214,10 +214,13 @@ export function applyUserTheme(themeName) {
  */
 export function protectWebCode() {
   const isLocal = window.location.hostname === 'localhost' || 
-                  window.location.hostname === '127.0.0.1' || 
-                  window.location.protocol === 'file:';
+                  window.location.hostname === '127.0.0.1';
   
-  if (isLocal) return;
+  const isNativeApp = window.location.protocol === 'file:' ||
+                      (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
+                      navigator.userAgent.includes('Capacitor');
+  
+  if (isLocal || isNativeApp) return;
 
   // 1. Deshabilitar menú contextual (clic derecho)
   document.addEventListener('contextmenu', (e) => e.preventDefault());

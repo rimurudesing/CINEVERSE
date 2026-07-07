@@ -516,6 +516,28 @@
       display: flex;
       gap: 0.85rem;
     }
+
+    /* Adaptación móvil del perfil y tarjeta VIP */
+    @media (max-width: 680px) {
+      .profile-tab-section > div {
+        padding: 1.25rem !important;
+      }
+      .vip-card {
+        width: 290px;
+        height: 172px;
+      }
+      .vip-logo {
+        font-size: 1.2rem;
+      }
+      .vip-card-number {
+        font-size: 0.65rem;
+        letter-spacing: 2px;
+      }
+      .vip-value {
+        font-size: 0.72rem;
+        max-width: 100px;
+      }
+    }
   </style>
 
   <script type="module" src="js/pages/perfil.js?v=3.0.0"></script>
