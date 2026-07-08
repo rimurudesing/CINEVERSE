@@ -44,6 +44,7 @@ class WatchPageController {
     this.currentUser  = null;
     this.season  = null;
     this.episode = null;
+    this.smartlinkUrl = 'https://www.effectivecpmnetwork.com/n8bfacm3rn?key=dae2ae5c2f289ded4d55b6217baeed0c';
   }
 
   async init() {
@@ -62,6 +63,14 @@ class WatchPageController {
     }
 
     this.currentUser = await getCurrentUser();
+
+    // Cargar smartlink dinámico
+    try {
+      const settings = await getGlobalSettings();
+      if (settings?.smartlink_url) {
+        this.smartlinkUrl = settings.smartlink_url;
+      }
+    } catch(e) {}
 
     // Validar AdBlock para usuarios gratuitos
     const profile = this.currentUser ? (this.currentUser.profile || {}) : {};
@@ -522,8 +531,7 @@ class WatchPageController {
     overlay.addEventListener('click', () => {
       // Abrir el Smartlink de Adsterra de forma segura por acción de click
       try {
-        const smartlink = 'https://www.effectivecpmnetwork.com/n8bfacm3rn?key=dae2ae5c2f289ded4d55b6217baeed0c';
-        window.open(smartlink, '_blank');
+        window.open(this.smartlinkUrl, '_blank');
       } catch (err) {
         console.error('Error abriendo smartlink:', err);
       }
@@ -649,8 +657,7 @@ class WatchPageController {
            const unlockBtn = document.getElementById('unlock-player-btn');
            unlockBtn?.addEventListener('click', () => {
              try {
-               const smartlink = 'https://www.effectivecpmnetwork.com/n8bfacm3rn?key=dae2ae5c2f289ded4d55b6217baeed0c';
-               window.open(smartlink, '_blank');
+               window.open(this.smartlinkUrl, '_blank');
              } catch(e) {}
              showToast("¡Reproductor desbloqueado!", "success");
              this.renderActualPlayer(playerRoot, vimeusURL);

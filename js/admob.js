@@ -72,7 +72,8 @@ export async function showInterstitialAd() {
 
   // 3. Abrir el Smartlink oficial de Adsterra
   try {
-    const smartlink = 'https://www.effectivecpmnetwork.com/n8bfacm3rn?key=dae2ae5c2f289ded4d55b6217baeed0c';
+    const settings = await getGlobalSettings();
+    const smartlink = settings?.smartlink_url || 'https://www.effectivecpmnetwork.com/n8bfacm3rn?key=dae2ae5c2f289ded4d55b6217baeed0c';
     window.open(smartlink, '_blank');
     console.log('[Adsterra Adapter] Smartlink abierto en nueva pestaña.');
     return true;

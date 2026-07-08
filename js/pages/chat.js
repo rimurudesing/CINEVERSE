@@ -10,6 +10,7 @@ import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { getCurrentUser } from '../auth.js';
 import { showToast, buildTMDBImageURL } from '../utils.js';
 import { api } from '../api.js';
+import { getGlobalSettings } from '../settings.js';
 
 // ─── Rangos por Nivel ────────────────────────────────────────────────────────
 const LEVEL_RANKS = [
@@ -64,10 +65,20 @@ class ChatPageLobby {
       console.error('ChatLobby: Error al obtener usuario', e);
     }
 
+    const isBanned = !!this.currentUser?.profile?.banned;
+
     this._injectStyles();
 
-    // FIX #3: Renderizar el input PRIMERO y de forma permanente
+    // Renderizar el input PRIMERO y de forma permanente
     this._renderStaticInput();
+
+    if (isBanned) {
+      const container = document.getElementById('chat-messages-container');
+      if (container) {
+        container.innerHTML = '<p style="text-align:center;color:var(--accent-red);font-size:0.95rem;padding:3rem;font-weight:700;">🚫 Tu cuenta ha sido bloqueada y no puedes acceder al chat general.</p>';
+      }
+      return;
+    }
 
     // Luego renderizar barra de reacciones
     this.renderReactionBar();
@@ -96,12 +107,31 @@ class ChatPageLobby {
 
     const isLoggedIn  = !!this.currentUser;
     const isPremium   = !!this.currentUser?.profile?.is_premium;
+    const isBanned    = !!this.currentUser?.profile?.banned;
+    const isMuted     = this.currentUser?.profile?.chat_muted_until && new Date(this.currentUser.profile.chat_muted_until) > new Date();
 
     if (!isLoggedIn) {
       placeholder.innerHTML = `
         <div style="text-align:center;padding:1rem 0;">
           <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:0.75rem;">Inicia sesión para participar en el chat global.</p>
           <a href="login.html" class="btn btn--primary" style="font-size:0.9rem;padding:0.6rem 1.5rem;text-decoration:none;font-weight:700;border-radius:var(--radius-sm);display:inline-block;">Iniciar Sesión</a>
+        </div>`;
+      return;
+    }
+
+    if (isBanned) {
+      placeholder.innerHTML = `
+        <div style="text-align:center;padding:1rem;background:rgba(229,9,20,0.1);border:1px solid rgba(229,9,20,0.3);border-radius:var(--radius-sm);">
+          <p style="color:var(--accent-red);font-size:0.85rem;font-weight:700;margin:0;">🚨 Tu cuenta ha sido baneada del chat por infringir las normas de convivencia.</p>
+        </div>`;
+      return;
+    }
+
+    if (isMuted) {
+      const date = new Date(this.currentUser.profile.chat_muted_until).toLocaleString();
+      placeholder.innerHTML = `
+        <div style="text-align:center;padding:1rem;background:rgba(229,9,20,0.06);border:1px solid rgba(229,9,20,0.25);border-radius:var(--radius-sm);">
+          <p style="color:var(--text-secondary);font-size:0.85rem;margin:0;">🔕 Has sido silenciado temporalmente del chat hasta: <strong style="color:var(--accent-red);">${date}</strong>.</p>
         </div>`;
       return;
     }
@@ -578,13 +608,24 @@ class ChatPageLobby {
   async _launchTrivia() {
     if (!this.supabase) return;
     try {
+      // Validar si CineBot está habilitado dinámicamente
+      const settings = await getGlobalSettings();
+      if (settings?.cinebot_enabled === false) {
+        // Volver a comprobar en 5 minutos
+        setTimeout(() => this._launchTrivia(), 5 * 60 * 1000);
+        return;
+      }
+
       const { data } = await this.supabase
         .from('cinebot_trivias')
         .select('*')
         .eq('active', true)
         .limit(20);
 
-      if (!data || data.length === 0) return;
+      if (!data || data.length === 0) {
+        setTimeout(() => this._launchTrivia(), 10 * 60 * 1000);
+        return;
+      }
 
       // Elegir una al azar
       const trivia = data[Math.floor(Math.random() * data.length)];

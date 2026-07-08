@@ -353,6 +353,64 @@
       .kpi-grid { grid-template-columns: 1fr 1fr; }
       .admin-card { padding: 1.25rem; }
     }
+
+    /* ─── Pestañas de Navegación del Dashboard v4.0 ─── */
+    .dashboard-tabs {
+      display: flex;
+      gap: 0.6rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.75rem;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+    }
+    .dashboard-tabs::-webkit-scrollbar { height: 3px; }
+    .dashboard-tabs::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    .dashboard-tab-btn {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      padding: 0.65rem 1.25rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.25s ease;
+      font-family: var(--font-ui);
+    }
+    .dashboard-tab-btn:hover {
+      border-color: var(--accent-red);
+      color: #fff;
+      background: rgba(255,255,255,0.05);
+    }
+    .dashboard-tab-btn.active {
+      background: var(--accent-red);
+      border-color: var(--accent-red);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(229,9,20,0.35);
+    }
+
+    .admin-panel-section {
+      display: none;
+    }
+    .admin-panel-section.active {
+      display: block;
+      animation: cvFadeIn 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+
+    .user-profile-mod-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      display: none;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .user-profile-mod-card.active { display: flex; }
   </style>
 </head>
 <body>
@@ -402,83 +460,102 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════ -->
-    <!-- CONTROL GLOBAL DE ANUNCIOS                        -->
+    <!-- BARRA DE PESTAÑAS DEL DASHBOARD                   -->
     <!-- ══════════════════════════════════════════════════ -->
-    <div class="ads-control-card">
-      <div class="ads-control-info">
-        <h3>📢 Control Global de Publicidad</h3>
-        <p>Activa o desactiva los anuncios de Adsterra (Web) y AdMob (APK) para <strong>todos los usuarios</strong> en tiempo real.<br>
-        Útil para pausar la publicidad durante mantenimientos o eventos especiales.</p>
-      </div>
-      <div class="toggle-switch-wrap">
-        <span class="toggle-label">Estado:</span>
-        <span id="ads-status-badge" class="on">ACTIVO</span>
-        <label class="toggle-switch" title="Activar/Desactivar publicidad">
-          <input type="checkbox" id="ads-toggle" checked>
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-    </div>
+    <nav class="dashboard-tabs">
+      <button class="dashboard-tab-btn active" data-target="section-licenses">🎫 Licencias y APK</button>
+      <button class="dashboard-tab-btn" data-target="section-requests">🍿 Pedidos de Películas</button>
+      <button class="dashboard-tab-btn" data-target="section-moderation">🛡️ Moderación Chat</button>
+      <button class="dashboard-tab-btn" data-target="section-cinebot">🤖 CineBot Trivias</button>
+      <button class="dashboard-tab-btn" data-target="section-ads">🔗 Publicidad Dinámica</button>
+    </nav>
 
     <!-- ══════════════════════════════════════════════════ -->
-    <!-- GESTIÓN DE ACTUALIZACIONES APK                    -->
+    <!-- SECCIÓN 1: LICENCIAS Y ACTUALIZACIÓN APK          -->
     <!-- ══════════════════════════════════════════════════ -->
-    <div class="admin-card" style="border-color: rgba(16,185,129,0.25); background: linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(10,10,10,0.4) 100%); margin-bottom: 2rem;">
-      <h2 class="admin-subtitle" style="color: #10B981;">📱 Gestión de Actualizaciones APK</h2>
-      <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
-        Publica una nueva versión del APK. Los usuarios con una versión anterior instalada verán un modal de actualización al abrir la app.
-      </p>
-      <div class="flex flex--col flex--gap-md">
-        <div class="flex flex--gap-md flex--wrap">
-          <div class="form-group" style="flex: 1; min-width: 160px;">
-            <label class="form-label" for="update-version">Nueva versión (ej: 1.3.0)</label>
-            <input type="text" id="update-version" class="form-input" placeholder="1.3.0">
-          </div>
-          <div class="form-group" style="flex: 3; min-width: 260px;">
-            <label class="form-label" for="update-download-url">URL de descarga (MediaFire)</label>
-            <input type="url" id="update-download-url" class="form-input" placeholder="https://www.mediafire.com/file/...">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="update-changelog">Novedades / Changelog (una por línea)</label>
-          <textarea id="update-changelog" class="form-input" rows="4"
-            style="resize: vertical; font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.6;"
-            placeholder="- Nuevo sistema de notificaciones&#10;- Corrección de bugs&#10;- Mejor rendimiento"></textarea>
-        </div>
-        <div class="flex flex--align-center flex--gap-md flex--wrap" style="margin-top: 0.5rem;">
-          <button id="update-publish-btn" class="btn btn--primary" style="background: linear-gradient(135deg,#059669,#10B981); border-color: #059669; display: flex; align-items: center; gap: 0.5rem;">
-            🚀 Publicar actualización
-          </button>
-          <div id="update-current-info" style="font-size: 0.82rem; color: var(--text-muted); font-family: var(--font-mono);">
-            Cargando versión actual...
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════════════ -->
-    <!-- GRID DE 2 COLUMNAS: FORMS + TABLA DE CÓDIGOS      -->
-    <!-- ══════════════════════════════════════════════════ -->
-    <div class="grid grid--2" style="grid-template-columns: 1fr 1.5fr; gap: 2rem; align-items: start;">
+    <div class="admin-panel-section active" id="section-licenses">
       
-      <!-- COLUMNA IZQUIERDA: Generador de códigos y asignador de premium -->
-      <div class="flex flex--col flex--gap-md">
+      <!-- Gestión de Actualizaciones APK -->
+      <div class="admin-card" style="border-color: rgba(16,185,129,0.25); background: linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(10,10,10,0.4) 100%); margin-bottom: 2rem;">
+        <h2 class="admin-subtitle" style="color: #10B981;">📱 Gestión de Actualizaciones APK</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
+          Publica una nueva versión del APK. Los usuarios con una versión anterior instalada verán un modal de actualización al abrir la app.
+        </p>
+        <div class="flex flex--col flex--gap-md">
+          <div class="flex flex--gap-md flex--wrap">
+            <div class="form-group" style="flex: 1; min-width: 160px;">
+              <label class="form-label" for="update-version">Nueva versión (ej: 1.3.0)</label>
+              <input type="text" id="update-version" class="form-input" placeholder="1.3.0">
+            </div>
+            <div class="form-group" style="flex: 3; min-width: 260px;">
+              <label class="form-label" for="update-download-url">URL de descarga (MediaFire)</label>
+              <input type="url" id="update-download-url" class="form-input" placeholder="https://www.mediafire.com/file/...">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="update-changelog">Novedades / Changelog (una por línea)</label>
+            <textarea id="update-changelog" class="form-input" rows="4"
+              style="resize: vertical; font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.6;"
+              placeholder="- Nuevo sistema de notificaciones&#10;- Corrección de bugs&#10;- Mejor rendimiento"></textarea>
+          </div>
+          <div class="flex flex--align-center flex--gap-md flex--wrap" style="margin-top: 0.5rem;">
+            <button id="update-publish-btn" class="btn btn--primary" style="background: linear-gradient(135deg,#059669,#10B981); border-color: #059669; display: flex; align-items: center; gap: 0.5rem;">
+              🚀 Publicar actualización
+            </button>
+            <div id="update-current-info" style="font-size: 0.82rem; color: var(--text-muted); font-family: var(--font-mono);">
+              Cargando versión actual...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid de Códigos -->
+      <div class="grid grid--2" style="grid-template-columns: 1fr 1.5fr; gap: 2rem; align-items: start; margin-bottom: 2rem;">
         
-        <!-- Tarjeta 1: Generador de códigos -->
-        <div class="admin-card">
-          <h2 class="admin-subtitle">🎟️ Generar Códigos Premium</h2>
-          <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
-            Crea lotes de códigos de activación con la duración elegida para los suscriptores que realicen el pago.
-          </p>
-          <form id="generator-form" class="flex flex--col flex--gap-sm">
-            <div class="flex flex--gap-sm">
-              <div class="form-group" style="flex: 1;">
-                <label class="form-label" for="generator-qty">Cantidad</label>
-                <input type="number" id="generator-qty" class="form-input" min="1" max="100" value="5" required>
+        <div class="flex flex--col flex--gap-md">
+          <!-- Generador de códigos -->
+          <div class="admin-card">
+            <h2 class="admin-subtitle">🎟️ Generar Códigos Premium</h2>
+            <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
+              Crea lotes de códigos de activación con la duración elegida para los suscriptores.
+            </p>
+            <form id="generator-form" class="flex flex--col flex--gap-sm">
+              <div class="flex flex--gap-sm">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="generator-qty">Cantidad</label>
+                  <input type="number" id="generator-qty" class="form-input" min="1" max="100" value="5" required>
+                </div>
+                <div class="form-group" style="flex: 2;">
+                  <label class="form-label" for="generator-duration">Duración</label>
+                  <select id="generator-duration" class="duration-select">
+                    <option value="30">30 días</option>
+                    <option value="90" selected>90 días</option>
+                    <option value="180">180 días</option>
+                    <option value="365">365 días (1 año)</option>
+                    <option value="99999">Vitalicio / Permanente</option>
+                  </select>
+                </div>
               </div>
-              <div class="form-group" style="flex: 2;">
-                <label class="form-label" for="generator-duration">Duración</label>
-                <select id="generator-duration" class="duration-select">
+              <button type="submit" class="btn btn--primary" id="generator-submit-btn" style="margin-top: 0.5rem; align-self: flex-start;">
+                ⚡ Generar y Subir
+              </button>
+            </form>
+          </div>
+
+          <!-- Asignación Manual -->
+          <div class="admin-card">
+            <h2 class="admin-subtitle">👑 Otorgar Premium Directo</h2>
+            <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
+              Asigna estatus Premium directamente a un usuario buscando por su Nombre de Usuario.
+            </p>
+            <form id="grant-manual-form" class="flex flex--col flex--gap-sm">
+              <div class="form-group">
+                <label class="form-label" for="grant-username">Nombre de Usuario</label>
+                <input type="text" id="grant-username" class="form-input" placeholder="nombre_usuario" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="grant-duration">Duración</label>
+                <select id="grant-duration" class="duration-select">
                   <option value="30">30 días</option>
                   <option value="90" selected>90 días</option>
                   <option value="180">180 días</option>
@@ -486,113 +563,291 @@
                   <option value="99999">Vitalicio / Permanente</option>
                 </select>
               </div>
-            </div>
-            <button type="submit" class="btn btn--primary" id="generator-submit-btn" style="margin-top: 0.5rem; align-self: flex-start;">
-              ⚡ Generar y Subir
-            </button>
-          </form>
+              <button type="submit" class="btn btn--primary" id="grant-submit-btn" style="margin-top: 0.5rem; align-self: flex-start; background-color: var(--accent-ember); border-color: var(--accent-ember);">
+                Otorgar Premium
+              </button>
+            </form>
+          </div>
         </div>
 
-        <!-- Tarjeta 2: Asignación Manual Directa -->
-        <div class="admin-card">
-          <h2 class="admin-subtitle">👑 Otorgar Premium Directo</h2>
-          <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
-            Asigna estatus Premium directamente a un usuario buscando por su Nombre de Usuario.
-          </p>
-          <form id="grant-manual-form" class="flex flex--col flex--gap-sm">
-            <div class="form-group">
-              <label class="form-label" for="grant-username">Nombre de Usuario</label>
-              <input type="text" id="grant-username" class="form-input" placeholder="nombre_usuario" required>
+        <!-- Códigos Listado -->
+        <div class="admin-card" style="height: 100%;">
+          <div style="margin-bottom: 1rem;">
+            <div class="flex flex--justify-between flex--align-center flex--wrap" style="gap: 0.75rem; margin-bottom: 0.75rem;">
+              <h2 class="admin-subtitle" style="margin-bottom: 0;">📋 Códigos de Activación</h2>
+              <div class="flex flex--gap-xs" style="align-items: center;">
+                <input type="text" id="search-codes-input" class="form-input" placeholder="Buscar código..." style="padding: 0.35rem 0.75rem; font-size: 0.8rem; width: 175px;">
+                <button id="export-codes-btn" class="btn btn--secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; white-space: nowrap;">
+                  📥 Exportar TXT
+                </button>
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label" for="grant-duration">Duración</label>
-              <select id="grant-duration" class="duration-select">
-                <option value="30">30 días</option>
-                <option value="90" selected>90 días</option>
-                <option value="180">180 días</option>
-                <option value="365">365 días (1 año)</option>
-                <option value="99999">Vitalicio / Permanente</option>
-              </select>
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all">Todos</button>
+              <button class="filter-tab" data-filter="active">Activos</button>
+              <button class="filter-tab" data-filter="used">Canjeados</button>
             </div>
-            <button type="submit" class="btn btn--primary" id="grant-submit-btn" style="margin-top: 0.5rem; align-self: flex-start; background-color: var(--accent-ember); border-color: var(--accent-ember);">
-              Otorgar Premium
-            </button>
-          </form>
+          </div>
+          <div class="admin-table-container" style="max-height: 480px; overflow-y: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Estado</th>
+                  <th>Usuario</th>
+                  <th>Canjeado</th>
+                  <th style="text-align: right;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="codes-list-tbody">
+                <tr><td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">Cargando códigos...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-
       </div>
 
-      <!-- COLUMNA DERECHA: Listado y control de códigos -->
-      <div class="admin-card" style="height: 100%;">
-        
-        <!-- Cabecera con búsqueda y filtros -->
-        <div style="margin-bottom: 1rem;">
-          <div class="flex flex--justify-between flex--align-center flex--wrap" style="gap: 0.75rem; margin-bottom: 0.75rem;">
-            <h2 class="admin-subtitle" style="margin-bottom: 0;">📋 Códigos de Activación</h2>
-            <div class="flex flex--gap-xs" style="align-items: center;">
-              <input type="text" id="search-codes-input" class="form-input" placeholder="Buscar código..." style="padding: 0.35rem 0.75rem; font-size: 0.8rem; width: 175px;">
-              <button id="export-codes-btn" class="btn btn--secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; white-space: nowrap;" title="Exportar códigos filtrados a TXT">
-                📥 Exportar TXT
-              </button>
-            </div>
-          </div>
-          <!-- Filter Tabs -->
-          <div class="filter-tabs">
-            <button class="filter-tab active" data-filter="all">Todos</button>
-            <button class="filter-tab" data-filter="active">Activos</button>
-            <button class="filter-tab" data-filter="used">Canjeados</button>
-          </div>
-        </div>
-
-        <!-- Tabla de códigos -->
-        <div class="admin-table-container" style="max-height: 480px; overflow-y: auto;">
+      <!-- Gestión de Usuarios Premium Activos -->
+      <div class="admin-card">
+        <h2 class="admin-subtitle">👥 Usuarios Premium Activos</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+          Listado de usuarios con membresía activa.
+        </p>
+        <div class="admin-table-container">
           <table class="admin-table">
             <thead>
               <tr>
-                <th>Código</th>
-                <th>Estado</th>
                 <th>Usuario</th>
-                <th>Canjeado</th>
-                <th style="text-align: right;">Acciones</th>
+                <th>Display Name</th>
+                <th>Premium Hasta</th>
+                <th>Días Restantes</th>
+                <th style="text-align: right;">Acción</th>
               </tr>
             </thead>
-            <tbody id="codes-list-tbody">
-              <tr>
-                <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">Cargando códigos...</td>
-              </tr>
+            <tbody id="premium-users-tbody">
+              <tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">Cargando usuarios premium...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
 
     <!-- ══════════════════════════════════════════════════ -->
-    <!-- GESTIÓN DE USUARIOS PREMIUM ACTIVOS               -->
+    <!-- SECCIÓN 2: GESTOR DE PEDIDOS DE PELÍCULAS         -->
     <!-- ══════════════════════════════════════════════════ -->
-    <div class="admin-card" style="margin-top: 0;">
-      <h2 class="admin-subtitle">👥 Usuarios Premium Activos</h2>
-      <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
-        Listado de usuarios con suscripción Premium activa. Puedes ver sus fechas de expiración o revocar el acceso.
-      </p>
+    <div class="admin-panel-section" id="section-requests">
+      <div class="admin-card">
+        <h2 class="admin-subtitle">🍿 Cola de Pedidos de Películas (Request Queue)</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
+          Lista de películas y series que los usuarios han solicitado. Los **pedidos prioritarios (Premium)** se colocan arriba automáticamente con una estrella dorada y deben procesarse preferiblemente en menos de 24 horas.
+        </p>
+        
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Solicitante</th>
+                <th>Título</th>
+                <th>Tipo</th>
+                <th>Año</th>
+                <th>Prioridad</th>
+                <th>Fecha Pedido</th>
+                <th>Estado</th>
+                <th style="text-align: right;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="requests-list-tbody">
+              <tr><td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">Cargando solicitudes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-      <div class="admin-table-container">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Usuario</th>
-              <th>Display Name</th>
-              <th>Premium Hasta</th>
-              <th>Días Restantes</th>
-              <th style="text-align: right;">Acción</th>
-            </tr>
-          </thead>
-          <tbody id="premium-users-tbody">
-            <tr>
-              <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">Cargando usuarios premium...</td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECCIÓN 3: MODERACIÓN DEL CHAT EN VIVO            -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="admin-panel-section" id="section-moderation">
+      <div class="grid grid--2" style="grid-template-columns: 1.2fr 1fr; gap: 2rem; align-items: start;">
+        
+        <!-- Búsqueda y acciones de usuario -->
+        <div class="admin-card">
+          <h2 class="admin-subtitle">🛡️ Moderar Usuario</h2>
+          <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+            Busca un perfil por su nombre de usuario (username) para banearlo del sistema o silenciarlo (mute) temporalmente.
+          </p>
+          <div class="flex flex--gap-xs" style="margin-bottom: 1.5rem;">
+            <input type="text" id="mod-search-username" class="form-input" placeholder="Escribe el nombre de usuario (ej: lorenzo)...">
+            <button id="mod-search-btn" class="btn btn--primary" style="padding: 0.6rem 1.2rem;">🔍 Buscar</button>
+          </div>
+
+          <!-- Tarjeta de perfil encontrado (Cargada dinámicamente) -->
+          <div id="mod-user-card" class="user-profile-mod-card">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <img id="mod-user-avatar" src="" style="width: 54px; height: 54px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-subtle);">
+              <div>
+                <h4 id="mod-user-name" style="font-size: 1.1rem; font-weight: 700; color: #fff; margin:0;"></h4>
+                <p id="mod-user-meta" style="font-size: 0.76rem; color: var(--text-secondary); margin: 0.15rem 0 0;"></p>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:0.5rem; padding: 0.85rem; background: rgba(0,0,0,0.15); border-radius: var(--radius-sm); font-size:0.8rem; color: var(--text-secondary);">
+              <div>Estatus Premium: <span id="mod-user-premium-status" style="font-weight:700;"></span></div>
+              <div>Estatus Baneo: <span id="mod-user-banned-status" style="font-weight:700;"></span></div>
+              <div>Estatus Mute: <span id="mod-user-muted-status" style="font-weight:700;"></span></div>
+            </div>
+            
+            <!-- Acciones de baneo y mute -->
+            <div class="flex flex--gap-sm flex--wrap" style="margin-top: 0.5rem;">
+              <button id="mod-btn-toggle-ban" class="btn btn--primary" style="background:var(--accent-red); border-color:var(--accent-red);"></button>
+              
+              <div style="display:flex; flex-direction:column; gap:0.35rem; width:100%; margin-top: 0.5rem;">
+                <label class="form-label" style="font-size:0.75rem;">Silenciar en el Chat (Mute):</label>
+                <div class="flex flex--gap-xs flex--wrap">
+                  <button class="btn btn--secondary mod-btn-mute" data-hours="1" style="font-size:0.75rem; padding:0.4rem 0.65rem;">1 Hora</button>
+                  <button class="btn btn--secondary mod-btn-mute" data-hours="24" style="font-size:0.75rem; padding:0.4rem 0.65rem;">24 Horas</button>
+                  <button class="btn btn--secondary mod-btn-mute" data-hours="72" style="font-size:0.75rem; padding:0.4rem 0.65rem;">3 Días</button>
+                  <button class="btn btn--secondary mod-btn-mute" data-hours="9999" style="font-size:0.75rem; padding:0.4rem 0.65rem; background: rgba(229,9,20,0.1); border-color: rgba(229,9,20,0.3); color: var(--accent-red);">Perm</button>
+                  <button id="mod-btn-unmute" class="btn btn--outline-green" style="font-size:0.75rem; padding:0.4rem 0.65rem; display:none;">Quitar Mute</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón de pánico limpieza de chat -->
+        <div class="admin-card" style="border-color: rgba(229,9,20,0.3); background: linear-gradient(135deg, rgba(229,9,20,0.04) 0%, rgba(10,10,10,0.3) 100%);">
+          <h2 class="admin-subtitle" style="color: var(--accent-red);">🚨 Panel de Pánico del Chat</h2>
+          <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
+            Si el chat global está siendo spameado por bots o usuarios maliciosos, puedes **eliminar por completo el historial de mensajes** del chat global inmediatamente de forma atómica en la base de datos.
+          </p>
+          <button id="panic-clear-chat-btn" class="btn btn--primary" style="background: linear-gradient(135deg,#b91c1c,#ef4444); border-color:#b91c1c; font-weight:800;">
+            🔥 Limpiar Historial de Chat
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECCIÓN 4: CONTROL DE CINEBOT TRIVIAS             -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="admin-panel-section" id="section-cinebot">
+      <div class="grid grid--2" style="grid-template-columns: 1fr 1.2fr; gap: 2rem; align-items: start;">
+        
+        <div class="flex flex--col flex--gap-md">
+          <!-- CineBot Switch y Estado -->
+          <div class="admin-card" style="background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(10,10,10,0.3) 100%); border-color: rgba(99,102,241,0.35);">
+            <h2 class="admin-subtitle" style="color: #A78BFA; display:flex; align-items:center; gap:0.5rem;">🤖 Control de CineBot</h2>
+            <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">
+              Permite encender o apagar las trivias interactivas automáticas de CineBot en el chat global de la aplicación.
+            </p>
+            <div class="toggle-switch-wrap">
+              <span class="toggle-label" style="font-weight:700;">CineBot Activo:</span>
+              <span id="cinebot-status-badge" style="font-size:0.75rem; font-weight:700; padding:0.2rem 0.5rem; border-radius:var(--radius-sm); border:1px solid; font-family:var(--font-mono);">...</span>
+              <label class="toggle-switch" title="Activar/Desactivar CineBot">
+                <input type="checkbox" id="cinebot-toggle">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Agregador de trivias -->
+          <div class="admin-card">
+            <h2 class="admin-subtitle">➕ Agregar Nueva Trivia</h2>
+            <form id="trivia-creator-form" class="flex flex--col flex--gap-sm">
+              <div class="form-group">
+                <label class="form-label" for="trivia-question">Pregunta de Cine</label>
+                <input type="text" id="trivia-question" class="form-input" placeholder="¿Cómo se llama la película...?" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="trivia-answer">Respuesta (En minúsculas, sin acentos ni signos)</label>
+                <input type="text" id="trivia-answer" class="form-input" placeholder="pulp fiction" required>
+              </div>
+              <div class="flex flex--gap-sm">
+                <div class="form-group" style="flex:2;">
+                  <label class="form-label" for="trivia-answer-display">Respuesta a Mostrar (Formato elegante)</label>
+                  <input type="text" id="trivia-answer-display" class="form-input" placeholder="Pulp Fiction" required>
+                </div>
+                <div class="form-group" style="flex:1;">
+                  <label class="form-label" for="trivia-reward">Recompensa (XP)</label>
+                  <input type="number" id="trivia-reward" class="form-input" min="10" max="200" value="50" required>
+                </div>
+              </div>
+              <button type="submit" class="btn btn--primary" id="trivia-submit-btn" style="margin-top: 0.5rem; align-self: flex-start; background: #8B5CF6; border-color: #8B5CF6;">
+                💾 Guardar Trivia
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Tabla de trivias -->
+        <div class="admin-card">
+          <h2 class="admin-subtitle">🎲 Banco de Trivias de Cine</h2>
+          <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+            Listado completo de trivias en el sistema que CineBot puede lanzar aleatoriamente.
+          </p>
+          <div class="admin-table-container" style="max-height: 480px; overflow-y: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Pregunta</th>
+                  <th>Respuesta</th>
+                  <th>Recompensa</th>
+                  <th style="text-align: right;">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="trivias-list-tbody">
+                <tr><td colspan="4" style="text-align: center; padding: 3rem; color: var(--text-muted);">Cargando trivias...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECCIÓN 5: ENLACES DE PUBLICIDAD DINÁMICA          -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="admin-panel-section" id="section-ads">
+      
+      <!-- Control de Anuncios -->
+      <div class="ads-control-card" style="margin-bottom:2rem;">
+        <div class="ads-control-info">
+          <h3>📢 Control Global de Publicidad</h3>
+          <p>Activa o desactiva la publicidad para todos los usuarios en tiempo real.</p>
+        </div>
+        <div class="toggle-switch-wrap">
+          <span class="toggle-label">Estado:</span>
+          <span id="ads-status-badge" class="on">ACTIVO</span>
+          <label class="toggle-switch" title="Activar/Desactivar publicidad">
+            <input type="checkbox" id="ads-toggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Enlaces de publicidad -->
+      <div class="admin-card">
+        <h2 class="admin-subtitle">🔗 Enlaces de Publicidad Dinámica</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
+          Edita las URLs e integraciones de tus plataformas publicitarias (Adsterra, PopAds, etc.). Esto actualizará los anuncios en el reproductor de video del APK y la web de forma automática e inmediata.
+        </p>
+        <form id="ads-links-form" class="flex flex--col flex--gap-md">
+          <div class="form-group">
+            <label class="form-label" for="ads-smartlink-url">URL del Smartlink de Adsterra (Desbloqueo de reproductor)</label>
+            <input type="url" id="ads-smartlink-url" class="form-input" placeholder="https://www.effectivecpmnetwork.com/..." required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ads-popads-url">URL / Código de PopAds (Ventanas emergentes)</label>
+            <input type="text" id="ads-popads-url" class="form-input" placeholder="ID de PopAds o URL alternativa">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ads-banner-url">URL Alternativa para Banners de Publicidad</label>
+            <input type="url" id="ads-banner-url" class="form-input" placeholder="https://...">
+          </div>
+          <button type="submit" id="ads-links-save-btn" class="btn btn--primary" style="align-self: flex-start; background: linear-gradient(135deg, var(--accent-red), #9b0f15);">
+            💾 Guardar Enlaces de Publicidad
+          </button>
+        </form>
       </div>
     </div>
 
@@ -601,3 +856,4 @@
   <script type="module" src="js/pages/admin.js?v=4.0.0"></script>
 </body>
 </html>
+
