@@ -46,7 +46,7 @@ export async function checkForUpdates({ force = false } = {}) {
   try {
     const settings = await getGlobalSettings();
     const latestVersion = settings?.latest_version;
-    const downloadUrl   = settings?.latest_download_url || 'https://www.mediafire.com/file/vv1rnozzr1fjso2/CineVerse-debug.apk/file';
+    const downloadUrl   = settings?.latest_download_url || 'https://www.mediafire.com/file/ivmi6sz2tpo3v7t/CineVerse-debug.apk/file';
     const changelog     = settings?.latest_changelog || '';
 
     if (!latestVersion) return; // Admin aún no ha configurado la versión
