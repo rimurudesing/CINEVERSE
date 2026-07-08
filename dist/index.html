@@ -104,5 +104,13 @@
   <!-- Controlador principal de la página -->
   <script type="module" src="js/pages/home.js?v=3.0.0"></script>
   <script type="module" src="js/ads-helper.js?v=3.0.0"></script>
+  <!-- Verificador de actualizaciones in-app -->
+  <script type="module">
+    import { checkForUpdates } from './js/update-checker.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      // Pequeño delay para no bloquear el renderizado inicial
+      setTimeout(() => checkForUpdates(), 2500);
+    });
+  </script>
 </body>
 </html>

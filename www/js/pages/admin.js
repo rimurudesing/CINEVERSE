@@ -42,6 +42,7 @@ class AdminDashboardController {
       this.loadCodes(),
       this.loadPremiumUsers(),
       this.loadAdsToggle(),
+      this.loadUpdateManager(),
     ]);
 
     // 4. Configurar eventos
@@ -49,6 +50,7 @@ class AdminDashboardController {
     this.setupFilterTabs();
     this.setupExport();
     this.setupAdsToggle();
+    this.setupUpdatePublisher();
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -141,8 +143,63 @@ class AdminDashboardController {
   }
 
   // ══════════════════════════════════════════════════════════════
-  // CARGAR CÓDIGOS DE ACTIVACIÓN
+  // GESTOR DE ACTUALIZACIONES APK
   // ══════════════════════════════════════════════════════════════
+  async loadUpdateManager() {
+    const infoEl = document.getElementById('update-current-info');
+    const urlEl  = document.getElementById('update-download-url');
+    try {
+      const settings = await getGlobalSettings();
+      const version  = settings?.latest_version  || '—';
+      const url      = settings?.latest_download_url || '';
+      if (infoEl) infoEl.textContent = `Versión publicada actualmente: v${version}`;
+      if (urlEl && !urlEl.value) urlEl.value = url;
+    } catch (e) {
+      if (infoEl) infoEl.textContent = 'Error al cargar versión.';
+    }
+  }
+
+  setupUpdatePublisher() {
+    const btn       = document.getElementById('update-publish-btn');
+    const versionEl = document.getElementById('update-version');
+    const urlEl     = document.getElementById('update-download-url');
+    const changeEl  = document.getElementById('update-changelog');
+    const infoEl    = document.getElementById('update-current-info');
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+      const version   = versionEl?.value?.trim();
+      const url       = urlEl?.value?.trim();
+      const changelog = changeEl?.value?.trim();
+
+      if (!version) { showToast('Escribe el número de versión (ej: 1.3.0)', 'error'); return; }
+      if (!url)     { showToast('Escribe la URL de descarga de MediaFire', 'error'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Publicando...';
+
+      try {
+        const current = await getGlobalSettings();
+        await saveGlobalSettings({
+          ...current,
+          latest_version:      version,
+          latest_download_url: url,
+          latest_changelog:    changelog || '',
+        });
+
+        if (infoEl) infoEl.textContent = `Versión publicada actualmente: v${version}`;
+        showToast(`🚀 Versión v${version} publicada. Los usuarios recibirán la notificación.`, 'success');
+      } catch (err) {
+        console.error('[Admin] Error publicando actualización:', err);
+        showToast('Error al publicar la actualización', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 Publicar actualización';
+      }
+    });
+  }
+
+
   async loadCodes() {
     const tbody = document.getElementById('codes-list-tbody');
     if (!tbody) return;
