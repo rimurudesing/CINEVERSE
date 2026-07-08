@@ -322,6 +322,9 @@
           <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-top: 3rem;">Iniciando conexión con el canal...</p>
         </div>
         
+        <!-- Barra de Reacciones Flotantes -->
+        <div id="chat-reaction-bar-container"></div>
+
         <!-- Input de Mensaje -->
         <div class="chat-area-footer">
           <div id="chat-input-placeholder">
@@ -341,6 +344,19 @@
           </div>
         </div>
         
+        <!-- Widget: Guía de Rangos -->
+        <div class="sidebar-widget">
+          <span class="sidebar-widget-title">⚔️ Rangos del Chat</span>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-secondary);"><span>🎬</span><span style="color:#9E9E9E;">Cinéfilo</span><span style="margin-left:auto;font-size:0.7rem;">Nv.1–9</span></div>
+            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-secondary);"><span>🎭</span><span style="color:#4CAF50;">Espectador Pro</span><span style="margin-left:auto;font-size:0.7rem;">Nv.10–29</span></div>
+            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-secondary);"><span>🏆</span><span style="background:linear-gradient(90deg,#2196F3,#00BCD4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Crítico CineVerse</span><span style="margin-left:auto;font-size:0.7rem;">Nv.30–49</span></div>
+            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-secondary);"><span>⭐</span><span style="background:linear-gradient(90deg,#FF9800,#FF5722);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Maestro del Cine</span><span style="margin-left:auto;font-size:0.7rem;">Nv.50–74</span></div>
+            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-secondary);"><span>👑</span><span style="background:linear-gradient(90deg,#FF6B6B,#FFD700,#4ECDC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Leyenda</span><span style="margin-left:auto;font-size:0.7rem;">Nv.75–99</span></div>
+            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-secondary);"><span>🌟</span><span style="background:linear-gradient(90deg,#FF00FF,#7B00FF,#00FFFF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">CineGod</span><span style="margin-left:auto;font-size:0.7rem;">Nv.100+</span></div>
+          </div>
+        </div>
+
         <!-- Widget: Reglas del Chat -->
         <div class="sidebar-widget">
           <span class="sidebar-widget-title">Reglas de Convivencia</span>
@@ -350,6 +366,20 @@
               <li>No compartas spam o enlaces no autorizados.</li>
               <li>Mantén los comentarios libres de spoilers directos.</li>
               <li>¡Diviértete compartiendo tu opinión!</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Widget: CineBot -->
+        <div class="sidebar-widget">
+          <span class="sidebar-widget-title">🤖 CineBot</span>
+          <div class="rules-card" style="background:rgba(99,102,241,0.05);border-color:rgba(99,102,241,0.2);">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;font-weight:700;color:#A78BFA;font-size:0.82rem;">¿Cómo ganar XP?</div>
+            <ul style="color:var(--text-secondary);">
+              <li>Responde trivias de cine (⚡ +XP)</li>
+              <li>Escribe <code style="background:rgba(255,255,255,0.05);padding:0.1rem 0.25rem;border-radius:3px;">/peli [nombre]</code> para compartir fichas</li>
+              <li>Doble clic en un mensaje para responder en hilo</li>
+              <li>Usa las reacciones 🔥 para animar el chat</li>
             </ul>
           </div>
         </div>

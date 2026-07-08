@@ -77,12 +77,18 @@ class ProfilePageController {
       shareMyProfileBtn.addEventListener('click', () => {
         const username = this.currentUser.profile?.username;
         if (username) {
-          const publicUrl = `${window.location.origin}/publico.html?u=${username}`;
-          navigator.clipboard.writeText(publicUrl).then(() => {
-            showToast('✓ Enlace de perfil público copiado al portapapeles', 'success');
-          }).catch(() => {
-            showToast('No se pudo copiar el enlace', 'error');
-          });
+          const baseHost = window.location.protocol === 'file:' ? 'https://cineverse-7u5.pages.dev' : window.location.origin;
+          const publicUrl = `${baseHost}/publico.html?u=${username}`;
+
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(publicUrl).then(() => {
+              showToast('✓ Enlace de perfil copiado', 'success');
+            }).catch(() => {
+              this.fallbackCopyText(publicUrl);
+            });
+          } else {
+            this.fallbackCopyText(publicUrl);
+          }
         } else {
           showToast('Debes configurar un nombre de usuario primero', 'error');
         }
@@ -970,6 +976,23 @@ class ProfilePageController {
         <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">${label}</div>
         <div style="font-size:0.75rem;color:var(--text-muted);">${sub}</div>
       </div>`;
+  }
+
+  fallbackCopyText(text) {
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+    document.body.appendChild(el);
+    el.focus();
+    el.select();
+    try {
+      document.execCommand('copy');
+      showToast('✓ Enlace de perfil copiado', 'success');
+    } catch (e) {
+      // Mostrar el enlace al usuario para que lo copie manualmente
+      showToast(`Copia este enlace: ${text}`, 'info');
+    }
+    document.body.removeChild(el);
   }
 
   /* ─────────────────────────────────────────────────────────
