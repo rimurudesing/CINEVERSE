@@ -1,5 +1,6 @@
 -- ═══════════════════════════════════════════════════════════
--- CINEVERSE CHAT PREMIUM UPGRADE v2.0
+-- CINEVERSE CHAT PREMIUM UPGRADE v2.0 — FIXED
+-- Corregido: reply_to_id usa UUID para compatibilidad con chat_messages.id
 -- Ejecutar en el SQL Editor de Supabase Dashboard
 -- ═══════════════════════════════════════════════════════════
 
@@ -9,7 +10,6 @@ ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1,
   ADD COLUMN IF NOT EXISTS chat_color TEXT DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS join_effect TEXT DEFAULT 'none';
-  -- join_effect: 'none' | 'sparkle' | 'fire' | 'rainbow'
 
 -- 2. Tabla de reacciones flotantes del chat (Live Reactions)
 CREATE TABLE IF NOT EXISTS chat_reactions (
@@ -19,8 +19,6 @@ CREATE TABLE IF NOT EXISTS chat_reactions (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Limpiar reacciones viejas automáticamente (> 10 segundos)
--- (Las reacciones son efímeras, se borran desde el cliente)
 ALTER TABLE chat_reactions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Cualquiera puede ver reacciones"
@@ -34,18 +32,19 @@ CREATE POLICY "Solo el autor puede borrar su reacción"
   ON chat_reactions FOR DELETE
   USING (auth.uid() = user_id);
 
--- 3. Tabla de replies (hilos de respuesta)
+-- 3. Agregar columnas de reply y rich_card a chat_messages
+--    NOTA: reply_to_id es UUID porque chat_messages.id es UUID
 ALTER TABLE chat_messages
-  ADD COLUMN IF NOT EXISTS reply_to_id BIGINT REFERENCES chat_messages(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS reply_preview TEXT DEFAULT NULL;
-  -- reply_preview: texto truncado del mensaje al que se responde
+  ADD COLUMN IF NOT EXISTS reply_to_id UUID REFERENCES chat_messages(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS reply_preview TEXT DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS rich_card TEXT DEFAULT NULL;
 
 -- 4. Tabla de trivias de CineBot
 CREATE TABLE IF NOT EXISTS cinebot_trivias (
   id            BIGSERIAL PRIMARY KEY,
   question      TEXT NOT NULL,
-  answer        TEXT NOT NULL,          -- respuesta en minúsculas para comparación
-  answer_display TEXT NOT NULL,         -- respuesta formateada para mostrar
+  answer        TEXT NOT NULL,
+  answer_display TEXT NOT NULL,
   xp_reward     INTEGER DEFAULT 50,
   active        BOOLEAN DEFAULT true,
   created_at    TIMESTAMPTZ DEFAULT now()
@@ -65,7 +64,7 @@ CREATE POLICY "Solo admins gestionan trivias"
     )
   );
 
--- 5. Tabla del historial de trivias respondidas (para evitar repetir)
+-- 5. Tabla historial de trivias respondidas
 CREATE TABLE IF NOT EXISTS cinebot_trivia_answers (
   id          BIGSERIAL PRIMARY KEY,
   trivia_id   BIGINT REFERENCES cinebot_trivias(id) ON DELETE CASCADE,
@@ -89,7 +88,7 @@ INSERT INTO cinebot_trivias (question, answer, answer_display, xp_reward) VALUES
   ('¿Qué película de Quentin Tarantino tiene una famosa escena de baile en una hamburguesería?', 'pulp fiction', 'Pulp Fiction', 60),
   ('¿En qué año se estrenó "El Señor de los Anillos: La Comunidad del Anillo"?', '2001', '2001', 40),
   ('¿Quién dirigió "Parasite" (2019), ganadora del Óscar a Mejor Película?', 'bong joon ho', 'Bong Joon-ho', 70),
-  ('¿Cuál es el nombre del detective privado interpretado por Humphrey Bogart en "El halcón maltés"?', 'sam spade', 'Sam Spade', 80),
+  ('¿Cuál es el nombre del detective interpretado por Humphrey Bogart en "El halcón maltés"?', 'sam spade', 'Sam Spade', 80),
   ('¿En qué ciudad ficticia transcurre "Batman" (el de Tim Burton)?', 'gotham', 'Gotham City', 40),
   ('¿Qué película tiene la frase: "Yo soy tu padre"?', 'el imperio contraataca', 'El Imperio Contraataca', 50),
   ('¿Quién compuso la banda sonora de "Interstellar"?', 'hans zimmer', 'Hans Zimmer', 50),
@@ -102,19 +101,19 @@ INSERT INTO cinebot_trivias (question, answer, answer_display, xp_reward) VALUES
   ('¿Qué película española ganó el Óscar a Mejor Película Internacional en 2023?', 'la sociedad de la nieve', 'La Sociedad de la Nieve', 75)
 ON CONFLICT DO NOTHING;
 
--- 7. Función para actualizar XP y nivel del usuario (llamada desde el cliente)
+-- 7. Función para dar XP y actualizar nivel del usuario
 CREATE OR REPLACE FUNCTION award_xp(p_user_id UUID, p_xp INT)
 RETURNS TABLE(new_xp INT, new_level INT, leveled_up BOOLEAN) AS $$
 DECLARE
-  v_xp   INT;
-  v_level INT;
+  v_xp        INT;
+  v_level     INT;
   v_new_level INT;
   v_leveled_up BOOLEAN := false;
 BEGIN
   SELECT xp, level INTO v_xp, v_level FROM profiles WHERE id = p_user_id;
   v_xp := COALESCE(v_xp, 0) + p_xp;
 
-  -- Cálculo de nivel: nivel = 1 + floor(xp / 100), cap en 100
+  -- Nivel = 1 + floor(xp / 100), máximo nivel 100
   v_new_level := LEAST(1 + FLOOR(v_xp::FLOAT / 100)::INT, 100);
 
   IF v_new_level > COALESCE(v_level, 1) THEN
@@ -127,9 +126,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 8. Habilitar Realtime en chat_reactions (para la animación de emojis en tiempo real)
+-- 8. Habilitar Realtime en chat_reactions
 ALTER PUBLICATION supabase_realtime ADD TABLE chat_reactions;
 
 -- ═══ FIN DEL SCRIPT ═══
--- Después de ejecutar esto, la tabla de trivias está poblada
--- con 14 preguntas iniciales y las reacciones flotantes están listas.
+-- ✅ Profiles: columnas xp, level, chat_color, join_effect
+-- ✅ chat_reactions: reacciones flotantes en tiempo real
+-- ✅ chat_messages: reply_to_id (UUID), reply_preview, rich_card
+-- ✅ cinebot_trivias: 14 preguntas iniciales
+-- ✅ award_xp(): función para dar XP desde el cliente

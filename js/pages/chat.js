@@ -1,14 +1,9 @@
-/* ═══ cineverse/js/pages/chat.js — PREMIUM v2.0 ═══
- *
- * Funciones implementadas:
- * ✅ Nombres con degradado animado (shimmer) por nivel/premium
- * ✅ Efecto de entrada VIP (Join Effect) al unirse al canal
- * ✅ Rangos dinámicos por nivel con colores e íconos
- * ✅ Burbujas de reacción flotantes en tiempo real
- * ✅ Rich Link Cards al mencionar /peli [nombre]
- * ✅ Trivia automática de CineBot (cada 30 min con XP reward)
- * ✅ Respuestas directas (Thread Replies con doble click)
- * ✅ Fallback robusto de portapapeles
+/* ═══ cineverse/js/pages/chat.js — PREMIUM v2.1 ═══
+ * FIXES v2.1:
+ * ✅ FIX: Input siempre visible sin necesidad de doble click
+ * ✅ FIX: Reacciones flotantes con feedback visual claro
+ * ✅ FIX: XP con escala exponencial (nivel 10 = 5000 XP)
+ * ✅ FIX: Reply se activa con doble click pero no bloquea el input
  * ═══════════════════════════════════════════════════════════ */
 
 import { getSupabase, isSupabaseConfigured } from '../supabase.js';
@@ -16,35 +11,40 @@ import { getCurrentUser } from '../auth.js';
 import { showToast, buildTMDBImageURL } from '../utils.js';
 import { api } from '../api.js';
 
-// ─── Configuración de Rangos por Nivel ──────────────────────────────────────
+// ─── Rangos por Nivel ────────────────────────────────────────────────────────
 const LEVEL_RANKS = [
-  { min: 0,  max: 9,  label: 'Cinéfilo',        icon: '🎬', color: '#9E9E9E', gradient: null },
-  { min: 10, max: 29, label: 'Espectador Pro',   icon: '🎭', color: '#4CAF50', gradient: null },
-  { min: 30, max: 49, label: 'Crítico CineVerse',icon: '🏆', color: '#2196F3', gradient: 'linear-gradient(90deg,#2196F3,#00BCD4)' },
-  { min: 50, max: 74, label: 'Maestro del Cine', icon: '⭐', color: '#FF9800', gradient: 'linear-gradient(90deg,#FF9800,#FF5722)' },
-  { min: 75, max: 99, label: 'Leyenda',          icon: '👑', color: '#FFD700', gradient: 'linear-gradient(90deg,#FF6B6B,#FFD700,#4ECDC4,#FF6B6B)' },
-  { min: 100,max: Infinity, label: 'CineGod',    icon: '🌟', color: '#FF00FF', gradient: 'linear-gradient(90deg,#FF00FF,#7B00FF,#00FFFF,#FF00FF)' },
+  { min: 0,  max: 9,  label: 'Cinéfilo',         icon: '🎬', color: '#9E9E9E', gradient: null },
+  { min: 10, max: 29, label: 'Espectador Pro',    icon: '🎭', color: '#4CAF50', gradient: null },
+  { min: 30, max: 49, label: 'Crítico CineVerse', icon: '🏆', color: '#2196F3', gradient: 'linear-gradient(90deg,#2196F3,#00BCD4)' },
+  { min: 50, max: 74, label: 'Maestro del Cine',  icon: '⭐', color: '#FF9800', gradient: 'linear-gradient(90deg,#FF9800,#FF5722)' },
+  { min: 75, max: 99, label: 'Leyenda',           icon: '👑', color: '#FFD700', gradient: 'linear-gradient(90deg,#FF6B6B,#FFD700,#4ECDC4,#FF6B6B)' },
+  { min: 100, max: Infinity, label: 'CineGod',    icon: '🌟', color: '#FF00FF', gradient: 'linear-gradient(90deg,#FF00FF,#7B00FF,#00FFFF,#FF00FF)' },
 ];
 
 function getRank(level = 1) {
   return LEVEL_RANKS.find(r => level >= r.min && level <= r.max) || LEVEL_RANKS[0];
 }
 
-// ─── Emojis de reacción disponibles ─────────────────────────────────────────
+// XP total necesario para alcanzar un nivel (escala exponencial)
+// Nivel 2 = 200 XP | Nivel 5 = 1250 XP | Nivel 10 = 5000 XP | Nivel 30 = 45000 XP
+function xpForLevel(level) {
+  return level <= 1 ? 0 : (level - 1) * (level - 1) * 50;
+}
+
 const REACTION_EMOJIS = ['🔥','🍿','😂','😱','😭','👍','❤️','💀','🎬','⚡'];
 
-// ─── CineBot Trivia State ─────────────────────────────────────────────────────
-let _triviaActive = null;          // { trivia, startedAt }
+let _triviaActive = null;
 let _triviaTimeout = null;
 
+// ─── Controlador Principal ────────────────────────────────────────────────────
 class ChatPageLobby {
   constructor() {
-    this.currentUser = null;
-    this.messages = [];
-    this.channel = null;
+    this.currentUser   = null;
+    this.messages      = [];
+    this.channel       = null;
     this.reactionChannel = null;
-    this.supabase = null;
-    this.replyingTo = null;        // { id, preview }
+    this.supabase      = null;
+    this.replyingTo    = null;
   }
 
   async init() {
@@ -65,221 +65,43 @@ class ChatPageLobby {
     }
 
     this._injectStyles();
-    this.renderInputPlaceholder();
-    this.setupListeners();
+
+    // FIX #3: Renderizar el input PRIMERO y de forma permanente
+    this._renderStaticInput();
+
+    // Luego renderizar barra de reacciones
     this.renderReactionBar();
+
+    // Configurar todos los listeners
+    this.setupListeners();
+
     await this.loadMessages();
     await this.loadPremiumMecenas();
     this.subscribeToRealtime();
     this.subscribeToReactions();
 
-    // Anuncio de entrada VIP si el usuario es premium
+    // Anuncio VIP si es premium
     if (this.currentUser?.profile?.is_premium) {
-      setTimeout(() => this.announceJoin(), 1200);
+      setTimeout(() => this.announceJoin(), 1500);
     }
 
-    // Iniciar CineBot trivia si la instancia es primera
+    // Lanzar CineBot trivia (primera vez después de 3 min)
     this._scheduleCineBot();
   }
 
-  // ─── Estilos Dinámicos ─────────────────────────────────────────────────────
-  _injectStyles() {
-    if (document.getElementById('chat-premium-styles')) return;
-    const style = document.createElement('style');
-    style.id = 'chat-premium-styles';
-    style.textContent = `
-      /* Shimmer de nombre gradiente */
-      @keyframes nameShimmer {
-        0%   { background-position: -200% center; }
-        100% { background-position:  200% center; }
-      }
-      @keyframes nameHolo {
-        0%   { background-position: 0% 50%; }
-        50%  { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-      }
-      .chat-name-gradient {
-        background-size: 200% auto;
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: nameShimmer 2.5s linear infinite;
-        font-weight: 800;
-      }
-      .chat-name-holo {
-        background-size: 300% 300%;
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: nameHolo 3s ease infinite;
-        font-weight: 800;
-      }
-
-      /* Anuncio de Entrada VIP */
-      @keyframes joinSlideIn {
-        from { opacity:0; transform:translateY(-12px); }
-        to   { opacity:1; transform:translateY(0); }
-      }
-      .chat-join-announce {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        margin: 0.4rem 0;
-        background: linear-gradient(135deg, rgba(255,215,0,0.07), rgba(255,140,0,0.04));
-        border: 1px solid rgba(255,215,0,0.2);
-        border-radius: var(--radius-sm);
-        font-size: 0.8rem;
-        color: #FFD700;
-        animation: joinSlideIn 0.4s cubic-bezier(0.16,1,0.3,1);
-      }
-
-      /* Reacciones Flotantes */
-      @keyframes floatUp {
-        0%   { opacity:1; transform: translateY(0) scale(1); }
-        70%  { opacity:0.8; transform: translateY(-80px) scale(1.2); }
-        100% { opacity:0; transform: translateY(-120px) scale(0.8); }
-      }
-      .floating-emoji {
-        position: fixed;
-        font-size: 1.8rem;
-        pointer-events: none;
-        z-index: 9999;
-        animation: floatUp 1.6s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
-        user-select: none;
-      }
-
-      /* Barra de Reacciones */
-      .chat-reaction-bar {
-        display: flex;
-        gap: 0.4rem;
-        padding: 0.6rem 0.75rem;
-        background: rgba(255,255,255,0.02);
-        border-top: 1px solid var(--border-subtle);
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      .chat-reaction-btn {
-        background: rgba(255,255,255,0.04);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-full);
-        padding: 0.28rem 0.55rem;
-        font-size: 1.1rem;
-        cursor: pointer;
-        transition: all 0.15s;
-        line-height: 1;
-      }
-      .chat-reaction-btn:hover {
-        background: rgba(255,255,255,0.1);
-        transform: scale(1.3);
-      }
-
-      /* Badge de rango */
-      .chat-rank-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.2rem;
-        font-size: 0.65rem;
-        font-weight: 700;
-        padding: 0.12rem 0.45rem;
-        border-radius: var(--radius-full);
-        border: 1px solid rgba(255,255,255,0.12);
-        background: rgba(0,0,0,0.3);
-        vertical-align: middle;
-        white-space: nowrap;
-        font-family: var(--font-ui);
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-      }
-
-      /* CineBot message */
-      .chat-cinebot-msg {
-        background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(168,85,247,0.04));
-        border: 1px solid rgba(99,102,241,0.25);
-        border-radius: var(--radius-md);
-        padding: 0.85rem 1.1rem;
-        margin: 0.5rem 0;
-        font-size: 0.9rem;
-      }
-      .chat-cinebot-header {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.4rem;
-        font-weight: 700;
-        color: #A78BFA;
-        font-size: 0.85rem;
-      }
-
-      /* Reply preview */
-      .chat-reply-preview {
-        background: rgba(255,255,255,0.04);
-        border-left: 3px solid var(--accent-red);
-        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-        padding: 0.35rem 0.65rem;
-        font-size: 0.78rem;
-        color: var(--text-muted);
-        margin-bottom: 0.3rem;
-        cursor: pointer;
-      }
-
-      /* Reply indicator en input */
-      #chat-reply-indicator {
-        display: none;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.4rem 0.75rem;
-        background: rgba(229,9,20,0.06);
-        border-top: 1px solid rgba(229,9,20,0.2);
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-      }
-      #chat-reply-indicator.active {
-        display: flex;
-      }
-      #chat-reply-cancel {
-        margin-left: auto;
-        background: none;
-        border: none;
-        color: var(--text-muted);
-        cursor: pointer;
-        font-size: 1rem;
-        padding: 0 0.25rem;
-      }
-
-      /* Rich link card */
-      .chat-rich-card {
-        display: flex;
-        gap: 0.75rem;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-sm);
-        padding: 0.6rem;
-        margin-top: 0.4rem;
-        text-decoration: none;
-        color: inherit;
-        transition: border-color 0.2s;
-        cursor: pointer;
-      }
-      .chat-rich-card:hover { border-color: var(--accent-red); }
-      .chat-rich-card img { width:48px; aspect-ratio:2/3; object-fit:cover; border-radius:4px; flex-shrink:0; }
-    `;
-    document.head.appendChild(style);
-  }
-
-  // ─── Placeholder de Input ──────────────────────────────────────────────────
-  renderInputPlaceholder() {
+  // ─── FIX #3: Input siempre visible ─────────────────────────────────────────
+  _renderStaticInput() {
     const placeholder = document.getElementById('chat-input-placeholder');
     if (!placeholder) return;
 
-    const isPremium = this.currentUser?.profile?.is_premium;
+    const isLoggedIn  = !!this.currentUser;
+    const isPremium   = !!this.currentUser?.profile?.is_premium;
 
-    if (!this.currentUser) {
+    if (!isLoggedIn) {
       placeholder.innerHTML = `
         <div style="text-align:center;padding:1rem 0;">
-          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:0.85rem;">Inicia sesión para participar en el chat global.</p>
-          <a href="login.html" class="btn btn--primary" style="display:inline-block;font-size:0.9rem;padding:0.6rem 1.5rem;text-decoration:none;font-weight:700;border-radius:var(--radius-sm);">Iniciar Sesión / Crear Cuenta</a>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:0.75rem;">Inicia sesión para participar en el chat global.</p>
+          <a href="login.html" class="btn btn--primary" style="font-size:0.9rem;padding:0.6rem 1.5rem;text-decoration:none;font-weight:700;border-radius:var(--radius-sm);display:inline-block;">Iniciar Sesión</a>
         </div>`;
       return;
     }
@@ -288,206 +110,235 @@ class ChatPageLobby {
       placeholder.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:0.75rem;">
           <div class="chat-input-form">
-            <input type="text" disabled placeholder="El chat en vivo es de solo lectura para cuentas Free..." class="chat-input-text">
-            <button disabled class="chat-send-btn"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+            <input type="text" disabled placeholder="El chat en vivo es de solo lectura para cuentas Free..." class="chat-input-text" style="opacity:0.5;cursor:not-allowed;">
+            <button disabled class="chat-send-btn" style="opacity:0.5;">
+              <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
           </div>
           <div class="chat-premium-promo">
             <span class="chat-promo-badge">👑 ¿Quieres participar en el chat?</span>
-            <p class="chat-promo-text">La escritura en tiempo real es exclusiva de usuarios Premium. ¡Hazte mecenas hoy mismo!</p>
+            <p class="chat-promo-text">La escritura en tiempo real es exclusiva de usuarios Premium.</p>
             <a href="perfil.html?tab=premium" class="chat-promo-link">Conocer Planes Premium →</a>
           </div>
         </div>`;
       return;
     }
 
+    // Usuario PREMIUM: mostrar el form completo SIEMPRE VISIBLE
     placeholder.innerHTML = `
-      <div id="chat-reply-indicator">
-        <span>↩️</span>
-        <span id="chat-reply-text"></span>
-        <button id="chat-reply-cancel" title="Cancelar respuesta">✕</button>
+      <div id="chat-reply-bar" style="display:none;align-items:center;gap:0.6rem;padding:0.4rem 0.75rem;background:rgba(229,9,20,0.08);border:1px solid rgba(229,9,20,0.25);border-radius:var(--radius-sm);margin-bottom:0.5rem;font-size:0.8rem;color:var(--text-secondary);">
+        <span style="color:var(--accent-red);font-weight:700;">↩️ Respondiendo a:</span>
+        <span id="chat-reply-text" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+        <button id="chat-reply-cancel" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;padding:0 0.25rem;line-height:1;">✕</button>
       </div>
       <form id="chat-input-form" class="chat-input-form">
-        <input type="text" id="chat-message-text"
-          placeholder="Escribe... o usa /peli [nombre] para compartir una ficha"
-          maxlength="150" required class="chat-input-text" autocomplete="off">
+        <input
+          type="text"
+          id="chat-message-text"
+          placeholder="Escribe tu mensaje... o /peli [nombre] para compartir"
+          maxlength="150"
+          required
+          class="chat-input-text"
+          autocomplete="off">
         <button type="submit" id="chat-send-btn" class="chat-send-btn">
           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
-      </form>`;
+      </form>
+      <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.35rem;text-align:center;">
+        Doble clic en un mensaje para responder · <code style="background:rgba(255,255,255,0.06);padding:0.1rem 0.3rem;border-radius:3px;">/peli [nombre]</code> para compartir una ficha
+      </div>`;
   }
 
-  // ─── Barra de Reacciones Flotantes ────────────────────────────────────────
+  // ─── Barra de Reacciones ───────────────────────────────────────────────────
   renderReactionBar() {
     const barContainer = document.getElementById('chat-reaction-bar-container');
     if (!barContainer) return;
 
-    const isPremium = this.currentUser?.profile?.is_premium;
+    const isPremium = !!this.currentUser?.profile?.is_premium;
 
     barContainer.innerHTML = `
-      <div class="chat-reaction-bar">
+      <div class="chat-reaction-bar" id="chat-reaction-bar">
+        <span style="font-size:0.7rem;color:var(--text-muted);align-self:center;white-space:nowrap;margin-right:0.25rem;">${isPremium ? 'Reaccionar:' : '🔒 Solo Premium:'}</span>
         ${REACTION_EMOJIS.map(emoji => `
-          <button class="chat-reaction-btn" data-emoji="${emoji}" title="${isPremium ? 'Enviar reacción' : 'Solo Premium'}">${emoji}</button>
+          <button class="chat-reaction-btn" data-emoji="${emoji}" title="${isPremium ? 'Enviar reacción a todos' : 'Activa Premium para reaccionar'}">${emoji}</button>
         `).join('')}
       </div>`;
 
     barContainer.querySelectorAll('.chat-reaction-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        e.preventDefault();
         const emoji = btn.getAttribute('data-emoji');
+
         if (!isPremium) {
-          showToast('🔒 Las reacciones flotantes son de CineVerse Premium', 'error');
+          showToast('👑 Las reacciones en vivo son exclusivas de CineVerse Premium', 'error');
           return;
         }
-        // Lanzar reacción local inmediatamente
-        this._spawnFloatingEmoji(emoji, e.clientX, e.clientY);
-        // Publicar en tiempo real para todos
-        this._publishReaction(emoji);
+
+        // FIX #1: Spawn desde posición del botón con efecto visual inmediato
+        const rect = btn.getBoundingClientRect();
+        this._spawnFloatingEmoji(emoji, rect.left + rect.width / 2, rect.top);
+
+        // Animación del botón
+        btn.style.transform = 'scale(1.5)';
+        setTimeout(() => { btn.style.transform = 'scale(1)'; }, 200);
+
+        // Publicar para todos los demás (silencioso si falla)
+        this._publishReaction(emoji).catch(() => {});
       });
     });
   }
 
+  // ─── Emoji Flotante ────────────────────────────────────────────────────────
   _spawnFloatingEmoji(emoji, x, y) {
     const el = document.createElement('span');
     el.className = 'floating-emoji';
     el.textContent = emoji;
-    el.style.left = `${x - 12 + (Math.random() * 24 - 12)}px`;
-    el.style.top  = `${y}px`;
+    // Variar posición horizontalmente
+    const offsetX = (Math.random() - 0.5) * 60;
+    el.style.cssText = `
+      position: fixed;
+      left: ${x + offsetX}px;
+      top: ${y}px;
+      font-size: 2rem;
+      pointer-events: none;
+      z-index: 9999;
+      user-select: none;
+      animation: floatUp 1.8s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+    `;
     document.body.appendChild(el);
-    el.addEventListener('animationend', () => el.remove());
+    setTimeout(() => el.remove(), 1900);
   }
 
   async _publishReaction(emoji) {
     if (!this.supabase || !this.currentUser) return;
-    try {
-      await this.supabase.from('chat_reactions').insert({
-        user_id: this.currentUser.id,
-        emoji
-      });
-      // Borrar después de 5 segundos para mantener tabla limpia
+    const { error } = await this.supabase.from('chat_reactions').insert({
+      user_id: this.currentUser.id,
+      emoji
+    });
+    if (!error) {
+      // Limpiar la reacción después de 5s para no llenar la tabla
       setTimeout(async () => {
-        await this.supabase.from('chat_reactions').delete().eq('user_id', this.currentUser.id).eq('emoji', emoji);
+        await this.supabase.from('chat_reactions')
+          .delete()
+          .eq('user_id', this.currentUser.id)
+          .eq('emoji', emoji);
       }, 5000);
-    } catch (e) {
-      // Error silencioso
     }
   }
 
-  // ─── Listeners ────────────────────────────────────────────────────────────
+  // ─── Listeners ─────────────────────────────────────────────────────────────
   setupListeners() {
-    const placeholder = document.getElementById('chat-input-placeholder');
-    if (placeholder) {
-      placeholder.addEventListener('submit', async (e) => {
-        const form = e.target.closest('#chat-input-form');
-        if (!form) return;
-        e.preventDefault();
-        const input = document.getElementById('chat-message-text');
-        const text = input.value.trim();
-        if (!text) return;
-        input.value = '';
+    // Submit del formulario de chat
+    document.addEventListener('submit', async (e) => {
+      const form = e.target.closest('#chat-input-form');
+      if (!form) return;
+      e.preventDefault();
 
-        // Comando /peli
-        if (text.toLowerCase().startsWith('/peli ')) {
-          const query = text.slice(6).trim();
-          await this.handlePeliCommand(query);
+      const input = document.getElementById('chat-message-text');
+      if (!input) return;
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+
+      // Comando /peli
+      if (text.toLowerCase().startsWith('/peli ')) {
+        const query = text.slice(6).trim();
+        if (query) await this.handlePeliCommand(query);
+        return;
+      }
+
+      // Respuesta de trivia CineBot
+      if (_triviaActive) {
+        const normalize = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+        if (normalize(text) === normalize(_triviaActive.trivia.answer)) {
+          await this.handleCineBotWin(text);
           return;
         }
+      }
 
-        // Responder trivia de CineBot
-        if (_triviaActive) {
-          const answer = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          const expected = _triviaActive.trivia.answer.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          if (answer === expected) {
-            await this.handleCineBotWin(text);
-            return;
-          }
-        }
+      await this.sendMessage(text, this.replyingTo);
+      this.clearReply();
+    });
 
-        await this.sendMessage(text, this.replyingTo);
-        this.clearReply();
-      });
+    // Cancelar reply
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'chat-reply-cancel') this.clearReply();
+    });
 
-      // Cancelar reply
-      placeholder.addEventListener('click', (e) => {
-        if (e.target.id === 'chat-reply-cancel') this.clearReply();
-      });
-    }
-
-    // Click derecho / doble click en mensaje para reply
+    // FIX #3: Doble clic SOLO activa el reply context, no muestra el input
     const container = document.getElementById('chat-messages-container');
     if (container) {
+      // Click normal: borrar mensaje
       container.addEventListener('click', async (e) => {
         const btn = e.target.closest('[data-delete-msg-id]');
-        if (btn) {
-          const msgId = btn.getAttribute('data-delete-msg-id');
-          await this.deleteMessage(msgId, btn);
-          return;
-        }
+        if (!btn) return;
+        const msgId = btn.getAttribute('data-delete-msg-id');
+        await this.deleteMessage(msgId, btn);
       });
 
+      // Doble click: activar reply
       container.addEventListener('dblclick', (e) => {
+        if (!this.currentUser?.profile?.is_premium) {
+          if (this.currentUser) showToast('👑 Los hilos de respuesta son de CineVerse Premium', 'error');
+          return;
+        }
         const msgEl = e.target.closest('[data-msg-id]');
         if (!msgEl) return;
         const msgId = msgEl.getAttribute('data-msg-id');
         const msg = this.messages.find(m => String(m.id) === msgId);
-        if (!msg || !this.currentUser?.profile?.is_premium) {
-          if (this.currentUser && !this.currentUser.profile?.is_premium) {
-            showToast('🔒 Los hilos de respuesta son exclusivos de Premium', 'error');
-          }
-          return;
-        }
-        this.setReply(msg);
+        if (msg) this.setReply(msg);
       });
     }
   }
 
   setReply(msg) {
     const profile = msg.profiles || {};
-    const author = profile.display_name || profile.username || 'Usuario';
-    const preview = msg.message?.slice(0, 60) + (msg.message?.length > 60 ? '…' : '');
+    const author  = profile.display_name || profile.username || 'Usuario';
+    const preview = (msg.message || '').slice(0, 55) + (msg.message?.length > 55 ? '…' : '');
 
     this.replyingTo = { id: msg.id, preview, author };
 
-    const indicator = document.getElementById('chat-reply-indicator');
-    const textEl = document.getElementById('chat-reply-text');
-    if (indicator && textEl) {
-      textEl.textContent = `Respondiendo a ${author}: "${preview}"`;
-      indicator.classList.add('active');
+    const bar  = document.getElementById('chat-reply-bar');
+    const text = document.getElementById('chat-reply-text');
+    if (bar && text) {
+      text.textContent = `${author}: "${preview}"`;
+      bar.style.display = 'flex';
     }
 
     document.getElementById('chat-message-text')?.focus();
+    showToast(`↩️ Respondiendo a ${author}`, 'info');
   }
 
   clearReply() {
     this.replyingTo = null;
-    const indicator = document.getElementById('chat-reply-indicator');
-    if (indicator) indicator.classList.remove('active');
+    const bar = document.getElementById('chat-reply-bar');
+    if (bar) bar.style.display = 'none';
   }
 
-  // ─── Anuncio de Entrada VIP ───────────────────────────────────────────────
-  async announceJoin() {
-    if (!this.currentUser) return;
-    const profile = this.currentUser.profile || {};
-    const name = profile.display_name || profile.username || 'Usuario';
-    const level = profile.level || 1;
-    const rank = getRank(level);
-
-    // Mostrar solo localmente (no enviar a BD para no spamear)
+  // ─── Anuncio VIP ───────────────────────────────────────────────────────────
+  announceJoin() {
     const container = document.getElementById('chat-messages-container');
-    if (!container) return;
+    if (!container || !this.currentUser) return;
+
+    const profile = this.currentUser.profile || {};
+    const name    = profile.display_name || profile.username || 'Usuario';
+    const level   = profile.level || 1;
+    const rank    = getRank(level);
 
     const div = document.createElement('div');
     div.className = 'chat-join-announce';
-    div.innerHTML = `✨ <strong style="color:#FFD700;">${name}</strong> ha entrado al chat ${rank.icon} <span style="font-size:0.72rem;opacity:0.7;">(Nivel ${level} · ${rank.label})</span>`;
+    div.innerHTML = `✨ <strong style="color:#FFD700;">${name}</strong> entró al canal ${rank.icon} <span style="font-size:0.7rem;opacity:0.6;">(Nivel ${level} · ${rank.label})</span>`;
     container.appendChild(div);
     this.scrollToBottom();
 
     setTimeout(() => {
-      div.style.transition = 'opacity 0.5s';
+      div.style.transition = 'opacity 0.6s';
       div.style.opacity = '0';
-      setTimeout(() => div.remove(), 500);
+      setTimeout(() => div.remove(), 600);
     }, 5000);
   }
 
-  // ─── Carga de Mensajes ────────────────────────────────────────────────────
+  // ─── Carga de Mensajes ─────────────────────────────────────────────────────
   async loadMessages() {
     const container = document.getElementById('chat-messages-container');
     if (!container || !this.supabase) return;
@@ -506,7 +357,8 @@ class ChatPageLobby {
       this.scrollToBottom();
     } catch (e) {
       console.error('ChatLobby: Error al cargar mensajes', e);
-      container.innerHTML = '<p style="text-align:center;color:var(--accent-red);font-size:0.9rem;padding:2rem;">Error de conexión.</p>';
+      const container = document.getElementById('chat-messages-container');
+      if (container) container.innerHTML = '<p style="text-align:center;color:var(--accent-red);font-size:0.9rem;padding:2rem;">Error de conexión al chat.</p>';
     }
   }
 
@@ -515,28 +367,27 @@ class ChatPageLobby {
     if (!container) return;
 
     if (this.messages.length === 0) {
-      container.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-size:0.9rem;padding:3rem;">¡El canal está en silencio. ¡Sé el primero!</p>';
+      container.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-size:0.9rem;padding:3rem;">El canal está en silencio. ¡Sé el primero en escribir!</p>';
       return;
     }
 
     container.innerHTML = this.messages.map(msg => this.formatMessageHTML(msg)).join('');
   }
 
-  // ─── Formateo de Mensaje ───────────────────────────────────────────────────
   formatMessageHTML(msg) {
-    const profile = msg.profiles || {};
+    const profile    = msg.profiles || {};
     const authorName = profile.display_name || profile.username || 'Usuario';
-    const avatar = profile.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(authorName)}`;
+    const avatar     = profile.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(authorName)}`;
     const isMsgPremium = !!profile.is_premium;
-    const level = profile.level || 1;
-    const rank = getRank(level);
+    const level      = profile.level || 1;
+    const rank       = getRank(level);
 
-    // Sanitizar
+    // Sanitizar contra XSS
     const tempDiv = document.createElement('div');
-    tempDiv.textContent = msg.message;
+    tempDiv.textContent = msg.message || '';
     const sanitizedMsg = tempDiv.innerHTML;
 
-    // Nombre con efecto de nivel
+    // Nombre con efecto de rango
     let nameHTML;
     if (rank.gradient && isMsgPremium) {
       const animClass = level >= 75 ? 'chat-name-holo' : 'chat-name-gradient';
@@ -547,24 +398,21 @@ class ChatPageLobby {
       nameHTML = `<span style="color:${rank.color};font-weight:700;">${authorName}</span>`;
     }
 
-    // Badge de rango
     const rankBadge = `<span class="chat-rank-badge" style="color:${rank.color};border-color:${rank.color}40;">${rank.icon} Nv.${level}</span>`;
 
-    // Badge premium
     const premiumBadge = isMsgPremium
-      ? `<span style="background:linear-gradient(135deg,#FFD700,#FF8C00);color:#000;font-size:0.62rem;font-weight:800;padding:0.12rem 0.4rem;border-radius:var(--radius-full);text-transform:uppercase;">👑 PREMIUM</span>`
+      ? `<span style="background:linear-gradient(135deg,#FFD700,#FF8C00);color:#000;font-size:0.6rem;font-weight:800;padding:0.1rem 0.35rem;border-radius:var(--radius-full);text-transform:uppercase;">👑 VIP</span>`
       : '';
 
     const timestamp = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const isOwn     = this.currentUser && msg.user_id === this.currentUser.id;
+    const frameClass = profile.avatar_frame && profile.avatar_frame !== 'none' ? `avatar-frame-${profile.avatar_frame}` : '';
 
-    const isOwn = this.currentUser && msg.user_id === this.currentUser.id;
     const deleteBtn = isOwn
-      ? `<button class="chat-msg-delete-btn" data-delete-msg-id="${msg.id}" title="Borrar mensaje">
+      ? `<button class="chat-msg-delete-btn" data-delete-msg-id="${msg.id}" title="Borrar">
            <svg style="width:13px;height:13px;fill:currentColor;" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
          </button>`
       : '';
-
-    const frameClass = profile.avatar_frame && profile.avatar_frame !== 'none' ? `avatar-frame-${profile.avatar_frame}` : '';
 
     // Reply preview
     let replyHTML = '';
@@ -572,7 +420,7 @@ class ChatPageLobby {
       replyHTML = `<div class="chat-reply-preview">↩️ ${msg.reply_preview}</div>`;
     }
 
-    // Rich card si el mensaje tiene rich_card_data en metadata
+    // Rich Card (ficha de película)
     let richCardHTML = '';
     if (msg.rich_card) {
       try {
@@ -581,12 +429,12 @@ class ChatPageLobby {
           <a class="chat-rich-card" href="detalle.html?id=${card.id}&type=${card.type}">
             <img src="${card.poster}" alt="${card.title}" loading="lazy">
             <div>
-              <div style="font-weight:700;font-size:0.88rem;color:var(--text-primary);">${card.title}</div>
+              <div style="font-weight:700;font-size:0.88rem;">${card.title}</div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.15rem;">${card.year || ''} ${card.vote ? '· ⭐ ' + card.vote : ''}</div>
-              <div style="font-size:0.72rem;color:var(--accent-red);margin-top:0.25rem;">Ver ficha →</div>
+              <div style="font-size:0.72rem;color:var(--accent-red);margin-top:0.2rem;">Ver ficha →</div>
             </div>
           </a>`;
-      } catch(e) {}
+      } catch (e) { /* card rota, ignorar */ }
     }
 
     return `
@@ -595,9 +443,7 @@ class ChatPageLobby {
         <div class="chat-msg-body">
           <div class="chat-msg-header">
             <div class="chat-msg-author-group">
-              ${nameHTML}
-              ${rankBadge}
-              ${premiumBadge}
+              ${nameHTML} ${rankBadge} ${premiumBadge}
             </div>
             <div class="chat-msg-meta">
               <span class="chat-msg-time">${timestamp}</span>
@@ -619,23 +465,21 @@ class ChatPageLobby {
       showToast('🔒 El comando /peli es exclusivo de Premium', 'error');
       return;
     }
-    showToast('🔍 Buscando película...', 'info');
+    showToast('🔍 Buscando...', 'info');
     try {
       const data = await api.search(query, 1);
       const first = data?.results?.[0];
-      if (!first) { showToast('No encontré esa película', 'error'); return; }
+      if (!first) { showToast('No encontré esa película o serie', 'error'); return; }
 
       const poster = buildTMDBImageURL(first.poster_path, 'w185');
-      const title = first.title || first.name;
-      const year = (first.release_date || first.first_air_date || '').slice(0, 4);
-      const vote = first.vote_average ? first.vote_average.toFixed(1) : null;
-      const type = first.media_type || (first.title ? 'movie' : 'tv');
+      const title  = first.title || first.name;
+      const year   = (first.release_date || first.first_air_date || '').slice(0, 4);
+      const vote   = first.vote_average ? first.vote_average.toFixed(1) : null;
+      const type   = first.media_type || (first.title ? 'movie' : 'tv');
 
-      const richCard = { id: first.id, type, title, poster, year, vote };
-
-      await this.sendMessage(`🎬 Compartiendo: ${title}`, null, richCard);
+      await this.sendMessage(`🎬 ${title}`, null, { id: first.id, type, title, poster, year, vote });
     } catch (e) {
-      showToast('Error al buscar la película', 'error');
+      showToast('Error buscando la película', 'error');
     }
   }
 
@@ -643,26 +487,21 @@ class ChatPageLobby {
   async sendMessage(text, replyData = null, richCard = null) {
     if (!this.currentUser) return;
     try {
-      const payload = {
-        user_id: this.currentUser.id,
-        message: text
-      };
+      const payload = { user_id: this.currentUser.id, message: text };
       if (replyData) {
-        payload.reply_to_id = replyData.id;
+        payload.reply_to_id  = replyData.id;
         payload.reply_preview = `${replyData.author}: "${replyData.preview}"`;
       }
-      if (richCard) {
-        payload.rich_card = JSON.stringify(richCard);
-      }
+      if (richCard) payload.rich_card = JSON.stringify(richCard);
 
       const { error } = await this.supabase.from('chat_messages').insert(payload);
       if (error) {
-        if (error.code === '42501' || error.message.includes('permission denied')) {
-          showToast('Solo los miembros Premium pueden chatear.', 'error');
+        if (error.code === '42501' || error.message?.includes('permission denied')) {
+          showToast('Solo miembros Premium pueden escribir en el chat.', 'error');
         } else throw error;
       }
     } catch (e) {
-      console.error('ChatLobby: Error al enviar mensaje', e);
+      console.error('ChatLobby: Error al enviar', e);
       showToast('No se pudo enviar el mensaje.', 'error');
     }
   }
@@ -670,29 +509,24 @@ class ChatPageLobby {
   // ─── Borrar Mensaje ────────────────────────────────────────────────────────
   async deleteMessage(msgId, btnEl) {
     if (!this.currentUser) return;
-    const originalText = btnEl.innerHTML;
-    btnEl.innerHTML = '⏳';
-    btnEl.disabled = true;
+    const original = btnEl.innerHTML;
+    btnEl.innerHTML = '⏳'; btnEl.disabled = true;
 
     try {
-      const { error } = await this.supabase
-        .from('chat_messages').delete()
+      const { error } = await this.supabase.from('chat_messages').delete()
         .eq('id', msgId).eq('user_id', this.currentUser.id);
-
       if (error) throw error;
 
-      const msgEl = document.querySelector(`.chat-msg[data-msg-id="${msgId}"]`);
-      if (msgEl) {
-        msgEl.style.transition = 'all 0.3s';
-        msgEl.style.opacity = '0';
-        msgEl.style.transform = 'translateX(20px)';
-        setTimeout(() => msgEl.remove(), 300);
+      const el = document.querySelector(`.chat-msg[data-msg-id="${msgId}"]`);
+      if (el) {
+        el.style.transition = 'all 0.3s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(20px)';
+        setTimeout(() => el.remove(), 300);
       }
       this.messages = this.messages.filter(m => m.id !== msgId);
     } catch (e) {
-      console.error('ChatLobby: Error al borrar', e);
-      btnEl.innerHTML = originalText;
-      btnEl.disabled = false;
+      btnEl.innerHTML = original; btnEl.disabled = false;
       showToast('No se pudo borrar el mensaje.', 'error');
     }
   }
@@ -713,15 +547,15 @@ class ChatPageLobby {
       if (error) throw error;
 
       if (!data || data.length === 0) {
-        listContainer.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:0.8rem;">Sé el primer mecenas en apoyar a CineVerse</div>';
+        listContainer.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:0.8rem;">Sé el primer mecenas en apoyar CineVerse</div>';
         return;
       }
 
       listContainer.innerHTML = data.map(user => {
-        const name = user.display_name || user.username || 'Mecenas';
+        const name  = user.display_name || user.username || 'Mecenas';
         const avatar = user.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
         const frameClass = user.avatar_frame && user.avatar_frame !== 'none' ? `avatar-frame-${user.avatar_frame}` : '';
-        const rank = getRank(user.level || 1);
+        const rank  = getRank(user.level || 1);
         return `
           <div class="rank-item">
             <img class="rank-avatar ${frameClass} premium" src="${avatar}" alt="${name}">
@@ -738,8 +572,7 @@ class ChatPageLobby {
 
   // ─── CineBot Trivia ────────────────────────────────────────────────────────
   _scheduleCineBot() {
-    // Primera trivia después de 2 minutos de entrada, luego cada 30 minutos
-    setTimeout(() => this._launchTrivia(), 2 * 60 * 1000);
+    setTimeout(() => this._launchTrivia(), 3 * 60 * 1000); // primera trivia: 3 min
   }
 
   async _launchTrivia() {
@@ -749,12 +582,12 @@ class ChatPageLobby {
         .from('cinebot_trivias')
         .select('*')
         .eq('active', true)
-        .order('RANDOM()')
-        .limit(1);
+        .limit(20);
 
-      if (!data || !data[0]) return;
+      if (!data || data.length === 0) return;
 
-      const trivia = data[0];
+      // Elegir una al azar
+      const trivia = data[Math.floor(Math.random() * data.length)];
       _triviaActive = { trivia, startedAt: Date.now() };
 
       const container = document.getElementById('chat-messages-container');
@@ -763,28 +596,25 @@ class ChatPageLobby {
       const div = document.createElement('div');
       div.className = 'chat-cinebot-msg';
       div.innerHTML = `
-        <div class="chat-cinebot-header">🤖 CineBot <span style="font-weight:400;color:var(--text-muted);font-size:0.75rem;">&nbsp;·&nbsp; Trivia de Cine</span></div>
-        <div style="font-weight:700;margin-bottom:0.35rem;">${trivia.question}</div>
-        <div style="font-size:0.78rem;color:#A78BFA;">¡El primero en responder correctamente gana +${trivia.xp_reward} XP! ⚡</div>
-      `;
+        <div class="chat-cinebot-header">🤖 CineBot <span style="font-weight:400;color:var(--text-muted);font-size:0.73rem;"> · Trivia de Cine</span></div>
+        <div style="font-weight:700;margin-bottom:0.35rem;font-size:0.92rem;">${trivia.question}</div>
+        <div style="font-size:0.78rem;color:#A78BFA;">⚡ El primero en responder correctamente gana <strong>+${trivia.xp_reward} XP</strong></div>`;
       container.appendChild(div);
       this.scrollToBottom();
 
-      // Expirar trivia después de 5 minutos sin respuesta
+      // Expirar trivia en 5 minutos
       _triviaTimeout = setTimeout(() => {
         _triviaActive = null;
-        const expiredDiv = document.createElement('div');
-        expiredDiv.className = 'chat-cinebot-msg';
-        expiredDiv.innerHTML = `<div class="chat-cinebot-header">🤖 CineBot</div><div style="font-size:0.85rem;color:var(--text-muted);">Nadie respondió la trivia... La respuesta era: <strong style="color:#A78BFA;">${trivia.answer_display}</strong></div>`;
-        container?.appendChild(expiredDiv);
+        const expDiv = document.createElement('div');
+        expDiv.className = 'chat-cinebot-msg';
+        expDiv.innerHTML = `<div class="chat-cinebot-header">🤖 CineBot</div><div style="font-size:0.85rem;color:var(--text-muted);">Tiempo agotado... La respuesta era: <strong style="color:#A78BFA;">${trivia.answer_display}</strong> 🎬</div>`;
+        container?.appendChild(expDiv);
         this.scrollToBottom();
-
-        // Programar siguiente trivia en 30 min
+        // Siguiente trivia en 30 min
         setTimeout(() => this._launchTrivia(), 30 * 60 * 1000);
       }, 5 * 60 * 1000);
-
     } catch (e) {
-      console.warn('CineBot: Error al cargar trivia', e);
+      console.warn('CineBot: error al cargar trivia', e);
     }
   }
 
@@ -795,7 +625,6 @@ class ChatPageLobby {
     clearTimeout(_triviaTimeout);
     _triviaActive = null;
 
-    // Dar XP al ganador
     try {
       const { data } = await this.supabase.rpc('award_xp', {
         p_user_id: this.currentUser.id,
@@ -805,20 +634,16 @@ class ChatPageLobby {
       const leveledUp = data?.[0]?.leveled_up;
       const newLevel  = data?.[0]?.new_level;
 
-      // Enviar el mensaje del usuario
       await this.sendMessage(text);
 
-      // Anuncio de victoria del CineBot
       const container = document.getElementById('chat-messages-container');
       if (container) {
-        const profile = this.currentUser.profile || {};
-        const name = profile.display_name || profile.username || 'Usuario';
+        const name = this.currentUser.profile?.display_name || this.currentUser.profile?.username || 'Usuario';
         const div = document.createElement('div');
         div.className = 'chat-cinebot-msg';
         div.innerHTML = `
-          <div class="chat-cinebot-header">🤖 CineBot <span style="color:#22C55E;margin-left:0.5rem;">¡Correcto! 🎉</span></div>
-          <div>¡<strong style="color:#FFD700;">${name}</strong> acertó! La respuesta era <strong style="color:#A78BFA;">${trivia.answer_display}</strong>. Ganó +${trivia.xp_reward} XP ⚡${leveledUp ? ` y subió al Nivel ${newLevel}! 🆙` : ''}</div>
-        `;
+          <div class="chat-cinebot-header">🤖 CineBot <span style="color:#22C55E;margin-left:0.4rem;">¡Correcto! 🎉</span></div>
+          <div>¡<strong style="color:#FFD700;">${name}</strong> acertó! La respuesta era <strong style="color:#A78BFA;">${trivia.answer_display}</strong>. Ganó +${trivia.xp_reward} XP ⚡${leveledUp ? ` ¡Subió al Nivel ${newLevel}! 🆙` : ''}</div>`;
         container.appendChild(div);
         this.scrollToBottom();
       }
@@ -830,7 +655,6 @@ class ChatPageLobby {
       await this.sendMessage(text);
     }
 
-    // Siguiente trivia en 30 min
     setTimeout(() => this._launchTrivia(), 30 * 60 * 1000);
   }
 
@@ -853,7 +677,9 @@ class ChatPageLobby {
 
         const container = document.getElementById('chat-messages-container');
         if (container) {
-          if (this.messages.length === 1) container.innerHTML = '';
+          // Limpiar estado vacío si es el primer mensaje
+          if (container.querySelector('p')) container.innerHTML = '';
+
           const div = document.createElement('div');
           div.innerHTML = this.formatMessageHTML(newMsg);
           const msgNode = div.firstElementChild;
@@ -864,14 +690,14 @@ class ChatPageLobby {
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chat_messages' }, (payload) => {
         const deletedId = payload.old?.id;
         if (!deletedId) return;
-        const msgEl = document.querySelector(`.chat-msg[data-msg-id="${deletedId}"]`);
-        if (msgEl) { msgEl.style.transition = 'opacity 0.3s'; msgEl.style.opacity = '0'; setTimeout(() => msgEl.remove(), 300); }
+        const el = document.querySelector(`.chat-msg[data-msg-id="${deletedId}"]`);
+        if (el) { el.style.transition = 'opacity 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
         this.messages = this.messages.filter(m => m.id !== deletedId);
       })
       .subscribe();
   }
 
-  // ─── Realtime: Reacciones Flotantes ──────────────────────────────────────
+  // ─── Realtime: Reacciones ─────────────────────────────────────────────────
   subscribeToReactions() {
     if (!this.supabase) return;
 
@@ -879,15 +705,15 @@ class ChatPageLobby {
       .channel('chat-reactions-v2')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_reactions' }, (payload) => {
         const emoji = payload.new?.emoji;
-        // No mostrar el propio (ya se mostró al hacer click)
+        // No mostrar la propia (ya se mostró al hacer click)
         if (payload.new?.user_id === this.currentUser?.id) return;
-        if (emoji) {
-          // Posición aleatoria en la barra de reacciones
-          const bar = document.querySelector('.chat-reaction-bar');
-          if (bar) {
-            const rect = bar.getBoundingClientRect();
-            this._spawnFloatingEmoji(emoji, rect.left + Math.random() * rect.width, rect.top);
-          }
+        if (!emoji) return;
+
+        // Spawnear desde la barra de reacciones
+        const bar = document.getElementById('chat-reaction-bar');
+        if (bar) {
+          const rect = bar.getBoundingClientRect();
+          this._spawnFloatingEmoji(emoji, rect.left + Math.random() * rect.width, rect.top);
         }
       })
       .subscribe();
@@ -895,20 +721,127 @@ class ChatPageLobby {
 
   scrollToBottom() {
     const container = document.getElementById('chat-messages-container');
-    if (container) setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
+    if (container) setTimeout(() => { container.scrollTop = container.scrollHeight; }, 60);
   }
-}
 
-// ─── Método auxiliar en perfil.js para fallback de clipboard ─────────────────
-// (también disponible aquí para consistencia)
-function fallbackCopyText(text) {
-  const el = document.createElement('textarea');
-  el.value = text;
-  el.style.cssText = 'position:fixed;left:-9999px;';
-  document.body.appendChild(el);
-  el.select();
-  try { document.execCommand('copy'); showToast('✓ Enlace copiado', 'success'); } catch (e) { showToast('No se pudo copiar el enlace', 'error'); }
-  document.body.removeChild(el);
+  // ─── Estilos Dinámicos ─────────────────────────────────────────────────────
+  _injectStyles() {
+    if (document.getElementById('chat-premium-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'chat-premium-styles';
+    style.textContent = `
+      @keyframes floatUp {
+        0%   { opacity:1; transform: translateY(0) scale(1) rotate(0deg); }
+        60%  { opacity:0.9; transform: translateY(-70px) scale(1.3) rotate(10deg); }
+        100% { opacity:0; transform: translateY(-130px) scale(0.7) rotate(-5deg); }
+      }
+      @keyframes nameShimmer {
+        0%   { background-position: -200% center; }
+        100% { background-position:  200% center; }
+      }
+      @keyframes nameHolo {
+        0%,100% { background-position: 0% 50%; }
+        50%     { background-position: 100% 50%; }
+      }
+      @keyframes joinSlideIn {
+        from { opacity:0; transform:translateY(-10px); }
+        to   { opacity:1; transform:translateY(0); }
+      }
+
+      .chat-name-gradient {
+        background-size: 200% auto;
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: nameShimmer 2.5s linear infinite;
+        font-weight: 800;
+      }
+      .chat-name-holo {
+        background-size: 300% 300%;
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: nameHolo 3s ease infinite;
+        font-weight: 800;
+      }
+      .chat-join-announce {
+        display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        padding: 0.45rem 1rem; margin: 0.3rem 0;
+        background: linear-gradient(135deg, rgba(255,215,0,0.07), rgba(255,140,0,0.03));
+        border: 1px solid rgba(255,215,0,0.18);
+        border-radius: var(--radius-sm);
+        font-size: 0.78rem; color: #FFD700;
+        animation: joinSlideIn 0.4s cubic-bezier(0.16,1,0.3,1);
+      }
+      .chat-reaction-bar {
+        display: flex; align-items: center; gap: 0.35rem;
+        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.015);
+        border-top: 1px solid rgba(255,255,255,0.05);
+        flex-wrap: wrap;
+      }
+      .chat-reaction-btn {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: var(--radius-full);
+        padding: 0.22rem 0.5rem;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: transform 0.15s, background 0.15s;
+        line-height: 1;
+      }
+      .chat-reaction-btn:hover {
+        background: rgba(255,255,255,0.1);
+        transform: scale(1.25);
+      }
+      .chat-rank-badge {
+        display: inline-flex; align-items: center; gap: 0.15rem;
+        font-size: 0.62rem; font-weight: 700;
+        padding: 0.1rem 0.4rem;
+        border-radius: var(--radius-full);
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(0,0,0,0.25);
+        vertical-align: middle;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        font-family: var(--font-ui);
+      }
+      .chat-cinebot-msg {
+        background: linear-gradient(135deg, rgba(99,102,241,0.09), rgba(168,85,247,0.04));
+        border: 1px solid rgba(99,102,241,0.22);
+        border-radius: var(--radius-md);
+        padding: 0.85rem 1.1rem;
+        margin: 0.4rem 0;
+        font-size: 0.88rem;
+      }
+      .chat-cinebot-header {
+        display: flex; align-items: center; gap: 0.4rem;
+        margin-bottom: 0.4rem;
+        font-weight: 700; color: #A78BFA; font-size: 0.83rem;
+      }
+      .chat-reply-preview {
+        background: rgba(255,255,255,0.03);
+        border-left: 3px solid var(--accent-red);
+        border-radius: 0 4px 4px 0;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.76rem;
+        color: var(--text-muted);
+        margin-bottom: 0.3rem;
+      }
+      .chat-rich-card {
+        display: flex; gap: 0.7rem;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        padding: 0.55rem;
+        margin-top: 0.4rem;
+        text-decoration: none;
+        color: inherit;
+        transition: border-color 0.2s;
+      }
+      .chat-rich-card:hover { border-color: var(--accent-red); }
+      .chat-rich-card img { width:44px; aspect-ratio:2/3; object-fit:cover; border-radius:4px; flex-shrink:0; }
+    `;
+    document.head.appendChild(style);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
