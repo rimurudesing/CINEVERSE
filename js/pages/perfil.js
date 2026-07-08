@@ -70,6 +70,24 @@ class ProfilePageController {
     // 7. Configurar ajustes de cuenta y solicitudes
     this.setupSettingsForm();
     this.setupRequestsForm();
+
+    // Configurar botón compartir mi perfil público
+    const shareMyProfileBtn = document.getElementById('btn-share-my-profile');
+    if (shareMyProfileBtn) {
+      shareMyProfileBtn.addEventListener('click', () => {
+        const username = this.currentUser.profile?.username;
+        if (username) {
+          const publicUrl = `${window.location.origin}/publico.html?u=${username}`;
+          navigator.clipboard.writeText(publicUrl).then(() => {
+            showToast('✓ Enlace de perfil público copiado al portapapeles', 'success');
+          }).catch(() => {
+            showToast('No se pudo copiar el enlace', 'error');
+          });
+        } else {
+          showToast('Debes configurar un nombre de usuario primero', 'error');
+        }
+      });
+    }
   }
 
   /* ─────────────────────────────────────────────────────────
@@ -748,7 +766,7 @@ class ProfilePageController {
         <div style="text-align:center;padding:4rem 1rem;">
           <div style="font-size:4rem;margin-bottom:1rem;">📊</div>
           <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:0.75rem;">Estadísticas Avanzadas</h3>
-          <p style="color:var(--text-muted);max-width:400px;margin:0 auto 2rem;">Activa CineVerse Premium para ver tus gráficas de géneros favoritos, actividad mensual y tu Top 10 personal.</p>
+          <p style="color:var(--text-muted);max-width:400px;margin:0 auto 2rem;">Activa CineVerse Premium para ver tus gráficas de géneros favoritos, actividad mensual y tu heatmap de reproducción.</p>
           <button class="btn btn--primary" onclick="document.querySelector('[data-tab=premium]').click()">👑 Activar Premium</button>
         </div>`;
       return;
@@ -768,6 +786,13 @@ class ProfilePageController {
       const history = histData.data || [];
       const reviews = reviewData.data || [];
 
+      // Calcular tiempo de visualización estimado (110 min por película, 45 min por serie)
+      let totalMinutes = 0;
+      history.forEach(item => {
+        totalMinutes += item.media_type === 'movie' ? 110 : 45;
+      });
+      const totalHours = Math.round(totalMinutes / 60);
+
       // Calcular actividad mensual (últimos 12 meses)
       const monthlyActivity = {};
       const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -783,56 +808,121 @@ class ProfilePageController {
         if (key in monthlyActivity) monthlyActivity[key]++;
       });
 
-      // Calcular géneros (usando genres de cada item si existen, si no inferir por media_type)
-      const genreCount = {};
+      // Heatmap de actividad (últimos 30 días)
+      const activityDays = [];
+      const dayNames = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().slice(0, 10);
+        activityDays.push({
+          dateStr,
+          dayLabel: dayNames[d.getDay()],
+          count: 0
+        });
+      }
+
       history.forEach(item => {
-        const g = item.media_type === 'movie' ? 'Cine' : 'Series';
-        genreCount[g] = (genreCount[g] || 0) + 1;
+        const itemDate = new Date(item.watched_at).toISOString().slice(0, 10);
+        const found = activityDays.find(a => a.dateStr === itemDate);
+        if (found) found.count++;
       });
 
-      // Top 10 personal (mayores valoraciones)
       const topRatings = (ratingData.data || []).slice(0, 10);
 
-      // Destruir charts anteriores
       this._statsCharts.forEach(c => { try { c.destroy(); } catch(e){} });
       this._statsCharts = [];
 
+      const currentTheme = profile.theme_color || 'red';
+      const themeConfig = THEME_COLORS[currentTheme] || THEME_COLORS.red;
+
       container.innerHTML = `
         <div>
-          <h3 style="font-size:1.75rem;font-weight:700;margin-bottom:2rem;">📊 Mis Estadísticas</h3>
+          <h3 style="font-size:1.75rem;font-weight:700;margin-bottom:2rem;">📊 Mis Estadísticas Avanzadas</h3>
 
           <!-- Tarjetas de resumen rápido -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-bottom:3rem;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-bottom:2.5rem;">
             ${this._statCard('👁️', 'Total Visto', history.length, 'películas y series')}
-            ${this._statCard('📝', 'Reseñas', reviews.length, 'escritas')}
+            ${this._statCard('⏱️', 'Tiempo Estimado', `${totalHours}h`, 'de reproducción total')}
             ${this._statCard('🔥', 'Racha Actual', profile.activity_streak || 0, 'días seguidos')}
-            ${this._statCard('❤️', 'Favoritos', (favData.data||[]).length, 'guardados')}
+            ${this._statCard('📝', 'Reseñas', reviews.length, 'escritas')}
           </div>
 
-          <!-- Gráfica: Actividad Mensual -->
+          <!-- Heatmap de Actividad (Últimos 30 Días) -->
           <div style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem;margin-bottom:2rem;">
-            <h4 style="font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;">📅 Actividad Mensual (últimos 12 meses)</h4>
-            <canvas id="chart-monthly" height="80"></canvas>
+            <h4 style="font-size:1.05rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+              <span>📅</span> Heatmap de Reproducción (Últimos 30 días)
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <div style="display: grid; grid-template-columns: repeat(30, 1fr); gap: 4px; overflow-x: auto; padding-bottom: 0.5rem;">
+                ${activityDays.map(day => {
+                  let bgColor = 'rgba(255,255,255,0.03)';
+                  let opacity = '0.5';
+                  let border = '1px solid var(--border-subtle)';
+                  if (day.count > 0) {
+                    opacity = '1';
+                    bgColor = themeConfig.accent;
+                    if (day.count === 1) {
+                      bgColor = themeConfig.glow;
+                    } else if (day.count > 1) {
+                      bgColor = themeConfig.accent;
+                    }
+                    border = '1px solid ' + themeConfig.accent;
+                  }
+                  return `
+                    <div style="aspect-ratio: 1; background: ${bgColor}; border: ${border}; border-radius: 4px; opacity: ${opacity};"
+                         title="${formatDate(day.dateStr)}: ${day.count} vistos">
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-ui);">
+                <span>Hace 30 días</span>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span>Menos</span>
+                  <div style="width: 10px; height: 10px; background: rgba(255,255,255,0.03); border-radius: 2px;"></div>
+                  <div style="width: 10px; height: 10px; background: ${themeConfig.glow}; border-radius: 2px;"></div>
+                  <div style="width: 10px; height: 10px; background: ${themeConfig.accent}; border-radius: 2px;"></div>
+                  <span>Más</span>
+                </div>
+                <span>Hoy</span>
+              </div>
+            </div>
           </div>
 
-          <!-- Gráfica: Películas vs Series -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem;">
-            <div style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem;">
-              <h4 style="font-size:1rem;font-weight:700;margin-bottom:1.25rem;">🎬 Tipo de Contenido</h4>
-              <canvas id="chart-type" height="200"></canvas>
+          <!-- Gráficas Principales -->
+          <div style="display:grid;grid-template-columns: 1.2fr 1fr; gap:1.5rem; margin-bottom:2rem; align-items: start;">
+            <!-- Gráfica: Actividad Mensual -->
+            <div style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem; height: 100%;">
+              <h4 style="font-size:1.05rem;font-weight:700;margin-bottom:1.25rem;">📈 Actividad Mensual (Últimos 12 meses)</h4>
+              <div style="position: relative; height: 220px; width: 100%;">
+                <canvas id="chart-monthly" style="max-height: 220px;"></canvas>
+              </div>
             </div>
-            <div style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem;">
-              <h4 style="font-size:1rem;font-weight:700;margin-bottom:0.75rem;">🏆 Tu Top 10 Personal</h4>
-              ${topRatings.length === 0 ? '<p style="color:var(--text-muted);font-size:0.9rem;">Aún no has puntuado nada.</p>' :
-                `<ol style="list-style:none;margin:0;padding:0;">
-                ${topRatings.map((r, i) => `
-                  <li style="display:flex;align-items:center;gap:0.75rem;padding:0.4rem 0;border-bottom:1px solid var(--border-subtle);">
-                    <span style="font-size:1.1rem;font-weight:700;color:var(--gold);width:24px;">#${i+1}</span>
-                    <span style="flex:1;font-size:0.9rem;font-weight:600;">${r.title || `ID ${r.tmdb_id}`}</span>
-                    <span class="badge badge--yellow" style="font-size:0.75rem;">${r.rating}★</span>
-                  </li>`).join('')}
-                </ol>`}
+
+            <!-- Tipo de Contenido & Top 10 -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem; height: 100%;">
+              <div style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem;">
+                <h4 style="font-size:1.05rem;font-weight:700;margin-bottom:1rem;">🎬 Tipo de Contenido</h4>
+                <div style="position: relative; height: 160px; display: flex; justify-content: center; align-items: center;">
+                  <canvas id="chart-type" style="max-height: 160px;"></canvas>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <!-- Fila 3: Top Personal -->
+          <div style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem; margin-bottom: 2rem;">
+            <h4 style="font-size:1.15rem;font-weight:700;margin-bottom:1rem;color: var(--text-primary);">🏆 Mi Top 10 Personal (Valorados)</h4>
+            ${topRatings.length === 0 ? '<p style="color:var(--text-muted);font-size:0.9rem;">Aún no has puntuado nada.</p>' :
+              `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 2rem;">
+              ${topRatings.map((r, i) => `
+                <div style="display:flex;align-items:center;gap:0.75rem;padding:0.4rem 0;border-bottom:1px solid var(--border-subtle);">
+                  <span style="font-size:1.1rem;font-weight:700;color:${themeConfig.accent};width:24px;">#${i+1}</span>
+                  <span style="flex:1;font-size:0.9rem;font-weight:600;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.title || `ID ${r.tmdb_id}`}</span>
+                  <span class="badge badge--yellow" style="font-size:0.75rem; flex-shrink:0;">${r.rating}★</span>
+                </div>`).join('')}
+              </div>`}
           </div>
         </div>`;
 
@@ -1192,16 +1282,52 @@ class ProfilePageController {
     const picker = document.getElementById('theme-color-picker');
     if (!picker || picker.dataset.bound) return;
     picker.dataset.bound = 'true';
+
+    // Generar dinámicamente los botones para todos los temas
+    picker.innerHTML = Object.entries(THEME_COLORS).map(([key, theme]) => {
+      const isActive = key === currentTheme ? 'active' : '';
+      const activeStyle = key === currentTheme ? 'border-color: #fff; transform: scale(1.15); box-shadow: 0 0 10px ' + theme.glowInt + ';' : '';
+      return `
+        <button class="theme-btn ${isActive}" data-theme="${key}"
+          style="width: 36px; height: 36px; border-radius: 50%; background: ${theme.accent}; border: 3px solid ${key === currentTheme ? '#fff' : 'transparent'}; cursor: pointer; transition: all 0.25s ease; ${activeStyle}"
+          title="${theme.name}">
+        </button>
+      `;
+    }).join('');
+
     picker.querySelectorAll('.theme-btn').forEach(btn => {
       const t = btn.getAttribute('data-theme');
-      if (t === currentTheme) btn.classList.add('active');
       btn.addEventListener('click', async () => {
-        picker.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+        picker.querySelectorAll('.theme-btn').forEach(b => {
+          b.classList.remove('active');
+          b.style.borderColor = 'transparent';
+          b.style.transform = '';
+          b.style.boxShadow = '';
+        });
         btn.classList.add('active');
+        btn.style.borderColor = '#fff';
+        btn.style.transform = 'scale(1.15)';
+        const themeData = THEME_COLORS[t];
+        if (themeData) {
+          btn.style.boxShadow = `0 0 10px ${themeData.glowInt}`;
+        }
+        
         this.applyUserTheme(t);
         await supabase.from('profiles').update({ theme_color: t }).eq('id', this.currentUser.id);
         if (this.currentUser.profile) this.currentUser.profile.theme_color = t;
-        showToast(`🎨 Tema "${t}" aplicado`, 'success');
+        showToast(`🎨 Tema "${themeData?.name || t}" aplicado`, 'success');
+      });
+
+      // Efectos hover
+      btn.addEventListener('mouseenter', () => {
+        if (!btn.classList.contains('active')) {
+          btn.style.transform = 'scale(1.1)';
+        }
+      });
+      btn.addEventListener('mouseleave', () => {
+        if (!btn.classList.contains('active')) {
+          btn.style.transform = '';
+        }
       });
     });
   }

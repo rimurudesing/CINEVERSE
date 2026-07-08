@@ -816,9 +816,13 @@ if (document.readyState === 'loading') {
     renderNavbar();
     setTimeout(injectGlobalPromoBanner, 50);
     setTimeout(checkForAppUpdate, 1500);
+    // Verificar alertas de estrenos in-app (silencioso, solo premium)
+    import('../alerts.js').then(m => m.checkUpcomingAlerts()).catch(() => {});
   });
 } else {
   renderNavbar();
   setTimeout(injectGlobalPromoBanner, 50);
   setTimeout(checkForAppUpdate, 1500);
+  // Verificar alertas de estrenos in-app (silencioso, solo premium)
+  import('../alerts.js').then(m => m.checkUpcomingAlerts()).catch(() => {});
 }

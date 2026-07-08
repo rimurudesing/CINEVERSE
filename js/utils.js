@@ -187,11 +187,19 @@ export async function showToast(message, type = 'info') {
  * Paleta de colores Premium de CineVerse
  */
 export const THEME_COLORS = {
-  red:    { accent: '#E50914', crimson: '#C1121F', ember: '#FF2D2D', dark: '#8B0000', glow: 'rgba(229,9,20,0.35)', glowInt: 'rgba(229,9,20,0.7)', border: 'rgba(229,9,20,0.4)' },
-  gold:   { accent: '#F5C518', crimson: '#D4A017', ember: '#FFD700', dark: '#9A7D0A', glow: 'rgba(245,197,24,0.35)', glowInt: 'rgba(245,197,24,0.7)', border: 'rgba(245,197,24,0.4)' },
-  blue:   { accent: '#0079FF', crimson: '#0060CC', ember: '#3B9EFF', dark: '#003D80', glow: 'rgba(0,121,255,0.35)', glowInt: 'rgba(0,121,255,0.7)', border: 'rgba(0,121,255,0.4)' },
-  purple: { accent: '#8B5CF6', crimson: '#7C3AED', ember: '#A78BFA', dark: '#4C1D95', glow: 'rgba(139,92,246,0.35)', glowInt: 'rgba(139,92,246,0.7)', border: 'rgba(139,92,246,0.4)' },
-  green:  { accent: '#10B981', crimson: '#059669', ember: '#34D399', dark: '#065F46', glow: 'rgba(16,185,129,0.35)', glowInt: 'rgba(16,185,129,0.7)', border: 'rgba(16,185,129,0.4)' },
+  red:         { name: 'Rojo CineVerse', accent: '#E50914', crimson: '#C1121F', ember: '#FF2D2D', dark: '#8B0000', glow: 'rgba(229,9,20,0.35)', glowInt: 'rgba(229,9,20,0.7)', border: 'rgba(229,9,20,0.4)' },
+  gold:        { name: 'Dorado Premium', accent: '#F5C518', crimson: '#D4A017', ember: '#FFD700', dark: '#9A7D0A', glow: 'rgba(245,197,24,0.35)', glowInt: 'rgba(245,197,24,0.7)', border: 'rgba(245,197,24,0.4)' },
+  blue:        { name: 'Azul Medianoche', accent: '#0079FF', crimson: '#0060CC', ember: '#3B9EFF', dark: '#003D80', glow: 'rgba(0,121,255,0.35)', glowInt: 'rgba(0,121,255,0.7)', border: 'rgba(0,121,255,0.4)' },
+  purple:      { name: 'Morado Fantasma', accent: '#8B5CF6', crimson: '#7C3AED', ember: '#A78BFA', dark: '#4C1D95', glow: 'rgba(139,92,246,0.35)', glowInt: 'rgba(139,92,246,0.7)', border: 'rgba(139,92,246,0.4)' },
+  green:       { name: 'Verde Esmeralda', accent: '#10B981', crimson: '#059669', ember: '#34D399', dark: '#065F46', glow: 'rgba(16,185,129,0.35)', glowInt: 'rgba(16,185,129,0.7)', border: 'rgba(16,185,129,0.4)' },
+  orange:      { name: 'Naranja Fuego', accent: '#F97316', crimson: '#C2410C', ember: '#FB923C', dark: '#7C2D12', glow: 'rgba(249,115,22,0.35)', glowInt: 'rgba(249,115,22,0.7)', border: 'rgba(249,115,22,0.4)' },
+  pink:        { name: 'Rosa Neón', accent: '#EC4899', crimson: '#BE185D', ember: '#F472B6', dark: '#831843', glow: 'rgba(236,72,153,0.35)', glowInt: 'rgba(236,72,153,0.7)', border: 'rgba(236,72,153,0.4)' },
+  cyan:        { name: 'Celeste Océano', accent: '#06B6D4', crimson: '#0E7490', ember: '#22D3EE', dark: '#164E63', glow: 'rgba(6,182,212,0.35)', glowInt: 'rgba(6,182,212,0.7)', border: 'rgba(6,182,212,0.4)' },
+  matrix:      { name: 'Cyber Matrix', accent: '#39FF14', crimson: '#008F11', ember: '#76FF03', dark: '#003B00', glow: 'rgba(57,255,20,0.35)', glowInt: 'rgba(57,255,20,0.7)', border: 'rgba(57,255,20,0.4)' },
+  wine:        { name: 'Vino Oscuro', accent: '#991B1B', crimson: '#7F1D1D', ember: '#EF4444', dark: '#450A0A', glow: 'rgba(153,27,27,0.35)', glowInt: 'rgba(153,27,27,0.7)', border: 'rgba(153,27,27,0.4)' },
+  coal:        { name: 'Carbón / Plata', accent: '#E2E8F0', crimson: '#94A3B8', ember: '#F8FAFC', dark: '#475569', glow: 'rgba(226,232,240,0.35)', glowInt: 'rgba(226,232,240,0.7)', border: 'rgba(226,232,240,0.4)' },
+  lavender:    { name: 'Lavanda Mística', accent: '#A855F7', crimson: '#7E22CE', ember: '#C084FC', dark: '#581C87', glow: 'rgba(168,85,247,0.35)', glowInt: 'rgba(168,85,247,0.7)', border: 'rgba(168,85,247,0.4)' },
+  yellow_neon: { name: 'Amarillo Neón', accent: '#EAB308', crimson: '#A16207', ember: '#FDE047', dark: '#713F12', glow: 'rgba(234,179,8,0.35)', glowInt: 'rgba(234,179,8,0.7)', border: 'rgba(234,179,8,0.4)' }
 };
 
 /**

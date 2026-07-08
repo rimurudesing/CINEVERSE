@@ -100,11 +100,16 @@
           <span>•</span>
           <span>📝 <strong id="stat-reviews" style="color: var(--text-primary);">0</strong> Reseñas</span>
         </div>
-        <!-- Botón Panel de Administración (oculto por defecto) -->
-        <div id="admin-panel-link-container" style="display: none; margin-top: 1.25rem;">
-          <a href="admin.html" class="btn btn--primary" style="background-color: var(--accent-ember); border-color: var(--accent-ember); font-weight: 700; padding: 0.5rem 1rem; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none;">
-            🛡️ Panel de Administración
-          </a>
+        <!-- Botones de administración y compartir -->
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.25rem; align-items: center;">
+          <div id="admin-panel-link-container" style="display: none;">
+            <a href="admin.html" class="btn btn--primary" style="background-color: var(--accent-ember); border-color: var(--accent-ember); font-weight: 700; padding: 0.5rem 1rem; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none;">
+              🛡️ Panel de Administración
+            </a>
+          </div>
+          <button id="btn-share-my-profile" class="btn btn--secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+            🔗 Perfil Público
+          </button>
         </div>
       </div>
 

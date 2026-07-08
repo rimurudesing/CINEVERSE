@@ -61,11 +61,15 @@
         <div class="flex flex--gap-sm">
           <button class="btn btn--primary btn--icon" id="view-grid-btn" data-tooltip="Vista Cuadrícula" style="width: 32px; height: 32px; font-size: 0.8rem;">田</button>
           <button class="btn btn--secondary btn--icon" id="view-list-btn" data-tooltip="Vista Lista" style="width: 32px; height: 32px; font-size: 0.8rem;">☰</button>
+          <button class="btn btn--secondary btn--icon" id="view-calendar-btn" data-tooltip="Vista Calendario (Premium)" style="width: 32px; height: 32px; font-size: 0.8rem;">📅</button>
         </div>
       </div>
 
       <!-- Grid de Estrenos -->
       <div class="grid grid--4" id="search-results-grid"></div>
+
+      <!-- Calendario de Estrenos (Premium) -->
+      <div id="search-results-calendar" style="display: none; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-card);"></div>
 
       <!-- Centinela para Scroll Infinito -->
       <div id="infinite-scroll-sentinel" style="height: 100px; width: 100%; margin-top: 2rem;"></div>
