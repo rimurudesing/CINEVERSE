@@ -107,6 +107,12 @@ export function renderNavbar() {
   document.body.prepend(header);
   document.body.appendChild(mobileMenu);
 
+  // ── Limpiar cualquier estado residual de navegación anterior ──
+  // Evita que el menú quede "open" y muestre "Perfil" por encima de la página
+  document.body.classList.remove('menu-open');
+  document.body.style.overflow = '';
+  document.body.style.touchAction = '';
+
   // ── 1. Control de scroll ──
   const handleScroll = () => {
     header.classList.toggle('navbar--scrolled', window.scrollY > 60);

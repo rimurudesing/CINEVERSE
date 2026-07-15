@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
-const excludeDirs = ['.git', 'node_modules', 'android', 'www', 'dist', 'build', 'supabase', 'functions'];
+const excludeDirs = ['.git', 'node_modules', 'android', 'www', 'dist', 'build', 'supabase', 'functions', 'scratch'];
+
 
 // Minificador nativo ultra rápido usando regex
 function minifyJS(content) {

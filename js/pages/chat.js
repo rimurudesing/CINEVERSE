@@ -545,57 +545,70 @@ class ChatPageLobby {
 
       this.messages = (data || []).reverse();
 
-      // Cargar reacciones y encuestas en lote
+      // Cargar reacciones en lote (graceful — si la tabla no existe, no falla todo)
       const msgIds = this.messages.map(m => m.id);
       if (msgIds.length > 0) {
-        const { data: rxData } = await this.supabase
-          .from('message_reactions')
-          .select('*')
-          .in('message_id', msgIds);
-        
-        this.messageReactions = {};
-        if (rxData) {
-          rxData.forEach(rx => {
-            if (!this.messageReactions[rx.message_id]) this.messageReactions[rx.message_id] = [];
-            this.messageReactions[rx.message_id].push(rx);
-          });
+        try {
+          const { data: rxData } = await this.supabase
+            .from('message_reactions')
+            .select('*')
+            .in('message_id', msgIds);
+          
+          this.messageReactions = {};
+          if (rxData) {
+            rxData.forEach(rx => {
+              if (!this.messageReactions[rx.message_id]) this.messageReactions[rx.message_id] = [];
+              this.messageReactions[rx.message_id].push(rx);
+            });
+          }
+        } catch (rxErr) {
+          // Tabla message_reactions no disponible aún — continuar sin reacciones
+          console.warn('ChatLobby: message_reactions no disponible, continuando sin reacciones:', rxErr?.message);
+          this.messageReactions = {};
         }
 
-        // Cargar encuestas
-        const pollMessages = this.messages.filter(m => {
-          if (!m.rich_card) return false;
-          try {
-            const card = JSON.parse(m.rich_card);
-            return card.type === 'poll';
-          } catch(e) { return false; }
-        });
+        // Cargar encuestas (graceful — si la tabla no existe, no falla todo)
+        try {
+          const pollMessages = this.messages.filter(m => {
+            if (!m.rich_card) return false;
+            try {
+              const card = JSON.parse(m.rich_card);
+              return card.type === 'poll';
+            } catch(e) { return false; }
+          });
 
-        if (pollMessages.length > 0) {
-          const pollIds = pollMessages.map(m => JSON.parse(m.rich_card).poll_id);
-          const { data: polls } = await this.supabase
-            .from('chat_polls')
-            .select('*')
-            .in('id', pollIds);
+          if (pollMessages.length > 0) {
+            const pollIds = pollMessages.map(m => JSON.parse(m.rich_card).poll_id);
+            const { data: polls } = await this.supabase
+              .from('chat_polls')
+              .select('*')
+              .in('id', pollIds);
 
-          const { data: votes } = await this.supabase
-            .from('chat_poll_votes')
-            .select('*')
-            .in('poll_id', pollIds);
+            const { data: votes } = await this.supabase
+              .from('chat_poll_votes')
+              .select('*')
+              .in('poll_id', pollIds);
 
+            this.activePolls = {};
+            if (polls) {
+              polls.forEach(p => {
+                this.activePolls[p.id] = p;
+              });
+            }
+
+            this.pollVotes = {};
+            if (votes) {
+              votes.forEach(v => {
+                if (!this.pollVotes[v.poll_id]) this.pollVotes[v.poll_id] = [];
+                this.pollVotes[v.poll_id].push(v);
+              });
+            }
+          }
+        } catch (pollErr) {
+          // Tablas de encuestas no disponibles aún — continuar sin encuestas
+          console.warn('ChatLobby: tablas de encuestas no disponibles, continuando sin encuestas:', pollErr?.message);
           this.activePolls = {};
-          if (polls) {
-            polls.forEach(p => {
-              this.activePolls[p.id] = p;
-            });
-          }
-
-          this.pollVotes = {};
-          if (votes) {
-            votes.forEach(v => {
-              if (!this.pollVotes[v.poll_id]) this.pollVotes[v.poll_id] = [];
-              this.pollVotes[v.poll_id].push(v);
-            });
-          }
+          this.pollVotes  = {};
         }
       }
 
@@ -607,6 +620,7 @@ class ChatPageLobby {
       if (container) container.innerHTML = '<p style="text-align:center;color:var(--accent-red);font-size:0.9rem;padding:2rem;">Error de conexión al chat.</p>';
     }
   }
+
 
   renderMessages() {
     const container = document.getElementById('chat-messages-container');
@@ -1117,23 +1131,32 @@ class ChatPageLobby {
   subscribeToReactions() {
     if (!this.supabase) return;
 
-    this.reactionChannel = this.supabase
-      .channel('chat-reactions-v2')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_reactions' }, (payload) => {
-        const emoji = payload.new?.emoji;
-        // No mostrar la propia (ya se mostró al hacer click)
-        if (payload.new?.user_id === this.currentUser?.id) return;
-        if (!emoji) return;
+    try {
+      this.reactionChannel = this.supabase
+        .channel('chat-reactions-v2')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_reactions' }, (payload) => {
+          const emoji = payload.new?.emoji;
+          // No mostrar la propia (ya se mostró al hacer click)
+          if (payload.new?.user_id === this.currentUser?.id) return;
+          if (!emoji) return;
 
-        // Spawnear desde la barra de reacciones
-        const bar = document.getElementById('chat-reaction-bar');
-        if (bar) {
-          const rect = bar.getBoundingClientRect();
-          this._spawnFloatingEmoji(emoji, rect.left + Math.random() * rect.width, rect.top);
-        }
-      })
-      .subscribe();
+          // Spawnear desde la barra de reacciones
+          const bar = document.getElementById('chat-reaction-bar');
+          if (bar) {
+            const rect = bar.getBoundingClientRect();
+            this._spawnFloatingEmoji(emoji, rect.left + Math.random() * rect.width, rect.top);
+          }
+        })
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.warn('ChatLobby: Canal de reacciones no disponible (tabla chat_reactions puede no existir aún).');
+          }
+        });
+    } catch (e) {
+      console.warn('ChatLobby: No se pudo suscribir a reacciones:', e?.message);
+    }
   }
+
 
   scrollToBottom() {
     const container = document.getElementById('chat-messages-container');
