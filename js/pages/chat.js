@@ -535,15 +535,28 @@ class ChatPageLobby {
     if (!container || !this.supabase) return;
 
     try {
-      const { data, error } = await this.supabase
+      // Intentar con columnas completas primero
+      let data, error;
+      ({ data, error } = await this.supabase
         .from('chat_messages')
         .select('*, profiles(username, display_name, avatar_url, is_premium, avatar_frame, level, xp)')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(50));
+
+      // Fallback: si falla por columnas faltantes (ej: avatar_frame, level, xp no aplicados aún)
+      if (error && (error.code === '42703' || error.message?.includes('column') || error.message?.includes('does not exist'))) {
+        console.warn('ChatLobby: Columnas extendidas no disponibles, usando query básica:', error.message);
+        ({ data, error } = await this.supabase
+          .from('chat_messages')
+          .select('*, profiles(username, display_name, avatar_url, is_premium)')
+          .order('created_at', { ascending: false })
+          .limit(50));
+      }
 
       if (error) throw error;
 
       this.messages = (data || []).reverse();
+
 
       // Cargar reacciones en lote (graceful — si la tabla no existe, no falla todo)
       const msgIds = this.messages.map(m => m.id);
@@ -894,14 +907,25 @@ class ChatPageLobby {
     if (!listContainer || !this.supabase) return;
 
     try {
-      const { data, error } = await this.supabase
+      let data, error;
+      ({ data, error } = await this.supabase
         .from('profiles')
         .select('username, display_name, avatar_url, is_premium, avatar_frame, level')
         .eq('is_premium', true)
         .order('level', { ascending: false })
-        .limit(10);
+        .limit(10));
+
+      if (error && (error.code === '42703' || error.message?.includes('column') || error.message?.includes('does not exist'))) {
+        console.warn('ChatLobby: Columnas level/avatar_frame no disponibles en profiles, usando fallback:');
+        ({ data, error } = await this.supabase
+          .from('profiles')
+          .select('username, display_name, avatar_url, is_premium')
+          .eq('is_premium', true)
+          .limit(10));
+      }
 
       if (error) throw error;
+
 
       if (!data || data.length === 0) {
         listContainer.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:0.8rem;">Sé el primer mecenas en apoyar CineVerse</div>';
@@ -1050,12 +1074,28 @@ class ChatPageLobby {
       .channel('chat-lobby-v2')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, async (payload) => {
         const newMsg = payload.new;
-        const { data: profile } = await this.supabase
-          .from('profiles')
-          .select('username, display_name, avatar_url, is_premium, avatar_frame, level, xp')
-          .eq('id', newMsg.user_id).maybeSingle();
+        let profile = null;
+        try {
+          const { data, error } = await this.supabase
+            .from('profiles')
+            .select('username, display_name, avatar_url, is_premium, avatar_frame, level, xp')
+            .eq('id', newMsg.user_id).maybeSingle();
+          
+          if (error && (error.code === '42703' || error.message?.includes('column') || error.message?.includes('does not exist'))) {
+            const { data: fallbackData } = await this.supabase
+              .from('profiles')
+              .select('username, display_name, avatar_url, is_premium')
+              .eq('id', newMsg.user_id).maybeSingle();
+            profile = fallbackData;
+          } else {
+            profile = data;
+          }
+        } catch (e) {
+          console.warn('ChatLobby: Error al cargar perfil en tiempo real:', e);
+        }
 
         newMsg.profiles = profile || {};
+
         this.messages.push(newMsg);
         if (this.messages.length > 80) this.messages.shift();
 

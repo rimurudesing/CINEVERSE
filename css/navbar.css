@@ -404,12 +404,23 @@ body.menu-open {
   justify-content: center;
   align-items: center;
   gap: 1.5rem;
+  overflow: hidden;                 /* Impide que cualquier texto se filtre fuera */
   transform: translateY(-100%);
-  transition: transform var(--transition-slow) cubic-bezier(0.76,0,0.24,1);
+  visibility: hidden;               /* Completamente invisible cuando cerrado */
+  pointer-events: none;             /* No captura clicks cuando está oculto */
+  /* Slide: 0.8s; visibility: instant al abrir, delayed al cerrar */
+  transition:
+    transform var(--transition-slow) cubic-bezier(0.76,0,0.24,1),
+    visibility 0s linear 0.8s;      /* Se oculta después de que termine la animación */
 }
 
 .navbar__mobile-menu.active {
   transform: translateY(0);
+  visibility: visible;              /* Visible instantáneamente al abrir */
+  pointer-events: auto;
+  transition:
+    transform var(--transition-slow) cubic-bezier(0.76,0,0.24,1),
+    visibility 0s linear 0s;        /* Sin delay al abrir */
 }
 
 /* Decoración atrás */
