@@ -56,7 +56,11 @@ class AdminDashboardController {
       this.loadAdsToggle(),
       this.loadUpdateManager(),
       this.loadRequests(),
-      this.loadTrivias()
+      this.loadTrivias(),
+      this.loadSystemSettings(),
+      this.loadChatReports(),
+      this.loadAdminLogs(),
+      this.loadBannedWords()
     ]);
 
     // 5. Configurar eventos de formularios
@@ -66,10 +70,11 @@ class AdminDashboardController {
     this.setupAdsToggle();
     this.setupUpdatePublisher();
 
-    // 6. Configurar nuevos eventos (Moderación, CineBot, Enlaces de publicidad)
+    // 6. Configurar nuevos eventos (Moderación, CineBot, Enlaces de publicidad, Sistema)
     this.setupModeration();
     this.setupCineBot();
     this.setupAdLinks();
+    this.setupSystemSettings();
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -99,10 +104,13 @@ class AdminDashboardController {
   // ══════════════════════════════════════════════════════════════
   async loadStats() {
     try {
-      const [usersRes, premiumRes, codesRes] = await Promise.all([
+      const [usersRes, premiumRes, codesRes, onlineRes, msgsRes, todayRes] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_premium', true),
         supabase.from('premium_codes').select('is_used'),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_online', true),
+        supabase.from('chat_messages').select('id', { count: 'exact', head: true }).gt('created_at', new Date(Date.now() - 60000).toISOString()),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).gt('created_at', new Date(new Date().setHours(0,0,0,0)).toISOString())
       ]);
 
       const totalUsers   = usersRes.count ?? 0;
@@ -110,11 +118,17 @@ class AdminDashboardController {
       const allCodes     = codesRes.data || [];
       const activeCodes  = allCodes.filter(c => !c.is_used).length;
       const usedCodes    = allCodes.filter(c => c.is_used).length;
+      const onlineUsers  = onlineRes.count ?? 0;
+      const msgsMin      = msgsRes.count ?? 0;
+      const newToday     = todayRes.count ?? 0;
 
       this._animateNumber('kpi-users',        totalUsers);
       this._animateNumber('kpi-premium',      totalPremium);
       this._animateNumber('kpi-codes-active', activeCodes);
       this._animateNumber('kpi-codes-used',   usedCodes);
+      this._animateNumber('kpi-users-online', onlineUsers);
+      this._animateNumber('kpi-msgs-min',      msgsMin);
+      this._animateNumber('kpi-users-today',   newToday);
 
     } catch (err) {
       console.error('Error al cargar stats:', err);
@@ -503,8 +517,28 @@ class AdminDashboardController {
           const id = btn.getAttribute('data-id');
           const action = btn.getAttribute('data-action');
           try {
+            const { data: requestObj } = await supabase
+              .from('movie_requests')
+              .select('*')
+              .eq('id', id)
+              .maybeSingle();
+
             const { error } = await supabase.from('movie_requests').update({ status: action }).eq('id', id);
             if (error) throw error;
+
+            if (requestObj) {
+              const actionLabel = action === 'added' ? 'disponible (subido) 🍿' : 'rechazado ❌';
+              const title = action === 'added' ? '¡Tu pedido ha sido subido!' : 'Estado de tu pedido';
+              await supabase.from('notifications').insert({
+                user_id: requestObj.user_id,
+                type: 'request_update',
+                title: title,
+                body: `Tu pedido "${requestObj.title}" ahora está ${actionLabel}.`,
+                link: action === 'added' ? `buscar.html?q=${encodeURIComponent(requestObj.title)}` : null
+              });
+            }
+
+            await this.logAdminAction(`pedido_status_${action}`, requestObj?.user_id, { request_id: id, title: requestObj?.title });
             showToast(`Solicitud marcada como ${action === 'added' ? 'subida' : 'rechazada'}`, 'success');
             await this.loadRequests();
           } catch (e) {
@@ -1001,6 +1035,394 @@ class AdminDashboardController {
     const chars   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const segment = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
     return `CINE-${segment()}-${segment()}-${segment()}`;
+  }
+
+  // ─── AUDITORÍA ─────────────────────────────────────────────────────────────
+  async logAdminAction(action, targetUserId = null, details = {}) {
+    if (!this.currentUser) return;
+    try {
+      await supabase.from('admin_logs').insert({
+        admin_id: this.currentUser.id,
+        action,
+        target_user_id: targetUserId,
+        details
+      });
+    } catch (e) {
+      console.error('Error logging admin action:', e);
+    }
+  }
+
+  async loadAdminLogs() {
+    const body = document.getElementById('system-logs-table-body');
+    if (!body) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('admin_logs')
+        .select(`
+          id, action, details, created_at,
+          profiles (username)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        body.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem;">No hay registros de auditoría</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = data.map(log => {
+        const admin = log.profiles?.username || 'Desconocido';
+        const date = new Date(log.created_at).toLocaleString('es-ES');
+        const details = JSON.stringify(log.details || {});
+
+        return `
+          <tr>
+            <td><strong>@${admin}</strong></td>
+            <td><span style="color:#A78BFA;font-weight:700;">${log.action}</span></td>
+            <td style="font-family:var(--font-mono);font-size:0.75rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title='${details}'>${details}</td>
+            <td style="font-size:0.75rem;color:var(--text-secondary);">${date}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // ─── REPORTES DEL CHAT ──────────────────────────────────────────────────────
+  async loadChatReports() {
+    const body = document.getElementById('reports-table-body');
+    if (!body) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('chat_reports')
+        .select(`
+          id, reason, created_at, resolved,
+          chat_messages (
+            id, message,
+            profiles (username)
+          )
+        `)
+        .eq('resolved', false)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">No hay reportes pendientes 🎉</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = data.map(rep => {
+        const msg = rep.chat_messages || {};
+        const author = msg.profiles?.username || 'Desconocido';
+        const msgText = msg.message || '(Mensaje eliminado)';
+        const date = new Date(rep.created_at).toLocaleString('es-ES');
+
+        return `
+          <tr>
+            <td><strong>@${author}</strong></td>
+            <td><span style="font-family:var(--font-mono);font-size:0.8rem;background:rgba(255,255,255,0.03);padding:0.2rem 0.4rem;border-radius:4px;">${msgText}</span></td>
+            <td><span class="chat-rank-badge" style="color:var(--accent-red);border-color:rgba(229,9,20,0.3);">${rep.reason}</span></td>
+            <td style="font-size:0.75rem;color:var(--text-secondary);">${date}</td>
+            <td>
+              <div class="flex flex--gap-xs">
+                <button class="btn btn--secondary btn-resolve-report" data-id="${rep.id}" style="padding:0.3rem 0.6rem;font-size:0.7rem;background:rgba(16,185,129,0.1);color:#10b981;border-color:rgba(16,185,129,0.2);">Ignorar</button>
+                <button class="btn btn--secondary btn-delete-msg-report" data-id="${rep.id}" data-msg-id="${msg.id}" style="padding:0.3rem 0.6rem;font-size:0.7rem;background:rgba(245,158,11,0.1);color:#f59e0b;border-color:rgba(245,158,11,0.2);">Eliminar</button>
+                <button class="btn btn--secondary btn-ban-user-report" data-id="${rep.id}" data-username="${author}" style="padding:0.3rem 0.6rem;font-size:0.7rem;background:rgba(229,9,20,0.1);color:var(--accent-red);border-color:rgba(229,9,20,0.2);">Banear</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      body.querySelectorAll('.btn-resolve-report').forEach(btn => {
+        btn.addEventListener('click', () => this.resolveReport(btn.dataset.id));
+      });
+      body.querySelectorAll('.btn-delete-msg-report').forEach(btn => {
+        btn.addEventListener('click', () => this.deleteReportMessage(btn.dataset.id, btn.dataset.msgId));
+      });
+      body.querySelectorAll('.btn-ban-user-report').forEach(btn => {
+        btn.addEventListener('click', () => this.banReportUser(btn.dataset.id, btn.dataset.username));
+      });
+
+    } catch (err) {
+      console.error(err);
+      body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--accent-red);">Error al cargar reportes</td></tr>`;
+    }
+  }
+
+  async resolveReport(reportId) {
+    try {
+      const { error } = await supabase
+        .from('chat_reports')
+        .update({ resolved: true })
+        .eq('id', reportId);
+      
+      if (error) throw error;
+      await this.logAdminAction('reporte_ignorado', null, { reportId });
+      await this.loadChatReports();
+      showToast('Reporte ignorado', 'success');
+    } catch (e) {
+      showToast('No se pudo resolver el reporte', 'error');
+    }
+  }
+
+  async deleteReportMessage(reportId, messageId) {
+    try {
+      const { error: msgErr } = await supabase
+        .from('chat_messages')
+        .delete()
+        .eq('id', messageId);
+      
+      if (msgErr) throw msgErr;
+
+      await supabase
+        .from('chat_reports')
+        .update({ resolved: true })
+        .eq('id', reportId);
+
+      await this.logAdminAction('reporte_borrar_mensaje', null, { reportId, messageId });
+      await this.loadChatReports();
+      showToast('Mensaje eliminado y reporte resuelto', 'success');
+    } catch (e) {
+      showToast('No se pudo eliminar el mensaje', 'error');
+    }
+  }
+
+  async banReportUser(reportId, username) {
+    try {
+      const { data: userProfile, error: profileErr } = await supabase
+        .from('profiles')
+        .update({ banned: true })
+        .eq('username', username)
+        .select()
+        .maybeSingle();
+
+      if (profileErr) throw profileErr;
+
+      await supabase
+        .from('chat_reports')
+        .update({ resolved: true })
+        .eq('id', reportId);
+
+      await this.logAdminAction('reporte_banear_usuario', userProfile?.id || null, { reportId, username });
+      await this.loadChatReports();
+      showToast(`Usuario @${username} baneado exitosamente`, 'success');
+    } catch (e) {
+      showToast('No se pudo banear al usuario', 'error');
+    }
+  }
+
+  // ─── PALABRAS PROHIBIDAS ────────────────────────────────────────────────────
+  async loadBannedWords() {
+    const container = document.getElementById('system-banned-words-container');
+    if (!container) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('banned_words')
+        .select('*')
+        .order('word', { ascending: true });
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        container.innerHTML = `<span style="font-size:0.8rem;color:var(--text-muted);">No hay palabras prohibidas agregadas</span>`;
+        return;
+      }
+
+      container.innerHTML = data.map(w => `
+        <span class="msg-reaction-pill" style="background:#222; border:1px solid #333; border-radius:12px; padding:0.2rem 0.6rem; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
+          <span>${w.word}</span>
+          <button class="btn-delete-word" data-id="${w.id}" style="background:none; border:none; color:var(--accent-red); cursor:pointer; font-weight:700;">✕</button>
+        </span>
+      `).join('');
+
+      container.querySelectorAll('.btn-delete-word').forEach(btn => {
+        btn.addEventListener('click', () => this.deleteBannedWord(btn.dataset.id));
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async deleteBannedWord(wordId) {
+    try {
+      const { error } = await supabase
+        .from('banned_words')
+        .delete()
+        .eq('id', wordId);
+
+      if (error) throw error;
+      await this.logAdminAction('palabra_prohibida_delete', null, { wordId });
+      await this.loadBannedWords();
+      showToast('Palabra eliminada del filtro', 'success');
+    } catch (err) {
+      showToast('No se pudo eliminar la palabra', 'error');
+    }
+  }
+
+  // ─── CONFIGURACIÓN DE SISTEMA ──────────────────────────────────────────────
+  async loadSystemSettings() {
+    try {
+      const settings = await getGlobalSettings();
+      const active = settings?.maintenance_mode === true;
+      const toggle = document.getElementById('system-maintenance-toggle');
+      if (toggle) toggle.checked = active;
+
+      const badge = document.getElementById('maintenance-status-badge');
+      if (badge) {
+        badge.textContent = active ? 'ACTIVO' : 'DESACTIVADO';
+        badge.className = active ? 'on' : 'off';
+        badge.style.background = active ? 'var(--accent-red)' : '#4a4a4a';
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  setupSystemSettings() {
+    const toggle = document.getElementById('system-maintenance-toggle');
+    toggle?.addEventListener('change', async () => {
+      const active = toggle.checked;
+      const settings = await getGlobalSettings();
+      settings.maintenance_mode = active;
+      await saveGlobalSettings(settings);
+      
+      const badge = document.getElementById('maintenance-status-badge');
+      if (badge) {
+        badge.textContent = active ? 'ACTIVO' : 'DESACTIVADO';
+        badge.className = active ? 'on' : 'off';
+        badge.style.background = active ? 'var(--accent-red)' : '#4a4a4a';
+      }
+      
+      await this.logAdminAction('mantenimiento_toggle', null, { active });
+      showToast(active ? 'Modo mantenimiento activado 🛠️' : 'Modo mantenimiento desactivado ✅', 'success');
+    });
+
+    const annBtn = document.getElementById('system-publish-announcement-btn');
+    annBtn?.addEventListener('click', async () => {
+      const textarea = document.getElementById('system-chat-announcement');
+      const text = textarea?.value?.trim();
+      if (!text) return;
+
+      try {
+        const { error } = await supabase.from('chat_messages').insert({
+          user_id: this.currentUser.id,
+          message: `📢 ANUNCIO OFICIAL: ${text}`
+        });
+
+        if (error) throw error;
+        textarea.value = '';
+        await this.logAdminAction('anuncio_chat', null, { text });
+        showToast('Anuncio publicado en el chat global 📢', 'success');
+      } catch (err) {
+        showToast('No se pudo publicar el anuncio', 'error');
+      }
+    });
+
+    const wordForm = document.getElementById('system-banned-word-form');
+    wordForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('system-new-banned-word');
+      const word = input?.value?.trim()?.toLowerCase();
+      if (!word) return;
+
+      try {
+        const { error } = await supabase.from('banned_words').insert({ word });
+        if (error) throw error;
+        input.value = '';
+        await this.logAdminAction('palabra_prohibida_add', null, { word });
+        await this.loadBannedWords();
+        showToast('Palabra prohibida agregada', 'success');
+      } catch (err) {
+        showToast('Ya existe la palabra o error al guardar', 'error');
+      }
+    });
+
+    const seoForm = document.getElementById('system-seo-form');
+    seoForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pageSelect = document.getElementById('system-seo-page');
+      const titleInput = document.getElementById('system-seo-title');
+      const descInput = document.getElementById('system-seo-desc');
+
+      const page = pageSelect.value;
+      const title = titleInput.value.trim();
+      const desc = descInput.value.trim();
+
+      try {
+        const settings = await getGlobalSettings();
+        if (!settings.seo_overrides) settings.seo_overrides = {};
+        settings.seo_overrides[page] = { title, desc };
+        await saveGlobalSettings(settings);
+
+        await this.logAdminAction('seo_override_save', null, { page, title });
+        showToast('SEO Overrides guardados exitosamente', 'success');
+      } catch (err) {
+        showToast('Error al guardar SEO overrides', 'error');
+      }
+    });
+
+    // Cambiar dinámicamente campos de SEO al cambiar página select
+    document.getElementById('system-seo-page')?.addEventListener('change', async (e) => {
+      const page = e.target.value;
+      const titleInput = document.getElementById('system-seo-title');
+      const descInput = document.getElementById('system-seo-desc');
+      const settings = await getGlobalSettings();
+      
+      const pageConfig = settings?.seo_overrides?.[page] || { title: '', desc: '' };
+      if (titleInput) titleInput.value = pageConfig.title;
+      if (descInput) descInput.value = pageConfig.desc;
+    });
+
+    this.renderABTests();
+  }
+
+  async renderABTests() {
+    const container = document.getElementById('system-ab-tests-container');
+    if (!container) return;
+
+    try {
+      const settings = await getGlobalSettings();
+      const tests = settings.ab_tests || {
+        'rediseño_reproductor': 50,
+        'chat_tematico_anime': 20
+      };
+
+      container.innerHTML = Object.entries(tests).map(([name, pct]) => `
+        <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:0.6rem; margin-bottom:0.4rem;">
+          <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.25rem;">
+            <strong>${name}</strong>
+            <span id="ab-pct-label-${name}" style="font-weight:700; color:#10b981;">${pct}%</span>
+          </div>
+          <input type="range" class="ab-test-slider" data-name="${name}" min="0" max="100" value="${pct}" style="width:100%;">
+        </div>
+      `).join('');
+
+      container.querySelectorAll('.ab-test-slider').forEach(slider => {
+        slider.addEventListener('change', async () => {
+          const name = slider.dataset.name;
+          const val = parseInt(slider.value);
+          const label = document.getElementById(`ab-pct-label-${name}`);
+          if (label) label.textContent = `${val}%`;
+
+          const settings = await getGlobalSettings();
+          if (!settings.ab_tests) settings.ab_tests = {};
+          settings.ab_tests[name] = val;
+          await saveGlobalSettings(settings);
+
+          await this.logAdminAction('ab_test_change', null, { name, value: val });
+        });
+      });
+    } catch (err) {
+      console.error(err);
+    }
   }
 }
 

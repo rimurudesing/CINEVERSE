@@ -8,6 +8,7 @@ import { initCustomCursor } from '../cursor.js';
 import { getCurrentUser } from '../auth.js';
 import '../components/navbar.js';
 import { skeleton } from '../components/skeleton.js';
+import { getSupabase } from '../supabase.js';
 
 class EstrenosPageController {
   constructor() {
@@ -318,6 +319,9 @@ class EstrenosPageController {
 
     listContainer.innerHTML = '';
     list.forEach(item => {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;';
+
       const cardItem = {
         id: item.id,
         media_type: 'movie',
@@ -327,8 +331,76 @@ class EstrenosPageController {
         vote_average: item.vote_average,
         release_date: item.release_date
       };
-      listContainer.appendChild(createMovieCard(cardItem, { size: 'md', showType: true }));
+      wrap.appendChild(createMovieCard(cardItem, { size: 'md', showType: true }));
+
+      // Botón de recordatorio (#60)
+      if (this.currentUser) {
+        const remBtn = document.createElement('button');
+        remBtn.title = 'Crear recordatorio de estreno';
+        remBtn.style.cssText = `
+          position:absolute;top:8px;right:8px;
+          background:rgba(229,9,20,0.85);color:#fff;
+          border:none;border-radius:6px;
+          padding:0.25rem 0.5rem;font-size:0.72rem;font-weight:700;
+          cursor:pointer;z-index:5;
+          backdrop-filter:blur(4px);
+          transition:background 0.2s;
+        `;
+        remBtn.textContent = '🔔 Recordar';
+        remBtn.onmouseenter = () => remBtn.style.background = 'rgba(229,9,20,1)';
+        remBtn.onmouseleave = () => remBtn.style.background = 'rgba(229,9,20,0.85)';
+        remBtn.onclick = async (e) => {
+          e.stopPropagation();
+          await this.setReleaseReminder(item);
+        };
+        wrap.appendChild(remBtn);
+      }
+
+      listContainer.appendChild(wrap);
     });
+  }
+
+  // #60 — Crear recordatorio in-app para un estreno
+  async setReleaseReminder(item) {
+    if (!this.currentUser) {
+      showToast('Inicia sesión para crear recordatorios', 'error');
+      return;
+    }
+    try {
+      const supabase = await getSupabase();
+      if (!supabase) throw new Error('BD no disponible');
+
+      const uid   = this.currentUser.id;
+      const title = item.title || item.name || 'Este estreno';
+      const date  = item.release_date ? formatDate(item.release_date) : 'pronto';
+
+      // Verificar que no existe ya un recordatorio para este estreno
+      const { data: existing } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('user_id', uid)
+        .eq('type', 'release_reminder')
+        .like('body', `%${item.id}%`)
+        .maybeSingle();
+
+      if (existing) {
+        showToast('Ya tienes un recordatorio para este estreno 🔔', 'info');
+        return;
+      }
+
+      await supabase.from('notifications').insert({
+        user_id: uid,
+        type:    'release_reminder',
+        title:   `🎬 \u00a1${title} se estrena hoy!`,
+        body:    `Te recordamos que el estreno que guardaste (tmdb:${item.id}) llega el ${date}. ¡No te lo pierdas!`,
+        link:    `info.html?id=${item.id}&type=movie`
+      });
+
+      showToast(`🔔 Recordatorio creado para «${title}»`, 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Error al crear el recordatorio', 'error');
+    }
   }
 
   setupInfiniteScroll() {

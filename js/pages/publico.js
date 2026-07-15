@@ -8,6 +8,7 @@
 import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { api } from '../api.js';
 import { createMovieCard } from '../components/movieCard.js';
+import { getCurrentUser } from '../auth.js';
 import {
   applyUserTheme,
   buildTMDBImageURL,
@@ -23,6 +24,7 @@ let supabase = null;
 class PublicProfileController {
   constructor() {
     this.profileUser = null;
+    this.currentUser = null;
   }
 
   async init() {
@@ -38,6 +40,8 @@ class PublicProfileController {
     }
 
     try {
+      this.currentUser = await getCurrentUser();
+
       // 1. Buscar perfil por username
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -58,7 +62,7 @@ class PublicProfileController {
       }
 
       // 3. Renderizar el perfil
-      this.renderProfile();
+      await this.renderProfile();
       await this.loadStatsAndContent();
 
     } catch (err) {
@@ -72,7 +76,7 @@ class PublicProfileController {
     document.getElementById('public-error').style.display = 'block';
   }
 
-  renderProfile() {
+  async renderProfile() {
     document.getElementById('public-loader').style.display = 'none';
     document.getElementById('public-profile-content').style.display = 'block';
 
@@ -92,13 +96,28 @@ class PublicProfileController {
     }
 
     const nameEl = document.getElementById('public-name');
-    if (nameEl) nameEl.textContent = name;
+    if (nameEl) {
+      nameEl.textContent = name;
+      if (profile.name_color) {
+        nameEl.style.color = profile.name_color;
+      }
+    }
 
     const usernameEl = document.getElementById('public-username');
     if (usernameEl) usernameEl.textContent = `@${profile.username}`;
 
     const bioEl = document.getElementById('public-bio');
     if (bioEl) bioEl.textContent = profile.bio || 'Sin descripción en su biografía.';
+
+    const titleEl = document.getElementById('public-user-title');
+    if (titleEl) {
+      if (profile.user_title) {
+        titleEl.textContent = profile.user_title;
+        titleEl.style.display = 'inline-block';
+      } else {
+        titleEl.style.display = 'none';
+      }
+    }
 
     const bannerBg = document.getElementById('public-banner');
     if (bannerBg) {
@@ -125,17 +144,112 @@ class PublicProfileController {
         });
       });
     }
+
+    // Botón de seguir/dejar de seguir (#31, #35)
+    const followBtn = document.getElementById('btn-follow');
+    if (followBtn) {
+      if (this.currentUser && this.currentUser.id !== profile.id) {
+        followBtn.style.display = 'inline-block';
+        await this.updateFollowButtonState();
+        followBtn.onclick = () => this.toggleFollow();
+      } else {
+        followBtn.style.display = 'none';
+      }
+    }
+  }
+
+  async updateFollowButtonState() {
+    const followBtn = document.getElementById('btn-follow');
+    if (!followBtn || !this.currentUser || !this.profileUser) return;
+    try {
+      const { data } = await supabase
+        .from('followers')
+        .select('*')
+        .eq('follower_id', this.currentUser.id)
+        .eq('following_id', this.profileUser.id)
+        .maybeSingle();
+
+      if (data) {
+        followBtn.textContent = 'Dejar de seguir';
+        followBtn.style.background = 'transparent';
+        followBtn.style.border = '1px solid var(--border-subtle)';
+        followBtn.style.color = 'var(--text-secondary)';
+      } else {
+        followBtn.textContent = 'Seguir';
+        followBtn.style.background = 'var(--accent-red)';
+        followBtn.style.border = 'none';
+        followBtn.style.color = '#fff';
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async toggleFollow() {
+    const followBtn = document.getElementById('btn-follow');
+    if (!followBtn || !this.currentUser || !this.profileUser) return;
+
+    followBtn.disabled = true;
+    try {
+      const { data } = await supabase
+        .from('followers')
+        .select('*')
+        .eq('follower_id', this.currentUser.id)
+        .eq('following_id', this.profileUser.id)
+        .maybeSingle();
+
+      if (data) {
+        // Dejar de seguir
+        await supabase
+          .from('followers')
+          .delete()
+          .eq('follower_id', this.currentUser.id)
+          .eq('following_id', this.profileUser.id);
+        
+        showToast('Dejaste de seguir a este usuario', 'info');
+      } else {
+        // Seguir
+        await supabase
+          .from('followers')
+          .insert({
+            follower_id: this.currentUser.id,
+            following_id: this.profileUser.id
+          });
+
+        showToast('Ahora sigues a este usuario ❤️', 'success');
+
+        // Notificación al usuario
+        const senderName = this.currentUser.profile?.display_name || this.currentUser.profile?.username || 'Alguien';
+        await supabase.from('notifications').insert({
+          user_id: this.profileUser.id,
+          type: 'follow',
+          title: '👤 Nuevo Seguidor',
+          body: `${senderName} ha comenzado a seguirte.`,
+          link: `publico.html?u=${this.currentUser.profile?.username}`
+        });
+      }
+
+      await this.updateFollowButtonState();
+      await this.loadStatsAndContent();
+    } catch (e) {
+      console.error(e);
+      showToast('Error al procesar acción social', 'error');
+    } finally {
+      followBtn.disabled = false;
+    }
   }
 
   async loadStatsAndContent() {
     const uid = this.profileUser.id;
 
     try {
-      // Cargar contadores
-      const [favsRes, historyRes, reviewsRes] = await Promise.all([
+      // Cargar contadores y seguidores
+      const [favsRes, historyRes, reviewsRes, followersRes, followingRes] = await Promise.all([
         supabase.from('favorites').select('*').eq('user_id', uid),
         supabase.from('watch_history').select('*').eq('user_id', uid).order('watched_at', { ascending: false }),
         supabase.from('reviews').select('*').eq('user_id', uid),
+        supabase.from('followers').select('*', { count: 'exact', head: true }).eq('following_id', uid),
+        supabase.from('followers').select('*', { count: 'exact', head: true }).eq('follower_id', uid)
       ]);
 
       const favsList = favsRes.data || [];
@@ -145,6 +259,8 @@ class PublicProfileController {
       document.getElementById('stat-favs').textContent = favsList.length;
       document.getElementById('stat-vistos').textContent = historyList.length;
       document.getElementById('stat-reviews').textContent = reviewsList.length;
+      document.getElementById('stat-followers').textContent = followersRes.count || 0;
+      document.getElementById('stat-following').textContent = followingRes.count || 0;
 
       // Renderizar Favoritos
       this.renderGrid('public-favorites-grid', favsList.slice(0, 6), 'Aún no tiene favoritos agregados.');

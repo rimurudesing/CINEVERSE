@@ -176,13 +176,17 @@ class ProfilePageController {
 
     // Banner de fondo
     const bannerBg = document.getElementById('profile-banner-bg');
+    const bannerPosBtn = document.getElementById('banner-position-btn');
     if (bannerBg) {
       if (isPremium && profile.banner_url) {
         bannerBg.style.backgroundImage = `url('${profile.banner_url}')`;
         bannerBg.style.backgroundSize   = 'cover';
-        bannerBg.style.backgroundPosition = 'center';
+        bannerBg.style.backgroundPosition = `center ${profile.banner_position || '50'}%`;
+        if (bannerPosBtn) bannerPosBtn.style.display = 'block';
       } else {
         bannerBg.style.backgroundImage = 'linear-gradient(135deg, var(--accent-dark-red) 0%, var(--bg-primary) 80%)';
+        bannerBg.style.backgroundPosition = 'center';
+        if (bannerPosBtn) bannerPosBtn.style.display = 'none';
       }
     }
 
@@ -396,6 +400,13 @@ class ProfilePageController {
   setupBannerUpload() {
     const btn       = document.getElementById('banner-upload-btn');
     const fileInput = document.getElementById('banner-file-input');
+    const posBtn    = document.getElementById('banner-position-btn');
+    const sliderContainer = document.getElementById('banner-position-slider-container');
+    const slider    = document.getElementById('banner-position-slider');
+    const valText   = document.getElementById('banner-position-val');
+    const saveBtn   = document.getElementById('banner-position-save');
+    const bannerBg  = document.getElementById('profile-banner-bg');
+    
     const profile   = this.currentUser.profile || {};
 
     if (!btn || btn.dataset.bound) return;
@@ -408,6 +419,53 @@ class ProfilePageController {
       }
       fileInput?.click();
     });
+
+    // #42 Ajustar posición
+    if (posBtn && sliderContainer && slider && valText && saveBtn && bannerBg) {
+      // Sincronizar posición actual del perfil
+      const currentPos = profile.banner_position || '50';
+      slider.value = currentPos;
+      valText.textContent = `${currentPos}%`;
+
+      posBtn.onclick = () => {
+        if (sliderContainer.style.display === 'none' || !sliderContainer.style.display) {
+          sliderContainer.style.display = 'flex';
+        } else {
+          sliderContainer.style.display = 'none';
+        }
+      };
+
+      slider.oninput = () => {
+        const value = slider.value;
+        valText.textContent = `${value}%`;
+        bannerBg.style.backgroundPosition = `center ${value}%`;
+      };
+
+      saveBtn.onclick = async () => {
+        const value = slider.value;
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Guardando...';
+
+        try {
+          const { error } = await supabase
+            .from('profiles')
+            .update({ banner_position: value })
+            .eq('id', this.currentUser.id);
+
+          if (error) throw error;
+
+          profile.banner_position = value;
+          showToast('Posición de portada guardada', 'success');
+          sliderContainer.style.display = 'none';
+        } catch (e) {
+          console.error(e);
+          showToast('Error al guardar la posición', 'error');
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Guardar';
+        }
+      };
+    }
 
     if (!fileInput || fileInput.dataset.bound) return;
     fileInput.dataset.bound = 'true';
@@ -422,12 +480,12 @@ class ProfilePageController {
         try {
           await supabase.from('profiles').update({ banner_url: base64Data }).eq('id', this.currentUser.id);
           if (this.currentUser.profile) this.currentUser.profile.banner_url = base64Data;
-          const bannerBg = document.getElementById('profile-banner-bg');
           if (bannerBg) {
             bannerBg.style.backgroundImage  = `url('${base64Data}')`;
             bannerBg.style.backgroundSize   = 'cover';
-            bannerBg.style.backgroundPosition = 'center';
+            bannerBg.style.backgroundPosition = `center ${profile.banner_position || '50'}%`;
           }
+          if (posBtn) posBtn.style.display = 'block';
           showToast('Portada actualizada', 'success');
         } catch (err) {
           showToast('Error al guardar portada', 'error');
@@ -487,6 +545,8 @@ class ProfilePageController {
     if (tab === 'achievements') this.loadAchievements();
     if (tab === 'premium')      this.loadPremium();
     if (tab === 'requests')     this.loadRequests();
+    if (tab === 'social')       this.loadSocial();
+    if (tab === 'referrals')    this.loadReferrals();
   }
 
   /* ─────────────────────────────────────────────────────────
@@ -1113,6 +1173,54 @@ class ProfilePageController {
     // Mostrar/ocultar personalización
     if (customBox) customBox.style.display = isPremium ? 'block' : 'none';
 
+    // 🎁 Control y activación de Prueba Gratuita de 7 Días (#62)
+    const trialContainer = document.getElementById('free-trial-container');
+    if (trialContainer) {
+      if (!isPremium && !profile.premium_trial_used) {
+        trialContainer.style.display = 'block';
+        const activateTrialBtn = document.getElementById('activate-trial-btn');
+        if (activateTrialBtn && !activateTrialBtn.dataset.bound) {
+          activateTrialBtn.dataset.bound = 'true';
+          activateTrialBtn.addEventListener('click', async () => {
+            activateTrialBtn.disabled = true;
+            activateTrialBtn.textContent = 'Activando...';
+            try {
+              const futureDate = new Date();
+              futureDate.setDate(futureDate.getDate() + 7);
+              const { error } = await supabase
+                .from('profiles')
+                .update({
+                  is_premium: true,
+                  premium_until: futureDate.toISOString(),
+                  premium_trial_used: true,
+                  premium_tier: 'pro'
+                })
+                .eq('id', this.currentUser.id);
+
+              if (error) throw error;
+              showToast('🎉 ¡Prueba de 7 días activada! Disfruta de CineVerse Premium.', 'success');
+              if (this.currentUser.profile) {
+                this.currentUser.profile.is_premium = true;
+                this.currentUser.profile.premium_until = futureDate.toISOString();
+                this.currentUser.profile.premium_trial_used = true;
+                this.currentUser.profile.premium_tier = 'pro';
+              }
+              await this.loadPremium();
+              this.renderProfileHero();
+            } catch (err) {
+              console.error('Error al activar prueba:', err);
+              showToast('No se pudo activar la prueba gratuita.', 'error');
+            } finally {
+              activateTrialBtn.disabled = false;
+              activateTrialBtn.textContent = 'Activar Mi Prueba Gratis';
+            }
+          });
+        }
+      } else {
+        trialContainer.style.display = 'none';
+      }
+    }
+
     if (isPremium) {
       const expiryDate = new Date(profile.premium_until);
       const now        = new Date();
@@ -1126,11 +1234,13 @@ class ProfilePageController {
       const level = profile.level || 1;
       const xp = profile.xp || 0;
 
+      const tierLabel = (profile.premium_tier || 'basic').toUpperCase();
+
       statusBox.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:1rem;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
             <div>
-              <h4 style="color:#FFD700;font-size:1.25rem;font-weight:700;">👑 Estatus: Premium Activo</h4>
+              <h4 style="color:#FFD700;font-size:1.25rem;font-weight:700;">👑 Estatus: Premium Activo (${tierLabel})</h4>
               <p style="color:var(--text-secondary);font-size:0.9rem;margin-top:0.25rem;">Expira el: <strong>${formatDate(profile.premium_until)}</strong></p>
             </div>
             <span style="font-size:2rem;">💎</span>
@@ -1143,7 +1253,7 @@ class ProfilePageController {
               <div class="vip-card-content">
                 <div class="vip-card-header">
                   <span class="vip-logo">CINE<span>VERSE</span></span>
-                  <span class="vip-badge">👑 MECENAS VIP</span>
+                  <span class="vip-badge">👑 MECENAS ${tierLabel}</span>
                 </div>
                 
                 <div class="vip-card-chip"></div>
@@ -1188,6 +1298,71 @@ class ProfilePageController {
     if (isPremium) {
       this._setupThemePicker(profile.theme_color || 'red');
       this._setupFramePicker(profile.avatar_frame || 'none');
+
+      // 1. Títulos desbloqueables (#43)
+      const titleSelect = document.getElementById('user-title-select');
+      if (titleSelect && !titleSelect.dataset.bound) {
+        titleSelect.dataset.bound = 'true';
+        const unlocked = this.getUnlockedTitles(profile);
+        titleSelect.innerHTML = unlocked.map(t => `<option value="${t.id}" ${profile.user_title === t.id ? 'selected' : ''}>${t.label}</option>`).join('');
+        titleSelect.addEventListener('change', async () => {
+          const val = titleSelect.value;
+          await supabase.from('profiles').update({ user_title: val }).eq('id', this.currentUser.id);
+          if (this.currentUser.profile) this.currentUser.profile.user_title = val;
+          showToast('Título de perfil actualizado', 'success');
+        });
+      }
+
+      // 2. Color de Nombre en Chat (#44)
+      const colorPicker = document.getElementById('chat-color-picker');
+      const colorPreview = document.getElementById('chat-color-preview');
+      if (colorPicker && !colorPicker.dataset.bound) {
+        colorPicker.dataset.bound = 'true';
+        const currentColor = profile.name_color || '#FFFFFF';
+        colorPicker.value = currentColor;
+        if (colorPreview) colorPreview.textContent = currentColor.toUpperCase();
+        colorPicker.addEventListener('input', (e) => {
+          if (colorPreview) colorPreview.textContent = e.target.value.toUpperCase();
+        });
+        colorPicker.addEventListener('change', async (e) => {
+          const val = e.target.value;
+          await supabase.from('profiles').update({ name_color: val }).eq('id', this.currentUser.id);
+          if (this.currentUser.profile) this.currentUser.profile.name_color = val;
+          showToast('Color de nombre actualizado', 'success');
+        });
+      }
+
+      // 3. Efecto de entrada al chat (#46)
+      const effectSelect = document.getElementById('join-effect-select');
+      if (effectSelect && !effectSelect.dataset.bound) {
+        effectSelect.dataset.bound = 'true';
+        effectSelect.value = profile.join_effect || 'none';
+        effectSelect.addEventListener('change', async () => {
+          const val = effectSelect.value;
+          await supabase.from('profiles').update({ join_effect: val }).eq('id', this.currentUser.id);
+          if (this.currentUser.profile) this.currentUser.profile.join_effect = val;
+          showToast('Efecto de entrada actualizado', 'success');
+        });
+      }
+
+      // 4. Acceso anticipado beta (#67)
+      const betaToggle = document.getElementById('beta-access-toggle');
+      if (betaToggle && !betaToggle.dataset.bound) {
+        betaToggle.dataset.bound = 'true';
+        betaToggle.checked = !!profile.early_access;
+        betaToggle.addEventListener('change', async () => {
+          const val = betaToggle.checked;
+          await supabase.from('profiles').update({ early_access: val }).eq('id', this.currentUser.id);
+          if (this.currentUser.profile) this.currentUser.profile.early_access = val;
+          showToast(val ? 'Acceso beta activado 🚀' : 'Acceso beta desactivado', 'info');
+        });
+      }
+
+      // 5. Placa de Fundador (#68)
+      const founderBox = document.getElementById('founder-badge-box');
+      if (founderBox) {
+        founderBox.style.display = profile.founder_badge ? 'flex' : 'none';
+      }
     }
 
     // Evento canjear código
@@ -1298,6 +1473,219 @@ class ProfilePageController {
           kofiBtn.textContent = '🔍 Buscar mi código';
         }
       });
+    }
+
+    // Plan Familiar (#63)
+    await this.setupFamilyPlan();
+  }
+
+  async setupFamilyPlan() {
+    const unsubscribedView = document.getElementById('family-unsubscribed-view');
+    const ownerView        = document.getElementById('family-owner-view');
+    const memberView       = document.getElementById('family-member-view');
+    const familyBox        = document.getElementById('premium-family-box');
+    
+    if (!familyBox) return;
+
+    const profile   = this.currentUser.profile || {};
+    const isPremium = !!profile.is_premium;
+    const tier      = profile.premium_tier || 'basic';
+
+    if (unsubscribedView) unsubscribedView.style.display = 'none';
+    if (ownerView) ownerView.style.display = 'none';
+    if (memberView) memberView.style.display = 'none';
+
+    // Caso 1: Miembro vinculado
+    if (profile.family_owner_id) {
+      if (memberView) {
+        memberView.style.display = 'block';
+        const hostNameEl = document.getElementById('family-host-name');
+        if (hostNameEl) {
+          try {
+            const { data } = await supabase
+              .from('profiles')
+              .select('display_name, username')
+              .eq('id', profile.family_owner_id)
+              .maybeSingle();
+            if (data) {
+              hostNameEl.textContent = data.display_name || data.username || 'Anfitrión';
+            }
+          } catch(e) {}
+        }
+      }
+      return;
+    }
+
+    // Caso 2: Dueño del plan (Pro)
+    if (isPremium && tier === 'pro') {
+      if (ownerView) {
+        ownerView.style.display = 'block';
+        
+        const genBtn = document.getElementById('family-code-gen-btn');
+        const codeDisplay = document.getElementById('family-generated-code-display');
+        const codeText = document.getElementById('family-code-text');
+        const copyBtn = document.getElementById('family-code-copy');
+
+        if (profile.family_code) {
+          if (genBtn) genBtn.style.display = 'none';
+          if (codeDisplay) codeDisplay.style.display = 'flex';
+          if (codeText) codeText.textContent = profile.family_code;
+          await this.loadFamilyMembers();
+        } else {
+          if (genBtn) {
+            genBtn.style.display = 'block';
+            if (!genBtn.dataset.bound) {
+              genBtn.dataset.bound = 'true';
+              genBtn.onclick = async () => {
+                genBtn.disabled = true;
+                genBtn.textContent = 'Generando...';
+                try {
+                  const newCode = `FAM-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+                  const { error } = await supabase
+                    .from('profiles')
+                    .update({ family_code: newCode })
+                    .eq('id', this.currentUser.id);
+
+                  if (error) throw error;
+                  profile.family_code = newCode;
+                  genBtn.style.display = 'none';
+                  if (codeDisplay) codeDisplay.style.display = 'flex';
+                  if (codeText) codeText.textContent = newCode;
+                  showToast('🎉 Código familiar generado con éxito', 'success');
+                } catch(e) {
+                  console.error(e);
+                  showToast('Error al generar código', 'error');
+                } finally {
+                  genBtn.disabled = false;
+                  genBtn.textContent = 'Generar Código';
+                }
+              };
+            }
+          }
+          if (codeDisplay) codeDisplay.style.display = 'none';
+        }
+
+        if (copyBtn && !copyBtn.dataset.bound) {
+          copyBtn.dataset.bound = 'true';
+          copyBtn.onclick = () => {
+            if (profile.family_code) {
+              navigator.clipboard.writeText(profile.family_code).then(() => {
+                showToast('✓ Código copiado', 'success');
+              });
+            }
+          };
+        }
+      }
+      return;
+    }
+
+    // Caso 3: Sin vincular (Free o Basic sin dueño)
+    if (unsubscribedView) {
+      unsubscribedView.style.display = 'block';
+      const claimBtn = document.getElementById('family-code-claim-btn');
+      const codeInput = document.getElementById('family-code-input');
+
+      if (claimBtn && !claimBtn.dataset.bound) {
+        claimBtn.dataset.bound = 'true';
+        claimBtn.onclick = async () => {
+          const code = codeInput.value.trim().toUpperCase();
+          if (!code || !code.startsWith('FAM-')) {
+            showToast('Ingresa un código familiar válido (FAM-XXXXXX)', 'error');
+            return;
+          }
+
+          claimBtn.disabled = true;
+          claimBtn.textContent = 'Vinculando...';
+
+          try {
+            const { data: owner, error: ownerErr } = await supabase
+              .from('profiles')
+              .select('id, premium_tier, is_premium')
+              .eq('family_code', code)
+              .maybeSingle();
+
+            if (ownerErr || !owner) {
+              showToast('Código familiar no encontrado o inválido', 'error');
+              return;
+            }
+
+            if (!owner.is_premium || owner.premium_tier !== 'pro') {
+              showToast('Este Plan Familiar ya no está activo', 'error');
+              return;
+            }
+
+            const { count, error: countErr } = await supabase
+              .from('profiles')
+              .select('*', { count: 'exact', head: true })
+              .eq('family_owner_id', owner.id);
+
+            if (countErr) throw countErr;
+
+            if (count >= 4) {
+              showToast('Límite del Plan Familiar alcanzado (máx 4 miembros)', 'error');
+              return;
+            }
+
+            const { error: updateErr } = await supabase
+              .from('profiles')
+              .update({
+                family_owner_id: owner.id,
+                is_premium: true,
+                premium_tier: 'basic',
+                premium_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+              })
+              .eq('id', this.currentUser.id);
+
+            if (updateErr) throw updateErr;
+
+            showToast('🎉 ¡Cuenta vinculada al Plan Familiar! Ya eres Premium', 'success');
+            profile.family_owner_id = owner.id;
+            profile.is_premium = true;
+            profile.premium_tier = 'basic';
+            
+            await this.loadPremium();
+            this.renderProfileHero();
+          } catch(e) {
+            console.error(e);
+            showToast('Error al vincular Plan Familiar', 'error');
+          } finally {
+            claimBtn.disabled = false;
+            claimBtn.textContent = 'Vincular';
+          }
+        };
+      }
+    }
+  }
+
+  async loadFamilyMembers() {
+    const list = document.getElementById('family-members-list');
+    if (!list) return;
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('display_name, username, avatar_url')
+        .eq('family_owner_id', this.currentUser.id);
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        list.innerHTML = `<p style="color:var(--text-muted); font-size:0.8rem; margin:0;">Ningún miembro vinculado aún.</p>`;
+        return;
+      }
+
+      list.innerHTML = data.map(m => {
+        const name = m.display_name || m.username || 'Miembro';
+        const avatar = m.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+        return `
+          <div style="display:flex; align-items:center; gap:0.5rem; background:rgba(255,255,255,0.02); padding:0.4rem 0.65rem; border-radius:var(--radius-sm); border:1px solid var(--border-subtle);">
+            <img src="${avatar}" style="width:20px; height:20px; border-radius:50%; object-fit:cover;">
+            <span style="font-weight:600;">${name}</span>
+            <span style="margin-left:auto; color:#10b981; font-size:0.75rem; font-weight:700;">Activo</span>
+          </div>
+        `;
+      }).join('');
+    } catch(e) {
+      console.error(e);
     }
   }
 
@@ -1547,6 +1935,562 @@ class ProfilePageController {
         }
       }
     });
+  }
+
+  getUnlockedTitles(profile) {
+    const level = profile.level || 1;
+    const isPremium = !!profile.is_premium;
+    const isFounder = !!profile.founder_badge;
+    const titles = [{ id: 'none', label: 'Ninguno' }];
+
+    titles.push({ id: 'espectador', label: '🍿 Espectador Novato' });
+    if (level >= 5) titles.push({ id: 'bronze', label: '🥉 Palomitas de Bronce' });
+    if (level >= 10) titles.push({ id: 'critic_jr', label: '🎭 Crítico Junior' });
+    if (level >= 20) titles.push({ id: 'silver', label: '🥈 Cinéfilo de Plata' });
+    if (level >= 30) titles.push({ id: 'director', label: '🎬 Director de Escena' });
+    if (level >= 50) titles.push({ id: 'script_master', label: '📜 Maestro del Guión' });
+    if (level >= 75) titles.push({ id: 'hollywood_legend', label: '⭐️ Leyenda de Hollywood' });
+    if (level >= 100) titles.push({ id: 'cinegod', label: '🌟 CineGod' });
+
+    if (isPremium) titles.push({ id: 'vip', label: '👑 Mecenas VIP' });
+    if (isFounder) titles.push({ id: 'founder', label: '🛡️ Socio Fundador' });
+
+    return titles;
+  }
+
+  async loadSocial() {
+    const followingCount = document.getElementById('social-following-count');
+    const followersCount = document.getElementById('social-followers-count');
+    const followingList = document.getElementById('social-following-list');
+    const followersList = document.getElementById('social-followers-list');
+    const suggestionsList = document.getElementById('social-suggestions-list');
+
+    const searchInput = document.getElementById('social-search-input');
+    const searchBtn = document.getElementById('social-search-btn');
+    const searchResults = document.getElementById('social-search-results');
+
+    if (!supabase || !this.currentUser) return;
+    const uid = this.currentUser.id;
+
+    // Importar SocialManager dinámicamente para no ensuciar la carga inicial
+    const { SocialManager } = await import('../social.js');
+
+    // Cargar estadísticas
+    const counts = await SocialManager.getSocialCounts(uid);
+    if (followingCount) followingCount.textContent = counts.following;
+    if (followersCount) followersCount.textContent = counts.followers;
+
+    // Cargar Siguiendo
+    if (followingList) {
+      followingList.innerHTML = 'Cargando...';
+      const { data: following, error } = await supabase
+        .from('followers')
+        .select('following_id, profiles!followers_following_id_fkey(username, display_name, avatar_url, is_online, avatar_frame)')
+        .eq('follower_id', uid);
+
+      if (error) {
+        followingList.innerHTML = 'Error al cargar.';
+      } else if (!following || following.length === 0) {
+        followingList.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">No sigues a nadie todavía.</div>';
+      } else {
+        followingList.innerHTML = following.map(f => {
+          const prof = f.profiles || {};
+          const name = prof.display_name || prof.username || 'Usuario';
+          const avatar = prof.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+          const frameClass = prof.avatar_frame && prof.avatar_frame !== 'none' ? `avatar-frame-${prof.avatar_frame}` : '';
+          const onlineDot = prof.is_online ? `<span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; margin-left: 0.3rem;" title="En línea"></span>` : '';
+          return `
+            <div class="social-user-row" style="margin-bottom: 0.5rem;">
+              <img class="social-user-avatar ${frameClass}" src="${avatar}" alt="Avatar">
+              <div class="social-user-info">
+                <span class="social-user-name">${name} ${onlineDot}</span>
+                <span class="social-user-meta">@${prof.username || ''}</span>
+              </div>
+              <button class="social-follow-btn social-follow-btn--unfollow" data-unfollow-id="${f.following_id}">Dejar de seguir</button>
+            </div>
+          `;
+        }).join('');
+
+        followingList.querySelectorAll('[data-unfollow-id]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const targetId = btn.getAttribute('data-unfollow-id');
+            const ok = await SocialManager.unfollow(uid, targetId);
+            if (ok) {
+              showToast('Dejaste de seguir a este usuario', 'success');
+              this.loadSocial();
+            }
+          });
+        });
+      }
+    }
+
+    // Cargar Seguidores
+    if (followersList) {
+      followersList.innerHTML = 'Cargando...';
+      const { data: followers, error } = await supabase
+        .from('followers')
+        .select('follower_id, profiles!followers_follower_id_fkey(username, display_name, avatar_url, is_online, avatar_frame)')
+        .eq('following_id', uid);
+
+      if (error) {
+        followersList.innerHTML = 'Error al cargar.';
+      } else if (!followers || followers.length === 0) {
+        followersList.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">No tienes seguidores todavía.</div>';
+      } else {
+        const { data: whoISollow } = await supabase.from('followers').select('following_id').eq('follower_id', uid);
+        const followingIds = (whoISollow || []).map(w => w.following_id);
+
+        followersList.innerHTML = followers.map(f => {
+          const prof = f.profiles || {};
+          const name = prof.display_name || prof.username || 'Usuario';
+          const avatar = prof.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+          const frameClass = prof.avatar_frame && prof.avatar_frame !== 'none' ? `avatar-frame-${prof.avatar_frame}` : '';
+          const isFollowingBack = followingIds.includes(f.follower_id);
+          const onlineDot = prof.is_online ? `<span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; margin-left: 0.3rem;" title="En línea"></span>` : '';
+
+          const actionBtn = isFollowingBack
+            ? `<button class="social-follow-btn social-follow-btn--unfollow" data-unfollow-id="${f.follower_id}">Dejar de seguir</button>`
+            : `<button class="social-follow-btn social-follow-btn--follow" data-follow-id="${f.follower_id}">Seguir de vuelta</button>`;
+
+          return `
+            <div class="social-user-row" style="margin-bottom: 0.5rem;">
+              <img class="social-user-avatar ${frameClass}" src="${avatar}" alt="Avatar">
+              <div class="social-user-info">
+                <span class="social-user-name">${name} ${onlineDot}</span>
+                <span class="social-user-meta">@${prof.username || ''}</span>
+              </div>
+              ${actionBtn}
+            </div>
+          `;
+        }).join('');
+
+        followersList.querySelectorAll('[data-follow-id]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const targetId = btn.getAttribute('data-follow-id');
+            const ok = await SocialManager.follow(uid, targetId);
+            if (ok) {
+              showToast('Ahora sigues a este usuario', 'success');
+              this.loadSocial();
+            }
+          });
+        });
+
+        followersList.querySelectorAll('[data-unfollow-id]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const targetId = btn.getAttribute('data-unfollow-id');
+            const ok = await SocialManager.unfollow(uid, targetId);
+            if (ok) {
+              showToast('Dejaste de seguir a este usuario', 'success');
+              this.loadSocial();
+            }
+          });
+        });
+      }
+    }
+
+    // Sugerencias
+    if (suggestionsList) {
+      suggestionsList.innerHTML = 'Cargando...';
+      const { data: sug, error } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url, avatar_frame, level')
+        .neq('id', uid)
+        .order('level', { ascending: false })
+        .limit(6);
+
+      if (error) {
+        suggestionsList.innerHTML = 'Error al cargar.';
+      } else {
+        const { data: whoISollow } = await supabase.from('followers').select('following_id').eq('follower_id', uid);
+        const followingIds = (whoISollow || []).map(w => w.following_id);
+        const nonFollowed = (sug || []).filter(s => !followingIds.includes(s.id));
+
+        if (nonFollowed.length === 0) {
+          suggestionsList.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">Estás al día con todos los usuarios recomendados.</div>';
+        } else {
+          suggestionsList.innerHTML = nonFollowed.slice(0, 3).map(s => {
+            const name = s.display_name || s.username || 'Usuario';
+            const avatar = s.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+            const frameClass = s.avatar_frame && s.avatar_frame !== 'none' ? `avatar-frame-${s.avatar_frame}` : '';
+            return `
+              <div class="social-user-row" style="margin-bottom: 0.5rem;">
+                <img class="social-user-avatar ${frameClass}" src="${avatar}" alt="Avatar">
+                <div class="social-user-info">
+                  <span class="social-user-name">${name}</span>
+                  <span class="social-user-meta">@${s.username || ''} · Nv.${s.level || 1}</span>
+                </div>
+                <button class="social-follow-btn social-follow-btn--follow" data-follow-id="${s.id}">Seguir</button>
+              </div>
+            `;
+          }).join('');
+
+          suggestionsList.querySelectorAll('[data-follow-id]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const targetId = btn.getAttribute('data-follow-id');
+              const ok = await SocialManager.follow(uid, targetId);
+              if (ok) {
+                showToast('Ahora sigues a este usuario', 'success');
+                this.loadSocial();
+              }
+            });
+          });
+        }
+      }
+    }
+
+    // Configurar búsqueda
+    if (searchBtn && !searchBtn.dataset.bound) {
+      searchBtn.dataset.bound = 'true';
+      const handleSearch = async () => {
+        const q = searchInput.value.trim().toLowerCase();
+        if (!q) return;
+        searchResults.innerHTML = 'Buscando...';
+
+        const { data: res } = await supabase
+          .from('profiles')
+          .select('id, username, display_name, avatar_url, avatar_frame')
+          .neq('id', uid)
+          .ilike('username', `%${q}%`)
+          .limit(5);
+
+        if (!res || res.length === 0) {
+          searchResults.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; padding: 0.5rem 0;">No se encontraron usuarios.</div>';
+          return;
+        }
+
+        const { data: whoISollow } = await supabase.from('followers').select('following_id').eq('follower_id', uid);
+        const followingIds = (whoISollow || []).map(w => w.following_id);
+
+        searchResults.innerHTML = res.map(u => {
+          const name = u.display_name || u.username || 'Usuario';
+          const avatar = u.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+          const frameClass = u.avatar_frame && u.avatar_frame !== 'none' ? `avatar-frame-${u.avatar_frame}` : '';
+          const isFollowing = followingIds.includes(u.id);
+
+          const actionBtn = isFollowing
+            ? `<button class="social-follow-btn social-follow-btn--unfollow" data-search-unfollow-id="${u.id}">Dejar de seguir</button>`
+            : `<button class="social-follow-btn social-follow-btn--follow" data-search-follow-id="${u.id}">Seguir</button>`;
+
+          return `
+            <div class="social-user-row" style="margin-top: 0.5rem;">
+              <img class="social-user-avatar ${frameClass}" src="${avatar}" alt="Avatar">
+              <div class="social-user-info">
+                <span class="social-user-name">${name}</span>
+                <span class="social-user-meta">@${u.username || ''}</span>
+              </div>
+              ${actionBtn}
+            </div>
+          `;
+        }).join('');
+
+        searchResults.querySelectorAll('[data-search-follow-id]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const targetId = btn.getAttribute('data-search-follow-id');
+            const ok = await SocialManager.follow(uid, targetId);
+            if (ok) {
+              showToast('Ahora sigues a este usuario', 'success');
+              handleSearch();
+              this.loadSocial();
+            }
+          });
+        });
+
+        searchResults.querySelectorAll('[data-search-unfollow-id]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const targetId = btn.getAttribute('data-search-unfollow-id');
+            const ok = await SocialManager.unfollow(uid, targetId);
+            if (ok) {
+              showToast('Dejaste de seguir a este usuario', 'success');
+              handleSearch();
+              this.loadSocial();
+            }
+          });
+        });
+      };
+
+      searchBtn.addEventListener('click', handleSearch);
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleSearch();
+      });
+    }
+  }
+
+  async loadReferrals() {
+    const codeEl = document.getElementById('my-referral-code');
+    const copyBtn = document.getElementById('copy-referral-btn');
+    const shareBtn = document.getElementById('share-referral-btn');
+
+    const totalCount = document.getElementById('referral-total-count');
+    const activeCount = document.getElementById('referral-active-count');
+    const xpEarned = document.getElementById('referral-xp-earned');
+
+    const listEl = document.getElementById('referrals-list');
+
+    const claimInput = document.getElementById('referral-input-code');
+    const claimBtn = document.getElementById('claim-referral-btn');
+    const claimResult = document.getElementById('referral-claim-result');
+
+    if (!supabase || !this.currentUser) return;
+    const uid = this.currentUser.id;
+    const profile = this.currentUser.profile || {};
+
+    // 1. Mostrar mi código de referido
+    const refCode = profile.referral_code || 'SINCODIGO';
+    if (codeEl) codeEl.textContent = refCode;
+
+    // Copiar código
+    if (copyBtn && !copyBtn.dataset.bound) {
+      copyBtn.dataset.bound = 'true';
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(refCode).then(() => {
+          showToast('✓ Código copiado', 'success');
+        });
+      });
+    }
+
+    // Compartir código
+    if (shareBtn && !shareBtn.dataset.bound) {
+      shareBtn.dataset.bound = 'true';
+      shareBtn.addEventListener('click', () => {
+        const shareText = `¡Únete a CineVerse para ver las mejores películas y series sin anuncios! Regístrate usando mi código de invitación: ${refCode} y recibe +150 XP de regalo. 🎬🍿`;
+        if (navigator.share) {
+          navigator.share({
+            title: 'Invitación a CineVerse',
+            text: shareText,
+            url: window.location.origin
+          }).catch(() => {});
+        } else {
+          navigator.clipboard.writeText(shareText).then(() => {
+            showToast('Enlace de invitación copiado al portapapeles', 'success');
+          });
+        }
+      });
+    }
+
+    // 2. Cargar estadísticas de referidos
+    const { data: refs, error } = await supabase
+      .from('referrals')
+      .select('referred_id, created_at, profiles!referrals_referred_id_fkey(username, display_name, avatar_url, is_premium)')
+      .eq('referrer_id', uid);
+
+    if (error) {
+      if (listEl) listEl.innerHTML = 'Error al cargar referidos.';
+      return;
+    }
+
+    const total = refs ? refs.length : 0;
+    const active = refs ? refs.filter(r => r.profiles?.is_premium).length : 0;
+    const xp = total * 150 + active * 500;
+
+    if (totalCount) totalCount.textContent = total;
+    if (activeCount) activeCount.textContent = active;
+    if (xpEarned) xpEarned.textContent = xp;
+
+    // 3. Renderizar la lista de amigos invitados
+    if (listEl) {
+      if (!refs || refs.length === 0) {
+        listEl.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:1.5rem;">Aún no has invitado a ningún amigo.</div>';
+      } else {
+        listEl.innerHTML = refs.map(r => {
+          const u = r.profiles || {};
+          const name = u.display_name || u.username || 'Invitado';
+          const avatar = u.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+          const premBadge = u.is_premium ? '👑 Premium' : 'Free';
+          const date = new Date(r.created_at).toLocaleDateString();
+          return `
+            <div class="referral-row" style="margin-bottom: 0.5rem;">
+              <img class="referral-row-avatar" src="${avatar}" alt="Avatar">
+              <span class="referral-row-name">${name} (${premBadge})</span>
+              <span class="referral-row-xp">${u.is_premium ? '+650 XP' : '+150 XP'}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // 4. Canjear código de invitación recibido
+    if (claimBtn && !claimBtn.dataset.bound) {
+      claimBtn.dataset.bound = 'true';
+      claimBtn.addEventListener('click', async () => {
+        const entered = claimInput.value.trim().toUpperCase();
+        if (!entered) {
+          if (claimResult) claimResult.innerHTML = '<span style="color:var(--accent-red);">Por favor ingresa un código.</span>';
+          return;
+        }
+        if (entered === refCode) {
+          if (claimResult) claimResult.innerHTML = '<span style="color:var(--accent-red);">No puedes ingresar tu propio código.</span>';
+          return;
+        }
+
+        claimBtn.disabled = true;
+        claimBtn.textContent = 'Canjeando...';
+        if (claimResult) claimResult.innerHTML = '';
+
+        try {
+          const { data: owner } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('referral_code', entered)
+            .maybeSingle();
+
+          if (!owner) {
+            if (claimResult) claimResult.innerHTML = '<span style="color:var(--accent-red);">Código de invitación no encontrado.</span>';
+            return;
+          }
+
+          const { data: alreadyReferred } = await supabase
+            .from('referrals')
+            .select('id')
+            .eq('referred_id', uid)
+            .maybeSingle();
+
+          if (alreadyReferred) {
+            if (claimResult) claimResult.innerHTML = '<span style="color:var(--accent-red);">Ya has canjeado un código de invitación anteriormente.</span>';
+            return;
+          }
+
+          const { error: insError } = await supabase
+            .from('referrals')
+            .insert({
+              referrer_id: owner.id,
+              referred_id: uid
+            });
+
+          if (insError) throw insError;
+
+          await supabase.rpc('award_xp', { p_user_id: owner.id, p_xp: 150 });
+          const { data: xpRes } = await supabase.rpc('award_xp', { p_user_id: uid, p_xp: 150 });
+
+          await supabase.from('notifications').insert({
+            user_id: owner.id,
+            type: 'referral_signup',
+            title: '🎁 ¡Referido exitoso! +150 XP',
+            body: `@${profile.username || 'Un amigo'} se ha registrado usando tu código de invitación.`,
+            link: 'perfil.html?tab=referrals'
+          });
+
+          if (claimResult) claimResult.innerHTML = '<span style="color:#22c55e; font-weight:700;">¡Código canjeado con éxito! Recibiste +150 XP y tu nivel se actualizó. 🎉</span>';
+          claimInput.value = '';
+
+          this.loadReferrals();
+          if (xpRes && xpRes[0]) {
+            const newLevel = xpRes[0].new_level;
+            if (xpRes[0].leveled_up) {
+              const RANK_NAMES = {
+                1: 'Espectador Casual', 2: 'Aficionado del Cine', 3: 'Cinéfilo',
+                4: 'Crítico Amateur', 5: 'Cronista de Películas', 6: 'Analista Fílmico',
+                7: 'Experto en Series', 8: 'Maratonista Épico', 9: 'Maestro del Cine', 10: 'CineGod'
+              };
+              if (typeof window.showLevelUpModal === 'function') {
+                window.showLevelUpModal({
+                  level: newLevel,
+                  rankName: RANK_NAMES[Math.min(newLevel, 10)] || `Nivel ${newLevel}`,
+                  xpGained: 150
+                });
+              } else {
+                showToast(`🎉 ¡Subiste al Nivel ${newLevel}!`, 'success');
+              }
+            }
+          }
+        } catch (e) {
+          console.error(e);
+          if (claimResult) claimResult.innerHTML = `<span style="color:var(--accent-red);">Error al procesar: ${e.message}</span>`;
+        } finally {
+          claimBtn.disabled = false;
+          claimBtn.textContent = 'Canjear';
+        }
+      });
+    }
+
+    // 5. Regalar Premium a un amigo (#64)
+    const giftBox = document.getElementById('referral-gift-box');
+    const sendGiftBtn = document.getElementById('send-gift-btn');
+    const giftUsernameInput = document.getElementById('gift-username-input');
+    const giftResultMsg = document.getElementById('gift-result-msg');
+
+    if (giftBox) {
+      const isPremium = !!profile.is_premium;
+      if (!isPremium) {
+        if (sendGiftBtn) sendGiftBtn.disabled = true;
+        if (giftUsernameInput) giftUsernameInput.disabled = true;
+        if (giftResultMsg) giftResultMsg.innerHTML = '<span style="color:var(--text-muted);">Esta función es exclusiva para usuarios Premium.</span>';
+      } else {
+        if (sendGiftBtn) sendGiftBtn.disabled = false;
+        if (giftUsernameInput) giftUsernameInput.disabled = false;
+
+        if (sendGiftBtn && !sendGiftBtn.dataset.bound) {
+          sendGiftBtn.dataset.bound = 'true';
+          sendGiftBtn.addEventListener('click', async () => {
+            const targetUsername = giftUsernameInput.value.trim().toLowerCase();
+            if (!targetUsername) {
+              if (giftResultMsg) giftResultMsg.innerHTML = '<span style="color:var(--accent-red);">Por favor ingresa un nombre de usuario.</span>';
+              return;
+            }
+
+            if (targetUsername === (profile.username || '').toLowerCase()) {
+              if (giftResultMsg) giftResultMsg.innerHTML = '<span style="color:var(--accent-red);">No puedes regalarte Premium a ti mismo.</span>';
+              return;
+            }
+
+            sendGiftBtn.disabled = true;
+            sendGiftBtn.textContent = 'Enviando...';
+            if (giftResultMsg) giftResultMsg.innerHTML = '';
+
+            try {
+              const { data: friend, error: friendError } = await supabase
+                .from('profiles')
+                .select('id, is_premium, premium_until')
+                .eq('username', targetUsername)
+                .maybeSingle();
+
+              if (friendError) throw friendError;
+              if (!friend) {
+                if (giftResultMsg) giftResultMsg.innerHTML = '<span style="color:var(--accent-red);">Usuario no encontrado.</span>';
+                return;
+              }
+
+              const now = new Date();
+              let newExpiry;
+              if (friend.is_premium && friend.premium_until) {
+                newExpiry = new Date(friend.premium_until);
+                newExpiry.setDate(newExpiry.getDate() + 30);
+              } else {
+                newExpiry = new Date();
+                newExpiry.setDate(newExpiry.getDate() + 30);
+              }
+
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({
+                  is_premium: true,
+                  premium_until: newExpiry.toISOString(),
+                  premium_tier: 'pro'
+                })
+                .eq('id', friend.id);
+
+              if (updateError) throw updateError;
+
+              await supabase.from('notifications').insert({
+                user_id: friend.id,
+                type: 'premium_gift',
+                title: '🎁 ¡Te regalaron Premium!',
+                body: `@${profile.username || 'Un amigo'} te ha regalado 30 días de CineVerse Premium. ¡Disfrútalo!`,
+                link: 'perfil.html?tab=premium'
+              });
+
+              if (giftResultMsg) giftResultMsg.innerHTML = `<span style="color:#22c55e; font-weight:700;">¡Regalo enviado con éxito a @${targetUsername}! 🎁</span>`;
+              giftUsernameInput.value = '';
+            } catch (e) {
+              console.error(e);
+              if (giftResultMsg) giftResultMsg.innerHTML = `<span style="color:var(--accent-red);">Error al procesar el regalo: ${e.message}</span>`;
+            } finally {
+              sendGiftBtn.disabled = false;
+              sendGiftBtn.textContent = '🎁 Enviar Regalo';
+            }
+          });
+        }
+      }
+    }
   }
 
   setupVipCard3DEffect() {

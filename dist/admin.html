@@ -457,6 +457,21 @@
         <div class="kpi-number" id="kpi-codes-used">–</div>
         <div class="kpi-label">Códigos Canjeados</div>
       </div>
+      <div class="kpi-card" style="border-color: rgba(16,185,129,0.3);">
+        <span class="kpi-icon">🟢</span>
+        <div class="kpi-number" id="kpi-users-online" style="color: #10B981;">–</div>
+        <div class="kpi-label">Usuarios Online ahora</div>
+      </div>
+      <div class="kpi-card" style="border-color: rgba(124,58,237,0.3);">
+        <span class="kpi-icon">💬</span>
+        <div class="kpi-number" id="kpi-msgs-min" style="color: #8B5CF6;">–</div>
+        <div class="kpi-label">Mensajes / min</div>
+      </div>
+      <div class="kpi-card" style="border-color: rgba(245,158,11,0.3);">
+        <span class="kpi-icon">📈</span>
+        <div class="kpi-number" id="kpi-users-today" style="color: #F59E0B;">–</div>
+        <div class="kpi-label">Nuevos hoy</div>
+      </div>
     </div>
 
     <!-- ══════════════════════════════════════════════════ -->
@@ -468,6 +483,8 @@
       <button class="dashboard-tab-btn" data-target="section-moderation">🛡️ Moderación Chat</button>
       <button class="dashboard-tab-btn" data-target="section-cinebot">🤖 CineBot Trivias</button>
       <button class="dashboard-tab-btn" data-target="section-ads">🔗 Publicidad Dinámica</button>
+      <button class="dashboard-tab-btn" data-target="section-reports">🚨 Reportes Chat</button>
+      <button class="dashboard-tab-btn" data-target="section-system">⚙️ Configuración Sistema</button>
     </nav>
 
     <!-- ══════════════════════════════════════════════════ -->
@@ -848,6 +865,133 @@
             💾 Guardar Enlaces de Publicidad
           </button>
         </form>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECCIÓN 6: REPORTES DEL CHAT                      -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="admin-panel-section" id="section-reports">
+      <div class="admin-card">
+        <h2 class="admin-subtitle" style="color: var(--accent-red);">🚨 Mensajes del Chat Reportados</h2>
+        <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
+          Lista de mensajes del chat global reportados por los usuarios por infringir las normas.
+        </p>
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Reportado</th>
+                <th>Mensaje</th>
+                <th>Motivo</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="reports-table-body">
+              <tr>
+                <td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">Cargando reportes...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECCIÓN 7: CONFIGURACIÓN DEL SISTEMA              -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="admin-panel-section" id="section-system">
+      <!-- Mantenimiento y Anuncios -->
+      <div class="admin-card flex flex--col flex--gap-md" style="margin-bottom: 2rem;">
+        <h2 class="admin-subtitle" style="color: #F5C518;">⚙️ Configuración del Sistema</h2>
+        
+        <div class="toggle-switch-wrap" style="margin-bottom: 1.5rem;">
+          <span class="toggle-label">🛠️ Modo Mantenimiento:</span>
+          <span id="maintenance-status-badge" class="off" style="background: #4a4a4a; color: #fff; padding: 0.1rem 0.5rem; border-radius: var(--radius-xs); font-size: 0.72rem; font-weight: 700; margin-right: 0.5rem;">DESACTIVADO</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="system-maintenance-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <h3 class="form-label" style="font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem;">📣 Publicar Anuncio Oficial del Sistema en Chat</h3>
+          <textarea id="system-chat-announcement" class="form-input" placeholder="Escribe un anuncio que aparecerá fijado en el chat global..." style="height: 80px; resize: none;"></textarea>
+          <button type="button" id="system-publish-announcement-btn" class="btn btn--primary" style="margin-top: 0.5rem; background: linear-gradient(135deg, #7C3AED, #5B21B6);">
+            📣 Publicar Anuncio
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtro de palabras prohibidas (CRUD) -->
+      <div class="admin-card" style="margin-bottom: 2rem;">
+        <h2 class="admin-subtitle">🚫 Filtro de Palabras Prohibidas (Anti-Spam / Toxicidad)</h2>
+        <form id="system-banned-word-form" class="flex flex--gap-sm" style="margin-bottom: 1.5rem;">
+          <input type="text" id="system-new-banned-word" class="form-input" placeholder="Ej. insulto" required style="max-width: 300px;">
+          <button type="submit" class="btn btn--primary" style="background: var(--accent-red);">🚫 Agregar Palabra</button>
+        </form>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;" id="system-banned-words-container">
+          <!-- Palabras prohibidas renderizadas dinámicamente -->
+        </div>
+      </div>
+
+      <!-- A/B Testing y SEO overrides -->
+      <div class="grid grid--2-col grid--gap-md">
+        <div class="admin-card">
+          <h2 class="admin-subtitle">🧪 Control de Tests A/B</h2>
+          <div id="system-ab-tests-container" class="flex flex--col flex--gap-sm">
+            <!-- Tests A/B cargados dinámicamente -->
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <h2 class="admin-subtitle">🔍 Optimización SEO Overrides</h2>
+          <form id="system-seo-form" class="flex flex--col flex--gap-sm">
+            <div class="form-group">
+              <label class="form-label" for="system-seo-page">Página</label>
+              <select id="system-seo-page" class="form-input" style="background: #222; color:#fff; border: 1px solid #333;">
+                <option value="index">Inicio (index.html)</option>
+                <option value="peliculas">Películas (peliculas.html)</option>
+                <option value="series">Series (series.html)</option>
+                <option value="estrenos">Estrenos (estrenos.html)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="system-seo-title">Meta Título</label>
+              <input type="text" id="system-seo-title" class="form-input" placeholder="CineVerse - Películas en vivo">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="system-seo-desc">Meta Descripción</label>
+              <textarea id="system-seo-desc" class="form-input" placeholder="Disfruta del mejor catálogo..." style="height: 60px; resize: none;"></textarea>
+            </div>
+            <button type="submit" class="btn btn--primary" style="align-self: flex-start; background: #222; border: 1px solid #444;">
+              💾 Guardar SEO Override
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Log de Actividad del Admin -->
+      <div class="admin-card" style="margin-top: 2rem;">
+        <h2 class="admin-subtitle" style="color: var(--text-secondary);">📜 Registro de Actividad Admin (Auditoría)</h2>
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Admin</th>
+                <th>Acción</th>
+                <th>Detalles</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody id="system-logs-table-body">
+              <tr>
+                <td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem;">Cargando historial de auditoría...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 

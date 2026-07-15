@@ -288,6 +288,9 @@ class InfoPageController {
       <button class="action-btn-secondary" id="btn-rate">
         ${this.userRating > 0 ? `★ Valorada: ${this.userRating}/10` : '★ Valorar'}
       </button>
+      <button class="action-btn-secondary" id="btn-recommend-movie">
+        📢 Recomendar a un amigo
+      </button>
     `;
   }
 
@@ -457,6 +460,9 @@ class InfoPageController {
 
     const btnRate = document.getElementById('btn-rate');
     if (btnRate) btnRate.onclick = () => this._openRatingModal();
+
+    const btnRec = document.getElementById('btn-recommend-movie');
+    if (btnRec) btnRec.onclick = () => this._openRecommendModal();
   }
 
   // ── Asegurar perfil existe (fix FK) ──────────────────────────────────────
@@ -573,6 +579,109 @@ class InfoPageController {
         modal.style.display = 'none';
         this._rebuildActions();
       } catch (e) { showToast('Error al guardar valoración', 'error'); }
+    };
+  }
+
+  // ── Modal de Recomendar a un Amigo (#34) ─────────────────────────────────
+  _openRecommendModal() {
+    const title = this.details?.title || this.details?.name || 'esta';
+    const poster = this.details?.poster_path
+      ? `https://image.tmdb.org/t/p/w92${this.details.poster_path}`
+      : '';
+
+    let modal = document.getElementById('info-recommend-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'info-recommend-modal';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);';
+      modal.innerHTML = `
+        <div style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:2rem;max-width:440px;width:92%;position:relative;overflow:hidden;">
+          <!-- Glow top -->
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:200px;height:3px;background:linear-gradient(90deg,transparent,var(--accent-red),transparent);border-radius:2px;"></div>
+          <div style="display:flex;gap:1rem;align-items:flex-start;margin-bottom:1.5rem;">
+            ${poster ? `<img src="${poster}" alt="${title}" style="width:60px;border-radius:6px;flex-shrink:0;border:1px solid var(--border-red);">` : ''}
+            <div>
+              <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:0.25rem;">📢 Recomendar</h3>
+              <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.4;">Envía <strong style="color:var(--text-primary);">${title}</strong> a un amigo directamente por notificación.</p>
+            </div>
+          </div>
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;font-size:0.8rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Nombre de usuario</label>
+            <input id="rec-username-input" type="text" placeholder="ej: cinefilo123" autocomplete="off"
+              style="width:100%;background:var(--bg-void);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:0.7rem 0.9rem;color:var(--text-primary);font-family:var(--font-ui);font-size:0.95rem;outline:none;box-sizing:border-box;transition:border-color 0.2s;">
+          </div>
+          <div style="margin-bottom:1.5rem;">
+            <label style="display:block;font-size:0.8rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Mensaje (opcional)</label>
+            <textarea id="rec-message-input" placeholder="¡Creo que te va a encantar esta!" maxlength="120" rows="2"
+              style="width:100%;background:var(--bg-void);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:0.7rem 0.9rem;color:var(--text-primary);font-family:var(--font-ui);font-size:0.9rem;outline:none;resize:none;box-sizing:border-box;transition:border-color 0.2s;"></textarea>
+          </div>
+          <div style="display:flex;gap:0.75rem;">
+            <button id="rec-cancel-btn" style="flex:1;padding:0.7rem;border:1px solid var(--border-subtle);background:none;color:var(--text-primary);border-radius:var(--radius-md);cursor:pointer;font-family:var(--font-ui);font-weight:600;">Cancelar</button>
+            <button id="rec-send-btn" style="flex:2;padding:0.7rem;background:var(--accent-red);color:white;border:none;border-radius:var(--radius-md);cursor:pointer;font-family:var(--font-ui);font-weight:700;font-size:1rem;transition:background 0.2s;">📢 Enviar</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+
+      // Focus style en inputs
+      modal.querySelectorAll('input, textarea').forEach(el => {
+        el.addEventListener('focus', () => el.style.borderColor = 'var(--accent-red)');
+        el.addEventListener('blur', () => el.style.borderColor = 'var(--border-subtle)');
+      });
+    }
+
+    modal.style.display = 'flex';
+    const usernameInput = modal.querySelector('#rec-username-input');
+    const msgInput      = modal.querySelector('#rec-message-input');
+    usernameInput.value = '';
+    msgInput.value      = '';
+    setTimeout(() => usernameInput.focus(), 100);
+
+    modal.querySelector('#rec-cancel-btn').onclick = () => { modal.style.display = 'none'; };
+    modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+    modal.querySelector('#rec-send-btn').onclick = async () => {
+      const username = usernameInput.value.trim();
+      const message  = msgInput.value.trim() || `¡Mira esto en CineVerse!`;
+      if (!username) { showToast('Escribe un nombre de usuario', 'error'); return; }
+      if (!supabase) { showToast('Base de datos no disponible', 'error'); return; }
+
+      const sendBtn = modal.querySelector('#rec-send-btn');
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Enviando...';
+
+      try {
+        // Buscar al usuario destino
+        const { data: targetProfile } = await supabase.from('profiles')
+          .select('id, display_name, username')
+          .or(`username.eq.${username},display_name.eq.${username}`)
+          .maybeSingle();
+
+        if (!targetProfile) {
+          showToast(`No se encontró el usuario "${username}"`, 'error');
+          sendBtn.disabled = false;
+          sendBtn.textContent = '📢 Enviar';
+          return;
+        }
+
+        const infoLink = `info.html?id=${this.mediaId}&type=${this.mediaType}`;
+        const senderName = this.currentUser?.profile?.display_name || this.currentUser?.profile?.username || 'Alguien';
+
+        await supabase.from('notifications').insert({
+          user_id: targetProfile.id,
+          type:    'recommendation',
+          title:   `📢 ${senderName} te recomienda algo`,
+          body:    `"${message}" — ${title}`,
+          link:    infoLink
+        });
+
+        showToast(`¡Recomendación enviada a ${targetProfile.display_name || targetProfile.username}! 📢`, 'success');
+        modal.style.display = 'none';
+      } catch (err) {
+        console.error(err);
+        showToast('Error al enviar la recomendación', 'error');
+        sendBtn.disabled = false;
+        sendBtn.textContent = '📢 Enviar';
+      }
     };
   }
 }

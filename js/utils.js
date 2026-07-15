@@ -1,6 +1,7 @@
 /* ═══ cineverse/js/utils.js ═══ */
 
 import { TMDB_IMG_BASE } from './config.js';
+import { getGlobalSettings } from './settings.js';
 import './tv.js';
 
 /**
@@ -115,8 +116,31 @@ export function buildTMDBImageURL(path, size = 'original') {
     // Si es póster vertical o tarjeta común
     return 'assets/placeholder-poster.svg';
   }
-  return `${TMDB_IMG_BASE}${size}${path}`;
+  // #96 — Intentar servir WebP si el navegador lo soporta (detección lazy)
+  const base = `${TMDB_IMG_BASE}${size}${path}`;
+  // Usamos una señal global que se rellena la primera vez
+  if (typeof window !== 'undefined') {
+    if (window._cvWebP === true) {
+      return base.replace('image.tmdb.org', 'wsrv.nl/?url=image.tmdb.org') + '&output=webp';
+    }
+    if (window._cvWebP === undefined) {
+      // Detectar en background — primer llamado retorna JPEG, el resto ya sabrán
+      window._cvWebP = null; // 'detecting'
+      (async () => {
+        try {
+          const blob = await fetch(
+            'data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAADQAQCdASoBAAEAAUAmJZQCdAEO/gcAAADRh5eMQqsAMi3P3gAA'
+          ).then(r => r.blob());
+          window._cvWebP = blob.type === 'image/webp';
+        } catch {
+          window._cvWebP = false;
+        }
+      })();
+    }
+  }
+  return base;
 }
+
 
 /**
  * Deduce si el elemento de datos representa una película ('movie') o serie ('tv').
@@ -157,6 +181,50 @@ export function initPageTransition() {
     overlay.classList.remove('in');
     overlay.classList.add('out');
   }
+
+  // #75 Modo Mantenimiento y #80 SEO overrides
+  (async () => {
+    try {
+      const isMaintenancePage = window.location.pathname.includes('admin.html') || window.location.pathname.includes('login.html');
+      const settings = await getGlobalSettings();
+
+      // 1. Control de Mantenimiento
+      if (settings?.maintenance_mode && !isMaintenancePage) {
+        const { getCurrentUser } = await import('./auth.js');
+        const userObj = await getCurrentUser().catch(() => null);
+        const isAdm = userObj?.profile?.is_admin === true;
+
+        if (!isAdm) {
+          document.body.innerHTML = `
+            <div style="position:fixed;inset:0;background:#090909;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:'Outfit',sans-serif;z-index:999999;text-align:center;padding:2rem;">
+              <div style="font-size:4rem;margin-bottom:1.5rem;animation:pulse 2s infinite;">🛠️</div>
+              <h1 style="font-size:2rem;font-weight:800;margin-bottom:1rem;color:var(--accent-red,#E50914)">Mantenimiento Programado</h1>
+              <p style="color:#aaa;max-width:450px;line-height:1.6;font-size:0.95rem;">
+                CineVerse se encuentra actualizando sus servidores para ofrecerte una mejor experiencia. Volvemos muy pronto.
+              </p>
+              <div style="margin-top:2rem;height:1px;width:80px;background:rgba(255,255,255,0.1);"></div>
+              <p style="font-size:0.75rem;color:#444;margin-top:1rem;">CineVerse Tech Team</p>
+            </div>
+          `;
+          document.body.style.overflow = 'hidden';
+          return;
+        }
+      }
+
+      // 2. SEO overrides (#80)
+      const pageName = window.location.pathname.split('/').pop().replace('.html', '') || 'index';
+      const seo = settings?.seo_overrides?.[pageName];
+      if (seo) {
+        if (seo.title) document.title = seo.title;
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc && seo.desc) {
+          metaDesc.setAttribute('content', seo.desc);
+        }
+      }
+    } catch(e) {
+      console.warn('[PageTransition] Error checking maintenance/SEO:', e);
+    }
+  })();
 }
 
 /**
@@ -199,7 +267,8 @@ export const THEME_COLORS = {
   wine:        { name: 'Vino Oscuro', accent: '#991B1B', crimson: '#7F1D1D', ember: '#EF4444', dark: '#450A0A', glow: 'rgba(153,27,27,0.35)', glowInt: 'rgba(153,27,27,0.7)', border: 'rgba(153,27,27,0.4)' },
   coal:        { name: 'Carbón / Plata', accent: '#E2E8F0', crimson: '#94A3B8', ember: '#F8FAFC', dark: '#475569', glow: 'rgba(226,232,240,0.35)', glowInt: 'rgba(226,232,240,0.7)', border: 'rgba(226,232,240,0.4)' },
   lavender:    { name: 'Lavanda Mística', accent: '#A855F7', crimson: '#7E22CE', ember: '#C084FC', dark: '#581C87', glow: 'rgba(168,85,247,0.35)', glowInt: 'rgba(168,85,247,0.7)', border: 'rgba(168,85,247,0.4)' },
-  yellow_neon: { name: 'Amarillo Neón', accent: '#EAB308', crimson: '#A16207', ember: '#FDE047', dark: '#713F12', glow: 'rgba(234,179,8,0.35)', glowInt: 'rgba(234,179,8,0.7)', border: 'rgba(234,179,8,0.4)' }
+  yellow_neon: { name: 'Amarillo Neón', accent: '#EAB308', crimson: '#A16207', ember: '#FDE047', dark: '#713F12', glow: 'rgba(234,179,8,0.35)', glowInt: 'rgba(234,179,8,0.7)', border: 'rgba(234,179,8,0.4)' },
+  amoled:      { name: 'AMOLED Negro Puro', accent: '#FFFFFF', crimson: '#CCCCCC', ember: '#F0F0F0', dark: '#111111', glow: 'rgba(255,255,255,0.15)', glowInt: 'rgba(255,255,255,0.4)', border: 'rgba(255,255,255,0.25)' }
 };
 
 /**
@@ -274,4 +343,39 @@ export function protectWebCode() {
 }
 
 
-
+/**
+ * #56 — Claqueta Loader
+ * Devuelve el HTML del loader de claqueta SVG animado.
+ * Uso: el.innerHTML = getCVLoader('Cargando...');
+ */
+export function getCVLoader(text = 'Cargando...') {
+  return `
+    <div class="cv-loader" role="status" aria-label="${text}">
+      <svg class="cv-loader__svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cuerpo principal de la claqueta -->
+        <rect x="4" y="20" width="56" height="38" rx="3" fill="#1a1a2e" stroke="#e50914" stroke-width="2"/>
+        <!-- Líneas de la claqueta -->
+        <line x1="4" y1="32" x2="60" y2="32" stroke="rgba(229,9,20,0.35)" stroke-width="1"/>
+        <line x1="4" y1="44" x2="60" y2="44" stroke="rgba(229,9,20,0.35)" stroke-width="1"/>
+        <!-- Texto CINEVERSE en la claqueta -->
+        <text x="32" y="55" text-anchor="middle" font-family="monospace" font-size="5" fill="rgba(255,255,255,0.4)" letter-spacing="2">CINEVERSE</text>
+        <!-- Brazo animado de la claqueta -->
+        <g class="cv-loader__arm">
+          <rect x="4" y="10" width="56" height="11" rx="2" fill="#e50914"/>
+          <!-- Franjas diagonales del brazo -->
+          <clipPath id="armClip"><rect x="4" y="10" width="56" height="11" rx="2"/></clipPath>
+          <g clip-path="url(#armClip)">
+            <line x1="10" y1="10" x2="4"  y2="21" stroke="#fff" stroke-width="2.5" stroke-opacity="0.2"/>
+            <line x1="20" y1="10" x2="14" y2="21" stroke="#fff" stroke-width="2.5" stroke-opacity="0.2"/>
+            <line x1="30" y1="10" x2="24" y2="21" stroke="#fff" stroke-width="2.5" stroke-opacity="0.2"/>
+            <line x1="40" y1="10" x2="34" y2="21" stroke="#fff" stroke-width="2.5" stroke-opacity="0.2"/>
+            <line x1="50" y1="10" x2="44" y2="21" stroke="#fff" stroke-width="2.5" stroke-opacity="0.2"/>
+            <line x1="60" y1="10" x2="54" y2="21" stroke="#fff" stroke-width="2.5" stroke-opacity="0.2"/>
+          </g>
+        </g>
+        <!-- Bisagra -->
+        <circle cx="8" cy="20" r="3" fill="#e50914"/>
+      </svg>
+      ${text ? `<span class="cv-loader__text">${text}</span>` : ''}
+    </div>`;
+}

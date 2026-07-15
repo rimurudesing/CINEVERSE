@@ -163,7 +163,7 @@ class WatchPageController {
     });
 
     playerRoot.innerHTML = `
-      <div class="vimeus-player-wrap" style="
+      <div class="vimeus-player-wrap" id="vimeus-player-wrapper" style="
         position: relative;
         width: 100%;
         aspect-ratio: 16/9;
@@ -172,6 +172,7 @@ class WatchPageController {
         overflow: hidden;
         border: 1px solid var(--border-subtle);
         box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(229,9,20,0.15);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       ">
         <!-- Glow rojo en la parte inferior del player -->
         <div style="
@@ -190,6 +191,61 @@ class WatchPageController {
           allowfullscreen
           allow="autoplay; fullscreen; picture-in-picture"
         ></iframe>
+
+        <!-- #59 CAPTURA DE GESTOS OVERLAY -->
+        <div id="player-gesture-capture" style="
+          position: absolute; inset: 0; z-index: 10;
+          cursor: pointer;
+        "></div>
+
+        <!-- #59 BRIGHTNESS DIMMING OVERLAY -->
+        <div id="player-brightness-overlay" style="
+          position: absolute; inset: 0; z-index: 9;
+          background: black; opacity: 0; pointer-events: none;
+        "></div>
+
+        <!-- #59 HUD OVERLAY -->
+        <div id="player-hud-toast" style="
+          position: absolute; top: 50%; left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 11;
+          background: rgba(0,0,0,0.85);
+          color: white; border: 1px solid rgba(255,255,255,0.15);
+          padding: 0.75rem 1.5rem; border-radius: 30px;
+          font-family: var(--font-ui); font-size: 0.9rem; font-weight: 700;
+          display: none; align-items: center; gap: 0.5rem;
+          pointer-events: none;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        "></div>
+
+        <!-- #53 PIP FLOATING CONTROLS -->
+        <div id="player-pip-controls" style="
+          display: none; position: absolute; top: 0.75rem; right: 0.75rem;
+          z-index: 12; gap: 0.5rem;
+        ">
+          <button id="pip-restore" style="
+            background: rgba(0,0,0,0.75); border: 1px solid rgba(255,255,255,0.25);
+            color: #fff; border-radius: 50%; width: 32px; height: 32px;
+            cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+          ">⤢</button>
+          <button id="pip-close" style="
+            background: rgba(0,0,0,0.75); border: 1px solid rgba(255,255,255,0.25);
+            color: #fff; border-radius: 50%; width: 32px; height: 32px;
+            cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+          ">✕</button>
+        </div>
+
+        <!-- Toggle Switch Gestos -->
+        <div id="gesture-toggle-pill" style="
+          position: absolute; bottom: 0.75rem; left: 0.75rem; z-index: 12;
+          display: flex; align-items: center; gap: 0.35rem;
+          background: rgba(0,0,0,0.75); padding: 0.3rem 0.6rem;
+          border-radius: 20px; font-size: 0.72rem;
+          border: 1px solid rgba(255,255,255,0.15);
+        ">
+          <input type="checkbox" id="gesture-active-chk" checked style="accent-color: var(--accent-red); cursor: pointer; margin:0;">
+          <label for="gesture-active-chk" style="color: #fff; font-weight: 700; cursor: pointer; user-select: none;">Gestos Táctiles</label>
+        </div>
       </div>
 
       <!-- Botón de Cast a TV con Web Video Caster -->
@@ -199,8 +255,9 @@ class WatchPageController {
       ${this.mediaType === 'tv' ? this.buildEpisodeBar() : ''}
     `;
 
-    // Vincular eventos del botón de Cast
+    // Vincular eventos del botón de Cast y PiP
     this.bindCastButton();
+    this.bindPiPAndGestures();
 
     // Vincular eventos del selector de episodios (series)
     if (this.mediaType === 'tv') {
@@ -216,43 +273,23 @@ class WatchPageController {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        background: linear-gradient(135deg, rgba(3,155,229,0.1) 0%, rgba(0,100,200,0.06) 100%);
-        border: 1px solid rgba(3,155,229,0.3);
+        background: linear-gradient(135deg, rgba(3,155,229,0.08) 0%, rgba(124,58,237,0.04) 100%);
+        border: 1px solid var(--border-subtle);
         border-radius: var(--radius-md);
         padding: 0.9rem 1.25rem;
         flex-wrap: wrap;
       ">
         <!-- Icono TV -->
-        <svg style="width:28px;height:28px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#039BE5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg style="width:24px;height:24px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#039BE5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="3" width="20" height="14" rx="2"/>
           <polyline points="8 21 12 17 16 21"/>
           <circle cx="12" cy="10" r="2" fill="#039BE5" stroke="none"/>
-          <path d="M8 10 Q10 7 12 10 Q14 13 16 10" stroke="#039BE5" fill="none"/>
         </svg>
         <div style="flex:1;min-width:0;">
           <p style="font-size:0.82rem;color:var(--text-secondary);margin:0;font-family:var(--font-ui);">
-            <strong style="color:var(--text-primary);">¿Quieres verlo en tu TV?</strong> Usa Web Video Caster para transmitir a Chromecast, Roku, Smart TV y más.
+            <strong style="color:var(--text-primary);">Opciones de Reproducción:</strong> Transmite a tu Smart TV o activa la reproducción flotante.
           </p>
         </div>
-        <button id="wvc-cast-btn" style="
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          background: linear-gradient(135deg, #0277BD 0%, #039BE5 100%);
-          color: white;
-          border: none;
-          border-radius: var(--radius-sm);
-          padding: 0.6rem 1.2rem;
-          font-family: var(--font-ui);
-          font-size: 0.85rem;
-          font-weight: 700;
-          cursor: pointer;
-          white-space: nowrap;
-          box-shadow: 0 4px 12px rgba(3,155,229,0.35);
-          transition: all 0.2s ease;
-          flex-shrink: 0;
-        ">
-          <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="white">
             <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2C12 12.94 7.06 8 1 10zm20-7H3C1.9 3 1 3.9 1 5v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
           </svg>
           Enviar a TV
@@ -875,6 +912,123 @@ class WatchPageController {
 
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  // ── Gestos y Picture-in-Picture (#53, #59) ─────────────────────────────────
+  bindPiPAndGestures() {
+    const wrapper = document.getElementById('vimeus-player-wrapper');
+    const pipToggle = document.getElementById('pip-toggle-btn');
+    const pipControls = document.getElementById('player-pip-controls');
+    const pipRestore = document.getElementById('pip-restore');
+    const pipClose = document.getElementById('pip-close');
+
+    if (wrapper && pipToggle && pipControls && pipRestore && pipClose) {
+      pipToggle.onclick = () => {
+        wrapper.style.position = 'fixed';
+        wrapper.style.bottom = '2rem';
+        wrapper.style.right = '2rem';
+        wrapper.style.width = '320px';
+        wrapper.style.height = '180px';
+        wrapper.style.zIndex = '9999';
+        wrapper.style.boxShadow = '0 20px 50px rgba(0,0,0,0.9), 0 0 0 2px var(--accent-red)';
+        pipControls.style.display = 'flex';
+        showToast('Minimizando reproductor...', 'info');
+      };
+
+      const restorePlayer = () => {
+        wrapper.style.position = '';
+        wrapper.style.bottom = '';
+        wrapper.style.right = '';
+        wrapper.style.width = '';
+        wrapper.style.height = '';
+        wrapper.style.zIndex = '';
+        wrapper.style.boxShadow = '';
+        pipControls.style.display = 'none';
+      };
+
+      pipRestore.onclick = restorePlayer;
+      pipClose.onclick = () => {
+        restorePlayer();
+        const iframe = document.getElementById('vimeus-iframe');
+        if (iframe) iframe.src = 'about:blank';
+        wrapper.parentNode.innerHTML = `<div style="aspect-ratio:16/9;width:100%;background:var(--bg-secondary);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;border:1px solid var(--border-subtle);"><p style="color:var(--text-secondary);">Reproducción cerrada.</p></div>`;
+      };
+    }
+
+    const gestureArea = document.getElementById('player-gesture-capture');
+    const brightnessOverlay = document.getElementById('player-brightness-overlay');
+    const hudToast = document.getElementById('player-hud-toast');
+    const gestureChk = document.getElementById('gesture-active-chk');
+
+    if (gestureArea && brightnessOverlay && hudToast && gestureChk) {
+      let startX = 0, startY = 0;
+      let isSwipe = false;
+      let startBrightness = 0;
+      let currentOpacity = 0;
+
+      currentOpacity = parseFloat(brightnessOverlay.style.opacity) || 0;
+
+      const showHUD = (text, icon) => {
+        hudToast.innerHTML = `<span>${icon}</span> <span>${text}</span>`;
+        hudToast.style.display = 'flex';
+        clearTimeout(hudToast.timer);
+        hudToast.timer = setTimeout(() => hudToast.style.display = 'none', 1500);
+      };
+
+      gestureArea.addEventListener('touchstart', (e) => {
+        if (!gestureChk.checked) return;
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        isSwipe = false;
+        startBrightness = 1 - currentOpacity;
+      }, { passive: true });
+
+      gestureArea.addEventListener('touchmove', (e) => {
+        if (!gestureChk.checked) return;
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - startX;
+        const deltaY = touch.clientY - startY;
+
+        if (Math.abs(deltaX) > 15 || Math.abs(deltaY) > 15) {
+          isSwipe = true;
+          if (e.cancelable) e.preventDefault();
+
+          const rect = gestureArea.getBoundingClientRect();
+          const touchXRelative = touch.clientX - rect.left;
+
+          if (Math.abs(deltaY) > Math.abs(deltaX)) {
+            const pctChange = -(deltaY / rect.height);
+
+            if (touchXRelative < rect.width / 2) {
+              let newBrightness = startBrightness + pctChange;
+              newBrightness = Math.max(0.1, Math.min(1, newBrightness));
+              currentOpacity = 1 - newBrightness;
+              brightnessOverlay.style.opacity = currentOpacity;
+              showHUD(`Brillo: ${Math.round(newBrightness * 100)}%`, '🔆');
+            } else {
+              let mockVol = Math.round(50 + (pctChange * 50));
+              mockVol = Math.max(0, Math.min(100, mockVol));
+              showHUD(`Volumen: ${mockVol}%`, '🔊');
+            }
+          } else {
+            const seekSeconds = Math.round(deltaX * 0.5);
+            const sign = seekSeconds >= 0 ? '+' : '';
+            showHUD(`Seek: ${sign}${seekSeconds}s`, '⏩');
+          }
+        }
+      }, { passive: false });
+
+      gestureArea.addEventListener('touchend', (e) => {
+        if (!gestureChk.checked) return;
+        if (!isSwipe) {
+          gestureArea.style.pointerEvents = 'none';
+          setTimeout(() => {
+            gestureArea.style.pointerEvents = 'auto';
+          }, 350);
+        }
+      });
     }
   }
 

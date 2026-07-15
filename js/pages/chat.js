@@ -11,6 +11,7 @@ import { getCurrentUser } from '../auth.js';
 import { showToast, buildTMDBImageURL } from '../utils.js';
 import { api } from '../api.js';
 import { getGlobalSettings } from '../settings.js';
+import { ChatEnhancements } from '../components/chatEnhancements.js';
 
 // ─── Rangos por Nivel ────────────────────────────────────────────────────────
 const LEVEL_RANKS = [
@@ -46,6 +47,10 @@ class ChatPageLobby {
     this.reactionChannel = null;
     this.supabase      = null;
     this.replyingTo    = null;
+    this.messageReactions = {};
+    this.activePolls      = {};
+    this.pollVotes        = {};
+    this.enhancements     = new ChatEnhancements(this);
   }
 
   async init() {
@@ -85,6 +90,9 @@ class ChatPageLobby {
 
     // Configurar todos los listeners
     this.setupListeners();
+
+    // Inicializar mejoras de chat
+    this.enhancements.init();
 
     await this.loadMessages();
     await this.loadPremiumMecenas();
@@ -170,13 +178,24 @@ class ChatPageLobby {
           required
           class="chat-input-text"
           autocomplete="off">
+        <button type="button" id="chat-mic-btn" class="chat-mic-btn" title="Mantén presionado para grabar voz (máx. 60s)" aria-label="Grabar mensaje de voz">
+          🎙️
+        </button>
         <button type="submit" id="chat-send-btn" class="chat-send-btn">
           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
       </form>
+      <div id="chat-recording-indicator" style="display:none;align-items:center;gap:0.5rem;padding:0.35rem 0.75rem;margin-top:0.35rem;background:rgba(229,9,20,0.1);border:1px solid rgba(229,9,20,0.3);border-radius:var(--radius-sm);font-size:0.78rem;color:var(--accent-red);">
+        <span class="voice-rec-dot"></span>
+        <span>Grabando... <span id="chat-rec-timer">0s</span> / 60s</span>
+        <span style="margin-left:auto;font-size:0.7rem;color:var(--text-muted);">Suelta para enviar</span>
+      </div>
       <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.35rem;text-align:center;">
         Doble clic en un mensaje para responder · <code style="background:rgba(255,255,255,0.06);padding:0.1rem 0.3rem;border-radius:3px;">/peli [nombre]</code> para compartir una ficha
       </div>`;
+
+    // Configurar el micrófono después de inyectar el HTML
+    this._setupVoiceRecorder();
   }
 
   // ─── Barra de Reacciones ───────────────────────────────────────────────────
@@ -256,6 +275,138 @@ class ChatPageLobby {
     }
   }
 
+  // ─── Voice Recorder ────────────────────────────────────────────────────────
+  _setupVoiceRecorder() {
+    const micBtn = document.getElementById('chat-mic-btn');
+    if (!micBtn) return;
+
+    const isPremium = !!this.currentUser?.profile?.is_premium;
+
+    // Si no es premium, sólo mostrar toast
+    if (!isPremium) {
+      micBtn.addEventListener('click', () => {
+        showToast('🎙️ Solo Premium puede enviar audios', 'error');
+      });
+      return;
+    }
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordingTimer = null;
+    let recordingSeconds = 0;
+    const MAX_SECONDS = 60;
+
+    const indicator = document.getElementById('chat-recording-indicator');
+    const timerEl = document.getElementById('chat-rec-timer');
+
+    const startRecording = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        recordingSeconds = 0;
+
+        // Elegir el mejor codec disponible
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : MediaRecorder.isTypeSupported('audio/webm')
+            ? 'audio/webm'
+            : 'audio/ogg';
+
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) audioChunks.push(e.data);
+        };
+        mediaRecorder.onstop = async () => {
+          // Parar todos los tracks
+          stream.getTracks().forEach(t => t.stop());
+          clearInterval(recordingTimer);
+          indicator.style.display = 'none';
+          micBtn.classList.remove('recording');
+
+          if (audioChunks.length === 0 || recordingSeconds < 1) return;
+
+          const blob = new Blob(audioChunks, { type: mimeType });
+          await this._uploadVoiceMessage(blob);
+        };
+
+        mediaRecorder.start(200); // Recolectar datos cada 200ms
+        micBtn.classList.add('recording');
+        indicator.style.display = 'flex';
+        timerEl.textContent = '0s';
+
+        // Contador de tiempo
+        recordingTimer = setInterval(() => {
+          recordingSeconds++;
+          timerEl.textContent = `${recordingSeconds}s`;
+          if (recordingSeconds >= MAX_SECONDS) stopRecording();
+        }, 1000);
+
+      } catch (err) {
+        console.error('Voice: Error al acceder al micrófono', err);
+        showToast('🎙️ No se pudo acceder al micrófono', 'error');
+      }
+    };
+
+    const stopRecording = () => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+    };
+
+    // Eventos de mouse (desktop)
+    micBtn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      startRecording();
+    });
+    micBtn.addEventListener('mouseup', stopRecording);
+    micBtn.addEventListener('mouseleave', stopRecording);
+
+    // Eventos táctiles (móvil)
+    micBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      startRecording();
+    }, { passive: false });
+    micBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      stopRecording();
+    }, { passive: false });
+  }
+
+  async _uploadVoiceMessage(blob) {
+    if (!this.supabase || !this.currentUser) return;
+
+    showToast('⬆️ Subiendo audio...', 'info');
+
+    try {
+      const timestamp = Date.now();
+      const ext = blob.type.includes('ogg') ? 'ogg' : 'webm';
+      const path = `voice_messages/${this.currentUser.id}/${timestamp}.${ext}`;
+
+      const { data: uploadData, error: uploadError } = await this.supabase.storage
+        .from('voice-messages')
+        .upload(path, blob, { contentType: blob.type, upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = this.supabase.storage
+        .from('voice-messages')
+        .getPublicUrl(path);
+
+      // Insertar mensaje con voice_url
+      const { error: msgError } = await this.supabase.from('chat_messages').insert({
+        user_id: this.currentUser.id,
+        message: '🎙️ Mensaje de voz',
+        voice_url: publicUrl
+      });
+
+      if (msgError) throw msgError;
+      showToast('✅ Audio enviado', 'success');
+    } catch (err) {
+      console.error('Voice: Error al subir audio', err);
+      showToast('❌ No se pudo enviar el audio', 'error');
+    }
+  }
+
   // ─── Listeners ─────────────────────────────────────────────────────────────
   setupListeners() {
     // Submit del formulario de chat
@@ -274,6 +425,16 @@ class ChatPageLobby {
       if (text.toLowerCase().startsWith('/peli ')) {
         const query = text.slice(6).trim();
         if (query) await this.handlePeliCommand(query);
+        return;
+      }
+
+      // Comando /encuesta
+      if (text.toLowerCase().startsWith('/encuesta ')) {
+        if (!this.currentUser?.profile?.is_premium) {
+          showToast('🔒 Las encuestas son exclusivas de usuarios Premium', 'error');
+          return;
+        }
+        await this.enhancements.handlePollCommand(text);
         return;
       }
 
@@ -326,7 +487,7 @@ class ChatPageLobby {
     const author  = profile.display_name || profile.username || 'Usuario';
     const preview = (msg.message || '').slice(0, 55) + (msg.message?.length > 55 ? '…' : '');
 
-    this.replyingTo = { id: msg.id, preview, author };
+    this.replyingTo = { id: msg.id, preview, author, user_id: msg.user_id };
 
     const bar  = document.getElementById('chat-reply-bar');
     const text = document.getElementById('chat-reply-text');
@@ -383,6 +544,61 @@ class ChatPageLobby {
       if (error) throw error;
 
       this.messages = (data || []).reverse();
+
+      // Cargar reacciones y encuestas en lote
+      const msgIds = this.messages.map(m => m.id);
+      if (msgIds.length > 0) {
+        const { data: rxData } = await this.supabase
+          .from('message_reactions')
+          .select('*')
+          .in('message_id', msgIds);
+        
+        this.messageReactions = {};
+        if (rxData) {
+          rxData.forEach(rx => {
+            if (!this.messageReactions[rx.message_id]) this.messageReactions[rx.message_id] = [];
+            this.messageReactions[rx.message_id].push(rx);
+          });
+        }
+
+        // Cargar encuestas
+        const pollMessages = this.messages.filter(m => {
+          if (!m.rich_card) return false;
+          try {
+            const card = JSON.parse(m.rich_card);
+            return card.type === 'poll';
+          } catch(e) { return false; }
+        });
+
+        if (pollMessages.length > 0) {
+          const pollIds = pollMessages.map(m => JSON.parse(m.rich_card).poll_id);
+          const { data: polls } = await this.supabase
+            .from('chat_polls')
+            .select('*')
+            .in('id', pollIds);
+
+          const { data: votes } = await this.supabase
+            .from('chat_poll_votes')
+            .select('*')
+            .in('poll_id', pollIds);
+
+          this.activePolls = {};
+          if (polls) {
+            polls.forEach(p => {
+              this.activePolls[p.id] = p;
+            });
+          }
+
+          this.pollVotes = {};
+          if (votes) {
+            votes.forEach(v => {
+              if (!this.pollVotes[v.poll_id]) this.pollVotes[v.poll_id] = [];
+              this.pollVotes[v.poll_id].push(v);
+            });
+          }
+        }
+      }
+
       this.renderMessages();
       this.scrollToBottom();
     } catch (e) {
@@ -402,6 +618,20 @@ class ChatPageLobby {
     }
 
     container.innerHTML = this.messages.map(msg => this.formatMessageHTML(msg)).join('');
+  }
+
+  updateMessageDOM(msgId) {
+    const msg = this.messages.find(m => String(m.id) === String(msgId));
+    if (!msg) return;
+    const el = document.querySelector(`.chat-msg[data-msg-id="${msgId}"]`);
+    if (el) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = this.formatMessageHTML(msg);
+      const newEl = tempDiv.firstElementChild;
+      if (newEl) {
+        el.parentNode.replaceChild(newEl, el);
+      }
+    }
   }
 
   formatMessageHTML(msg) {
@@ -450,21 +680,81 @@ class ChatPageLobby {
       replyHTML = `<div class="chat-reply-preview">↩️ ${msg.reply_preview}</div>`;
     }
 
-    // Rich Card (ficha de película)
+    // Rich Card (ficha de película, gif, sticker, encuesta)
     let richCardHTML = '';
     if (msg.rich_card) {
       try {
         const card = typeof msg.rich_card === 'string' ? JSON.parse(msg.rich_card) : msg.rich_card;
-        richCardHTML = `
-          <a class="chat-rich-card" href="detalle.html?id=${card.id}&type=${card.type}">
-            <img src="${card.poster}" alt="${card.title}" loading="lazy">
-            <div>
-              <div style="font-weight:700;font-size:0.88rem;">${card.title}</div>
-              <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.15rem;">${card.year || ''} ${card.vote ? '· ⭐ ' + card.vote : ''}</div>
-              <div style="font-size:0.72rem;color:var(--accent-red);margin-top:0.2rem;">Ver ficha →</div>
-            </div>
-          </a>`;
+        if (card.type === 'gif') {
+          richCardHTML = `
+            <div class="chat-gif-container" style="margin-top:0.35rem; max-width:220px; border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
+              <img src="${card.url}" alt="GIF" style="width:100%; display:block; object-fit:contain;">
+            </div>`;
+        } else if (card.type === 'sticker') {
+          richCardHTML = `
+            <div class="chat-sticker-container" style="margin-top:0.35rem; max-width:120px;">
+              <img src="${card.url}" alt="Sticker" style="width:100%; display:block; object-fit:contain;">
+            </div>`;
+        } else if (card.type === 'poll') {
+          const poll = this.activePolls[card.poll_id];
+          if (poll) {
+            const votes = this.pollVotes[card.poll_id] || [];
+            richCardHTML = this.enhancements.renderPollCard(poll, votes);
+          } else {
+            richCardHTML = `<div style="font-size:0.75rem; color:var(--text-muted); padding:0.5rem; background:rgba(255,255,255,0.02); border-radius:8px; margin-top:0.4rem;">📊 Cargando encuesta...</div>`;
+          }
+        } else {
+          richCardHTML = `
+            <a class="chat-rich-card" href="detalle.html?id=${card.id}&type=${card.type}">
+              <img src="${card.poster}" alt="${card.title}" loading="lazy">
+              <div>
+                <div style="font-weight:700;font-size:0.88rem;">${card.title}</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.15rem;">${card.year || ''} ${card.vote ? '· ⭐ ' + card.vote : ''}</div>
+                <div style="font-size:0.72rem;color:var(--accent-red);margin-top:0.2rem;">Ver ficha →</div>
+              </div>
+            </a>`;
+        }
       } catch (e) { /* card rota, ignorar */ }
+    }
+
+    // Reacciones individuales (#20)
+    let reactionsHTML = '';
+    const reactions = this.messageReactions[msg.id] || [];
+    if (reactions.length > 0) {
+      const counts = {};
+      reactions.forEach(r => {
+        counts[r.emoji] = (counts[r.emoji] || 0) + 1;
+      });
+      reactionsHTML = `
+        <div class="chat-msg-reactions" style="display:flex; gap:0.25rem; margin-top:0.25rem; flex-wrap:wrap;">
+          ${Object.entries(counts).map(([emoji, count]) => `
+            <div class="msg-reaction-pill" data-emoji="${emoji}" style="
+              background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+              border-radius:12px; padding:0.1rem 0.4rem; font-size:0.72rem; display:flex; align-items:center; gap:0.25rem;
+            ">
+              <span>${emoji}</span>
+              <span style="font-weight:700; color:var(--text-secondary);">${count}</span>
+            </div>
+          `).join('')}
+        </div>`;
+    }
+
+    // Voice message player
+    let voicePlayerHTML = '';
+    if (msg.voice_url) {
+      const audioId = `voice-audio-${msg.id}`;
+      voicePlayerHTML = `
+        <div class="voice-msg-player" data-audio-id="${audioId}">
+          <button class="voice-play-btn" data-audio-id="${audioId}" title="Reproducir / Pausar">
+            <svg class="voice-icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg class="voice-icon-pause" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <div class="voice-waveform" aria-hidden="true">
+            ${Array.from({ length: 20 }, (_, i) => `<span class="voice-bar" style="height:${6 + Math.sin(i * 0.7 + 1) * 8 + Math.random() * 6}px;"></span>`).join('')}
+          </div>
+          <span class="voice-duration" data-audio-id="${audioId}">0:00</span>
+          <audio id="${audioId}" src="${msg.voice_url}" preload="metadata" style="display:none;"></audio>
+        </div>`;
     }
 
     return `
@@ -482,9 +772,10 @@ class ChatPageLobby {
           </div>
           ${replyHTML}
           <div class="chat-msg-bubble ${isMsgPremium ? 'premium-bubble' : ''}">
-            ${sanitizedMsg}
-            ${richCardHTML}
+            ${msg.voice_url ? voicePlayerHTML : sanitizedMsg}
+            ${msg.voice_url ? '' : richCardHTML}
           </div>
+          ${reactionsHTML}
         </div>
       </div>`;
   }
@@ -516,6 +807,15 @@ class ChatPageLobby {
   // ─── Enviar Mensaje ────────────────────────────────────────────────────────
   async sendMessage(text, replyData = null, richCard = null) {
     if (!this.currentUser) return;
+    
+    // #97 Rate Limiting
+    const now = Date.now();
+    if (this.lastMessageSentTime && (now - this.lastMessageSentTime < 2000)) {
+      showToast('⏳ Espera 2 segundos entre mensajes (anti-spam)', 'warning');
+      return;
+    }
+    this.lastMessageSentTime = now;
+
     try {
       const payload = { user_id: this.currentUser.id, message: text };
       if (replyData) {
@@ -529,6 +829,19 @@ class ChatPageLobby {
         if (error.code === '42501' || error.message?.includes('permission denied')) {
           showToast('Solo miembros Premium pueden escribir en el chat.', 'error');
         } else throw error;
+      } else {
+        // Enviar notificación in-app de respuesta (#88)
+        if (replyData && replyData.user_id && replyData.user_id !== this.currentUser.id) {
+          const profile = this.currentUser.profile || {};
+          const senderName = profile.display_name || profile.username || 'Un usuario';
+          await this.supabase.from('notifications').insert({
+            user_id: replyData.user_id,
+            type: 'chat_reply',
+            title: '💬 Respondieron a tu mensaje',
+            body: `@${senderName} te respondió: "${text.slice(0, 50)}${text.length > 50 ? '...' : ''}"`,
+            link: 'chat.html'
+          });
+        }
       }
     } catch (e) {
       console.error('ChatLobby: Error al enviar', e);
@@ -689,7 +1002,23 @@ class ChatPageLobby {
         this.scrollToBottom();
       }
 
-      if (leveledUp) showToast(`🎉 ¡Subiste al Nivel ${newLevel}!`, 'success');
+      if (leveledUp) {
+        // #85 — Modal de logro épico en lugar del simple toast
+        const RANK_NAMES = {
+          1: 'Espectador Casual', 2: 'Aficionado del Cine', 3: 'Cinéfilo',
+          4: 'Crítico Amateur', 5: 'Cronista de Películas', 6: 'Analista Fílmico',
+          7: 'Experto en Series', 8: 'Maratonista Épico', 9: 'Maestro del Cine', 10: 'CineGod'
+        };
+        if (typeof window.showLevelUpModal === 'function') {
+          window.showLevelUpModal({
+            level: newLevel,
+            rankName: RANK_NAMES[Math.min(newLevel, 10)] || `Nivel ${newLevel}`,
+            xpGained: trivia.xp_reward
+          });
+        } else {
+          showToast(`🎉 ¡Subiste al Nivel ${newLevel}!`, 'success');
+        }
+      }
 
     } catch (e) {
       console.error('CineBot: Error al dar XP', e);
@@ -735,6 +1064,52 @@ class ChatPageLobby {
         if (el) { el.style.transition = 'opacity 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
         this.messages = this.messages.filter(m => m.id !== deletedId);
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'message_reactions' }, async (payload) => {
+        const reaction = payload.new || payload.old;
+        if (!reaction) return;
+        const msgId = reaction.message_id;
+        
+        // Volver a cargar reacciones de este mensaje
+        const { data: rxData } = await this.supabase
+          .from('message_reactions')
+          .select('*')
+          .eq('message_id', msgId);
+        
+        this.messageReactions[msgId] = rxData || [];
+        this.updateMessageDOM(msgId);
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_polls' }, (payload) => {
+        const poll = payload.new;
+        if (!poll) return;
+        this.activePolls[poll.id] = poll;
+        this.pollVotes[poll.id] = [];
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_poll_votes' }, async (payload) => {
+        const vote = payload.new || payload.old;
+        if (!vote) return;
+        const pollId = vote.poll_id;
+
+        // Volver a cargar votos de esta encuesta
+        const { data: votes } = await this.supabase
+          .from('chat_poll_votes')
+          .select('*')
+          .eq('poll_id', pollId);
+
+        this.pollVotes[pollId] = votes || [];
+
+        // Buscar mensaje con este poll_id y actualizar
+        const pollMsg = this.messages.find(m => {
+          if (!m.rich_card) return false;
+          try {
+            const card = JSON.parse(m.rich_card);
+            return card.type === 'poll' && String(card.poll_id) === String(pollId);
+          } catch(e) { return false; }
+        });
+
+        if (pollMsg) {
+          this.updateMessageDOM(pollMsg.id);
+        }
+      })
       .subscribe();
   }
 
@@ -763,6 +1138,80 @@ class ChatPageLobby {
   scrollToBottom() {
     const container = document.getElementById('chat-messages-container');
     if (container) setTimeout(() => { container.scrollTop = container.scrollHeight; }, 60);
+  }
+
+  // ─── Voice Player: Setup de eventos ───────────────────────────────────────
+  _setupVoicePlayerEvents(container) {
+    if (!container) return;
+    // Delegación de eventos para players de voz inyectados en el DOM
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('.voice-play-btn');
+      if (!btn) return;
+      const audioId = btn.getAttribute('data-audio-id');
+      const audio = document.getElementById(audioId);
+      if (!audio) return;
+
+      const playerEl = btn.closest('.voice-msg-player');
+      const iconPlay  = btn.querySelector('.voice-icon-play');
+      const iconPause = btn.querySelector('.voice-icon-pause');
+      const durationEl = playerEl?.querySelector('.voice-duration');
+      const bars = playerEl?.querySelectorAll('.voice-bar');
+
+      if (audio.paused) {
+        // Pausar cualquier otro audio en reproducción
+        document.querySelectorAll('.voice-msg-player audio').forEach(a => {
+          if (a.id !== audioId && !a.paused) {
+            a.pause();
+            const otherBtn = document.querySelector(`.voice-play-btn[data-audio-id="${a.id}"]`);
+            if (otherBtn) {
+              otherBtn.querySelector('.voice-icon-play').style.display = '';
+              otherBtn.querySelector('.voice-icon-pause').style.display = 'none';
+            }
+            const otherPlayer = otherBtn?.closest('.voice-msg-player');
+            otherPlayer?.querySelectorAll('.voice-bar').forEach(b => b.classList.remove('playing'));
+          }
+        });
+
+        audio.play();
+        iconPlay.style.display = 'none';
+        iconPause.style.display = '';
+        bars?.forEach(b => b.classList.add('playing'));
+
+        // Actualizar duración en tiempo real
+        audio.ontimeupdate = () => {
+          if (durationEl) {
+            const t = audio.currentTime;
+            const m = Math.floor(t / 60);
+            const s = Math.floor(t % 60).toString().padStart(2, '0');
+            durationEl.textContent = `${m}:${s}`;
+          }
+        };
+        audio.onended = () => {
+          iconPlay.style.display = '';
+          iconPause.style.display = 'none';
+          bars?.forEach(b => b.classList.remove('playing'));
+          if (durationEl) durationEl.textContent = '0:00';
+        };
+      } else {
+        audio.pause();
+        iconPlay.style.display = '';
+        iconPause.style.display = 'none';
+        bars?.forEach(b => b.classList.remove('playing'));
+      }
+    });
+
+    // Cargar duración cuando el metadata está disponible
+    container.addEventListener('loadedmetadata', (e) => {
+      if (!e.target.matches('audio')) return;
+      const audio = e.target;
+      const playerEl = audio.closest('.voice-msg-player');
+      const durationEl = playerEl?.querySelector('.voice-duration');
+      if (durationEl && isFinite(audio.duration)) {
+        const m = Math.floor(audio.duration / 60);
+        const s = Math.floor(audio.duration % 60).toString().padStart(2, '0');
+        durationEl.textContent = `${m}:${s}`;
+      }
+    }, true);
   }
 
   // ─── Estilos Dinámicos ─────────────────────────────────────────────────────
@@ -880,6 +1329,120 @@ class ChatPageLobby {
       }
       .chat-rich-card:hover { border-color: var(--accent-red); }
       .chat-rich-card img { width:44px; aspect-ratio:2/3; object-fit:cover; border-radius:4px; flex-shrink:0; }
+
+      /* ── Botón Micrófono ─────────────────────────────────────── */
+      .chat-mic-btn {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.05rem;
+        flex-shrink: 0;
+        transition: all 0.2s;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+      }
+      .chat-mic-btn:hover {
+        background: rgba(229,9,20,0.15);
+        border-color: rgba(229,9,20,0.4);
+        transform: scale(1.08);
+      }
+      .chat-mic-btn.recording {
+        background: rgba(229,9,20,0.25);
+        border-color: var(--accent-red);
+        box-shadow: 0 0 12px rgba(229,9,20,0.5);
+        animation: micPulse 1s ease-in-out infinite;
+      }
+      @keyframes micPulse {
+        0%, 100% { box-shadow: 0 0 8px rgba(229,9,20,0.4); }
+        50%       { box-shadow: 0 0 18px rgba(229,9,20,0.7); }
+      }
+
+      /* ── Indicador de grabación (punto rojo parpadeante) ─────── */
+      .voice-rec-dot {
+        display: inline-block;
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--accent-red);
+        animation: recBlink 0.9s ease-in-out infinite;
+        flex-shrink: 0;
+      }
+      @keyframes recBlink {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.2; }
+      }
+
+      /* ── Player de Voz ───────────────────────────────────────── */
+      .voice-msg-player {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.5rem 0.6rem;
+        background: rgba(255,255,255,0.04);
+        border-radius: 20px;
+        min-width: 180px;
+        max-width: 260px;
+      }
+      .chat-msg--own .voice-msg-player {
+        background: rgba(255,255,255,0.08);
+      }
+      .voice-play-btn {
+        background: rgba(255,255,255,0.1);
+        border: none;
+        border-radius: 50%;
+        width: 32px; height: 32px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background 0.2s, transform 0.15s;
+        color: #fff;
+      }
+      .voice-play-btn:hover { background: rgba(229,9,20,0.6); transform: scale(1.1); }
+      .voice-play-btn svg {
+        width: 16px; height: 16px;
+        fill: #fff;
+        pointer-events: none;
+      }
+      .voice-waveform {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex: 1;
+        height: 28px;
+        overflow: hidden;
+      }
+      .voice-bar {
+        display: inline-block;
+        width: 3px;
+        border-radius: 2px;
+        background: rgba(255,255,255,0.3);
+        transition: background 0.2s, transform 0.15s;
+        flex-shrink: 0;
+      }
+      .voice-bar.playing {
+        background: rgba(229,9,20,0.85);
+        animation: voiceBarBounce 0.6s ease-in-out infinite alternate;
+      }
+      .voice-bar.playing:nth-child(odd) { animation-delay: 0.1s; }
+      .voice-bar.playing:nth-child(3n)  { animation-delay: 0.25s; }
+      @keyframes voiceBarBounce {
+        from { transform: scaleY(0.5); }
+        to   { transform: scaleY(1.5); }
+      }
+      .voice-duration {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.5);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -887,5 +1450,9 @@ class ChatPageLobby {
 
 document.addEventListener('DOMContentLoaded', () => {
   const chatLobby = new ChatPageLobby();
-  chatLobby.init();
+  chatLobby.init().then(() => {
+    // Configurar eventos del player de voz después de que el DOM esté listo
+    const container = document.getElementById('chat-messages-container');
+    chatLobby._setupVoicePlayerEvents(container);
+  });
 });

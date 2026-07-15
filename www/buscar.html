@@ -7,6 +7,11 @@
   <link rel="apple-touch-icon" href="assets/icon.png">
 
   <meta charset="UTF-8">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#e50914">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CineVerse">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CineVerse — Buscador Universal</title>
   <meta name="description" content="Busca películas, series y todo el catálogo de CineVerse. Resultados en tiempo real con filtros avanzados.">
@@ -206,7 +211,7 @@
 
     .search-box__clear {
       position: absolute;
-      right: 5rem;
+      right: 9rem;
       background: none;
       border: none;
       color: var(--text-muted);
@@ -227,6 +232,34 @@
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    .search-box__voice {
+      position: absolute;
+      right: 5rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0.4rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s;
+    }
+
+    .search-box__voice:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+    .search-box__voice.listening {
+      color: var(--accent-red);
+      animation: voicePulse 1s ease infinite;
+    }
+
+    @keyframes voicePulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(229,9,20,0.5); }
+      50% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(229,9,20,0); }
     }
 
     .search-box__btn {
@@ -648,6 +681,7 @@
             spellcheck="false"
           >
           <button class="search-box__clear" id="clear-btn" title="Limpiar">✕</button>
+          <button class="search-box__voice" id="voice-search-btn" title="Buscar por voz">🎙️</button>
           <button class="search-box__btn" id="search-btn">Buscar →</button>
         </div>
       </div>
@@ -973,6 +1007,57 @@
       doSearch(currentQuery, currentPage + 1, false);
     });
 
+    // ── Búsqueda por Voz (#52) ──────────────────────────────
+    const voiceBtn = document.getElementById('voice-search-btn');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (voiceBtn) {
+      if (!SpeechRecognition) {
+        voiceBtn.title = 'Tu navegador no soporta búsqueda por voz';
+        voiceBtn.style.opacity = '0.35';
+        voiceBtn.style.cursor  = 'not-allowed';
+      } else {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'es-ES';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = (e) => {
+          const transcript = e.results[0][0].transcript.trim();
+          if (transcript) {
+            inputEl.value = transcript;
+            clearBtn.classList.add('visible');
+            doSearch(transcript, 1, true);
+          }
+        };
+        recognition.onend = () => {
+          voiceBtn.classList.remove('listening');
+          voiceBtn.textContent = '🎙️';
+        };
+        recognition.onerror = (e) => {
+          voiceBtn.classList.remove('listening');
+          voiceBtn.textContent = '🎙️';
+          if (e.error !== 'aborted' && e.error !== 'no-speech') {
+            console.warn('[Voice Search]', e.error);
+          }
+        };
+
+        let isListening = false;
+        voiceBtn.addEventListener('click', () => {
+          if (isListening) {
+            recognition.stop();
+            isListening = false;
+          } else {
+            recognition.start();
+            isListening = true;
+            voiceBtn.classList.add('listening');
+            voiceBtn.textContent = '⏺';
+          }
+        });
+      }
+    }
+
     // ── Init ─────────────────────────────────────────────────
     renderGenres();
     initFromURL();
@@ -982,5 +1067,6 @@
   </script>
 
   <script type="module" src="js/ads-helper.js?v=3.0.0"></script>
+  <script src="js/pwa-extras.js"></script>
 </body>
 </html>

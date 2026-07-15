@@ -69,6 +69,7 @@ export function renderNavbar() {
         <a href="series.html"     class="navbar__link" data-link="tv">Series</a>
         <a href="estrenos.html"   class="navbar__link" data-link="upcoming">Estrenos</a>
         <a href="chat.html"       class="navbar__link" data-link="chat">Chat</a>
+        <a href="grupos.html"     class="navbar__link" data-link="groups">Grupos</a>
         ${downloadLink}
         <a href="perfil.html"     class="navbar__link" data-link="profile">Perfil</a>
       </nav>
@@ -97,6 +98,7 @@ export function renderNavbar() {
     <a href="series.html"    class="navbar__mobile-link" data-link="tv">Series</a>
     <a href="estrenos.html"  class="navbar__mobile-link" data-link="upcoming">Estrenos</a>
     <a href="chat.html"      class="navbar__mobile-link" data-link="chat">Chat</a>
+    <a href="grupos.html"     class="navbar__mobile-link" data-link="groups">Grupos</a>
     ${downloadLinkMobile}
     <a href="perfil.html"    class="navbar__mobile-link" data-link="profile">Perfil</a>
   `;
@@ -162,6 +164,7 @@ function highlightActiveLink() {
   else if (currentPath.includes('serie.html'))      activeTab = 'tv';
   else if (currentPath.includes('perfil.html'))     activeTab = 'profile';
   else if (currentPath.includes('chat.html'))       activeTab = 'chat';
+  else if (currentPath.includes('grupos.html'))     activeTab = 'groups';
   else if (currentPath.includes('descargar.html'))  activeTab = 'download';
   else if (currentPath.includes('login.html'))      activeTab = 'login';
   else if (
@@ -818,11 +821,69 @@ if (document.readyState === 'loading') {
     setTimeout(checkForAppUpdate, 1500);
     // Verificar alertas de estrenos in-app (silencioso, solo premium)
     import('../alerts.js').then(m => m.checkUpcomingAlerts()).catch(() => {});
+    // #81 Centro de notificaciones + #84 Online status
+    _initNotificationsAndOnline();
   });
 } else {
   renderNavbar();
   setTimeout(injectGlobalPromoBanner, 50);
   setTimeout(checkForAppUpdate, 1500);
-  // Verificar alertas de estrenos in-app (silencioso, solo premium)
   import('../alerts.js').then(m => m.checkUpcomingAlerts()).catch(() => {});
+  _initNotificationsAndOnline();
+}
+
+async function _initNotificationsAndOnline() {
+  try {
+    const { getSupabase } = await import('../supabase.js');
+    const { getCurrentUser } = await import('../auth.js');
+    const { NotificationCenter } = await import('../notifications.js');
+    const { SocialManager } = await import('../social.js');
+
+    const supabase = await getSupabase();
+    if (!supabase) return;
+
+    const userObj = await getCurrentUser().catch(() => null);
+    if (!userObj) return;
+
+    const userId = userObj.id;
+
+    // Iniciar centro de notificaciones
+    const notifCenter = new NotificationCenter(userId);
+    await notifCenter.init();
+
+    // #84 Marcar usuario como online
+    await SocialManager.updateOnlineStatus(userId, true);
+
+    // Heartbeat cada 30s para mantener estado online activo
+    const heartbeatInterval = setInterval(() => {
+      SocialManager.updateOnlineStatus(userId, true);
+    }, 30000);
+
+    // Marcar offline al cerrar/ocultar la página
+    const goOffline = () => {
+      clearInterval(heartbeatInterval);
+      // Usar sendBeacon para asegurar que llega incluso al cerrar la pestaña
+      const supabaseUrl = supabase.supabaseUrl;
+      const supabaseKey = supabase.supabaseKey;
+      if (supabaseUrl && supabaseKey) {
+        const body = JSON.stringify({ is_online: false, last_seen: new Date().toISOString() });
+        navigator.sendBeacon(
+          `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`,
+          new Blob([body], { type: 'application/json' })
+        );
+      }
+    };
+
+    window.addEventListener('beforeunload', goOffline);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        SocialManager.updateOnlineStatus(userId, false);
+      } else {
+        SocialManager.updateOnlineStatus(userId, true);
+      }
+    });
+  } catch (e) {
+    // No es crítico, fallo silencioso
+    console.warn('[Navbar] Error inicializando notificaciones:', e);
+  }
 }

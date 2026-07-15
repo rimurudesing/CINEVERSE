@@ -76,6 +76,50 @@
   border-width: 2px;
 }
 
+/* ════════ CLAQUETA LOADER (#56) ════════ */
+@keyframes claquetaArm {
+  0%   { transform-origin: left center; transform: rotate(0deg); }
+  15%  { transform-origin: left center; transform: rotate(-42deg); }
+  30%  { transform-origin: left center; transform: rotate(0deg); }
+  100% { transform-origin: left center; transform: rotate(0deg); }
+}
+@keyframes claquetaWobble {
+  0%,30%,100% { transform: rotate(0deg); }
+  16%         { transform: rotate(-3deg); }
+  22%         { transform: rotate(2deg); }
+}
+@keyframes claquetaFade {
+  0%,100% { opacity:1; } 50% { opacity:0.7; }
+}
+
+.cv-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cv-loader__svg {
+  width: 64px;
+  height: 64px;
+  animation: claquetaWobble 1.4s ease-in-out infinite, claquetaFade 2.8s ease infinite;
+}
+
+.cv-loader__arm {
+  animation: claquetaArm 1.4s ease-in-out infinite;
+  transform-origin: left center;
+}
+
+.cv-loader__text {
+  font-family: var(--font-ui, 'Outfit', sans-serif);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted, rgba(255,255,255,0.4));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+
 /* ════════ RIPPLE ════════ */
 @keyframes ripple {
   from { opacity: 0.6; transform: scale(0); }
@@ -181,9 +225,66 @@
   100% { border-color: #E50914; box-shadow: 0 0 12px #E50914; }
 }
 
-.avatar-frame-glow   { animation: avatarGlow 2s ease-in-out infinite; border: 3px solid var(--accent-red) !important; }
-.avatar-frame-pulse  { animation: avatarPulse 2.5s ease-in-out infinite; }
-.avatar-frame-rainbow{ animation: rainbowBorder 3s linear infinite; border: 3px solid transparent !important; }
+/* Marcos existentes */
+.avatar-frame-glow    { animation: avatarGlow 2s ease-in-out infinite; border: 3px solid var(--accent-red) !important; }
+.avatar-frame-pulse   { animation: avatarPulse 2.5s ease-in-out infinite; }
+.avatar-frame-rainbow { animation: rainbowBorder 3s linear infinite; border: 3px solid transparent !important; }
+
+/* #47 — 8 marcos de avatar adicionales */
+
+/* Marco: Galaxia */
+@keyframes galaxyBorder {
+  0%   { box-shadow: 0 0 0 3px #7c3aed, 0 0 20px #7c3aed, 0 0 40px rgba(124,58,237,0.3); }
+  50%  { box-shadow: 0 0 0 3px #06b6d4, 0 0 20px #06b6d4, 0 0 40px rgba(6,182,212,0.3); }
+  100% { box-shadow: 0 0 0 3px #7c3aed, 0 0 20px #7c3aed, 0 0 40px rgba(124,58,237,0.3); }
+}
+.avatar-frame-galaxy  { animation: galaxyBorder 3s ease-in-out infinite; border: 3px solid #7c3aed !important; }
+
+/* Marco: Neón Rojo */
+@keyframes neonRed {
+  0%,100% { box-shadow: 0 0 6px #e50914, 0 0 15px #e50914, 0 0 30px rgba(229,9,20,0.5); }
+  50%     { box-shadow: 0 0 10px #ff4444, 0 0 25px #ff4444, 0 0 50px rgba(255,68,68,0.6); }
+}
+.avatar-frame-neon    { animation: neonRed 1.5s ease-in-out infinite; border: 2px solid #e50914 !important; }
+
+/* Marco: Oro */
+@keyframes goldShine {
+  0%,100% { box-shadow: 0 0 6px #d97706, 0 0 18px #d97706; border-color: #d97706; }
+  50%     { box-shadow: 0 0 10px #fbbf24, 0 0 28px #fbbf24; border-color: #fbbf24; }
+}
+.avatar-frame-gold    { animation: goldShine 2s ease-in-out infinite; border: 3px solid #d97706 !important; }
+
+/* Marco: Plata */
+@keyframes silverGlow {
+  0%,100% { box-shadow: 0 0 6px #94a3b8, 0 0 15px rgba(148,163,184,0.4); }
+  50%     { box-shadow: 0 0 12px #cbd5e1, 0 0 25px rgba(203,213,225,0.5); }
+}
+.avatar-frame-silver  { animation: silverGlow 2.5s ease-in-out infinite; border: 3px solid #94a3b8 !important; }
+
+/* Marco: Diamante */
+@keyframes diamondSpin {
+  0%   { box-shadow: 0 0 8px #67e8f9, 0 0 16px #a5f3fc; border-color: #67e8f9; }
+  25%  { box-shadow: 0 0 8px #a78bfa, 0 0 16px #c4b5fd; border-color: #a78bfa; }
+  50%  { box-shadow: 0 0 8px #f0abfc, 0 0 16px #e879f9; border-color: #f0abfc; }
+  75%  { box-shadow: 0 0 8px #6ee7b7, 0 0 16px #34d399; border-color: #6ee7b7; }
+  100% { box-shadow: 0 0 8px #67e8f9, 0 0 16px #a5f3fc; border-color: #67e8f9; }
+}
+.avatar-frame-diamond { animation: diamondSpin 2s linear infinite; border: 3px solid #67e8f9 !important; }
+
+/* Marco: Llamas */
+@keyframes flameBorder {
+  0%,100% { box-shadow: 0 0 6px #f97316, 0 0 15px rgba(249,115,22,0.4), 0 -5px 15px rgba(239,68,68,0.3); border-color: #f97316; }
+  50%     { box-shadow: 0 0 10px #ef4444, 0 0 22px rgba(239,68,68,0.5), 0 -8px 20px rgba(249,115,22,0.4); border-color: #ef4444; }
+}
+.avatar-frame-fire    { animation: flameBorder 1.2s ease-in-out infinite; border: 3px solid #f97316 !important; }
+
+/* Marco: Nieve */
+@keyframes snowGlow {
+  0%,100% { box-shadow: 0 0 8px #bae6fd, 0 0 20px rgba(186,230,253,0.3); border-color: #bae6fd; }
+  50%     { box-shadow: 0 0 14px #e0f2fe, 0 0 30px rgba(224,242,254,0.5); border-color: #e0f2fe; }
+}
+.avatar-frame-snow    { animation: snowGlow 2s ease-in-out infinite; border: 3px solid #bae6fd !important; }
+
 
 /* ════════ ACHIEVEMENT / LOGROS ════════ */
 @keyframes achievementPop {

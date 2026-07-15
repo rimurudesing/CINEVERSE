@@ -9,6 +9,13 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- PWA Manifest (#100) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#e50914">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CineVerse">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>CineVerse — Descubrimiento de Películas y Series</title>
   <meta name="description" content="Explora las películas y series más populares, valoradas y en tendencia. Crea tu perfil, guarda favoritos y sigue tu historial en CineVerse.">
 
@@ -112,5 +119,7 @@
       setTimeout(() => checkForUpdates(), 2500);
     });
   </script>
+  <!-- PWA Extras: TV Mode, Prefetch, Level-Up Modal (#55, #85, #92, #100) -->
+  <script src="js/pwa-extras.js"></script>
 </body>
 </html>

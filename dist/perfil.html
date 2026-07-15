@@ -7,6 +7,11 @@
   <link rel="apple-touch-icon" href="assets/icon.png">
 
   <meta charset="UTF-8">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#e50914">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CineVerse">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CineVerse — Mi Perfil de Usuario</title>
   
@@ -50,6 +55,15 @@
     <button id="banner-upload-btn" style="display: none; position: absolute; top: 1rem; right: 1rem; z-index: 5; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 0.4rem 0.9rem; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer; font-family: var(--font-ui);">
       🖼️ Cambiar Portada
     </button>
+    <button id="banner-position-btn" style="display: none; position: absolute; top: 1rem; right: 10.5rem; z-index: 5; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 0.4rem 0.9rem; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer; font-family: var(--font-ui);">
+      ↕️ Ajustar Posición
+    </button>
+    <div id="banner-position-slider-container" style="display: none; position: absolute; top: 3.5rem; right: 1rem; z-index: 5; background: rgba(0,0,0,0.85); border: 1px solid var(--border-subtle); padding: 0.75rem 1rem; border-radius: var(--radius-md); align-items: center; gap: 0.75rem; font-family: var(--font-ui); font-size: 0.8rem; color: #fff;">
+      <span>Posición:</span>
+      <input type="range" id="banner-position-slider" min="0" max="100" value="50" style="accent-color: var(--accent-red); cursor: pointer;">
+      <span id="banner-position-val">50%</span>
+      <button id="banner-position-save" class="btn btn--primary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; font-weight: 700;">Guardar</button>
+    </div>
     <input type="file" id="banner-file-input" accept="image/*" style="display: none;">
 
     <div class="container flex profile-hero" style="position: relative; z-index: 2; align-items: center; gap: 2rem; padding: 4rem 0 3rem 0;">
@@ -135,6 +149,8 @@
       <button class="pill profile-tabs__btn" data-tab="settings">⚙️ Ajustes</button>
       <button class="pill profile-tabs__btn" data-tab="premium">⭐ Premium</button>
       <button class="pill profile-tabs__btn" data-tab="requests">📣 Pedidos</button>
+      <button class="pill profile-tabs__btn" data-tab="social">👥 Social</button>
+      <button class="pill profile-tabs__btn" data-tab="referrals">🎁 Referidos</button>
     </div>
 
     <!-- Banner Viral Promo Premium (visible para no Premium) -->
@@ -333,26 +349,78 @@
           <div id="premium-customization-box" style="display:none;" class="premium-section-card">
             <h4 class="premium-section-title" style="font-size:1.1rem;">🎨 Personalización Exclusiva</h4>
 
+            <!-- Temas -->
             <div style="margin-bottom: 1.5rem;">
-              <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.75rem; font-weight: 600;">🎨 Tema de Color</label>
+              <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.75rem; font-weight: 600;">🎨 Tema de Color de Interfaz</label>
               <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;" id="theme-color-picker">
-                <button class="theme-btn" data-theme="red"    style="width: 36px; height: 36px; border-radius: 50%; background: #E50914; border: 3px solid transparent; cursor: pointer; transition: all 0.2s;" title="Rojo Clásico"></button>
-                <button class="theme-btn" data-theme="gold"   style="width: 36px; height: 36px; border-radius: 50%; background: #F5C518; border: 3px solid transparent; cursor: pointer; transition: all 0.2s;" title="Oro Premium"></button>
-                <button class="theme-btn" data-theme="blue"   style="width: 36px; height: 36px; border-radius: 50%; background: #0079FF; border: 3px solid transparent; cursor: pointer; transition: all 0.2s;" title="Azul Eléctrico"></button>
-                <button class="theme-btn" data-theme="purple" style="width: 36px; height: 36px; border-radius: 50%; background: #8B5CF6; border: 3px solid transparent; cursor: pointer; transition: all 0.2s;" title="Violeta Oscuro"></button>
-                <button class="theme-btn" data-theme="green"  style="width: 36px; height: 36px; border-radius: 50%; background: #10B981; border: 3px solid transparent; cursor: pointer; transition: all 0.2s;" title="Verde Esmeralda"></button>
+                <!-- Generado por JS -->
               </div>
             </div>
 
-            <div>
-              <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.75rem; font-weight: 600;">👑 Marco de Avatar</label>
-              <div style="display: flex; gap: 1rem; flex-wrap: wrap;" id="avatar-frame-picker">
-                <button class="frame-btn" data-frame="none"    style="font-size: 0.78rem; padding: 0.4rem 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">Sin Marco</button>
-                <button class="frame-btn" data-frame="glow"    style="font-size: 0.78rem; padding: 0.4rem 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">✨ Brillo</button>
-                <button class="frame-btn" data-frame="pulse"   style="font-size: 0.78rem; padding: 0.4rem 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">💓 Pulso</button>
-                <button class="frame-btn" data-frame="rainbow" style="font-size: 0.78rem; padding: 0.4rem 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">🌈 Arcoíris</button>
+            <!-- Marcos de Avatar -->
+            <div style="margin-bottom: 1.5rem;">
+              <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.75rem; font-weight: 600;">👑 Marco de Avatar Animado</label>
+              <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;" id="avatar-frame-picker">
+                <button class="frame-btn" data-frame="none"    style="font-size: 0.75rem; padding: 0.35rem 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">⬜ Sin Marco</button>
+                <button class="frame-btn" data-frame="glow"    style="font-size: 0.75rem; padding: 0.35rem 0.7rem; background: var(--bg-secondary); border: 1px solid rgba(229,9,20,0.4); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">✨ Brillo</button>
+                <button class="frame-btn" data-frame="pulse"   style="font-size: 0.75rem; padding: 0.35rem 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">💓 Pulso</button>
+                <button class="frame-btn" data-frame="rainbow" style="font-size: 0.75rem; padding: 0.35rem 0.7rem; background: var(--bg-secondary); border: 1px solid rgba(99,102,241,0.4); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">🌈 Arcoíris</button>
+                <button class="frame-btn" data-frame="fire"    style="font-size: 0.75rem; padding: 0.35rem 0.7rem; background: var(--bg-secondary); border: 1px solid rgba(249,115,22,0.4); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">🔥 Fuego</button>
+                <button class="frame-btn" data-frame="galaxy"  style="font-size: 0.75rem; padding: 0.35rem 0.7rem; background: var(--bg-secondary); border: 1px solid rgba(124,58,237,0.4); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">🌌 Galaxia</button>
+                <button class="frame-btn" data-frame="neon"    style="font-size: 0.75rem; padding: 0.35rem 0.7rem; background: var(--bg-secondary); border: 1px solid rgba(229,9,20,0.6); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">💡 Neón</button>
+                <button class="frame-btn" data-frame="gold"    style="font-size: 0.75rem; padding: 0.35rem 0.7rem; background: var(--bg-secondary); border: 1px solid rgba(217,119,6,0.5); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">🏅 Oro</button>
+                <button class="frame-btn" data-frame="silver"  style="font-size: 0.75rem; padding: 0.35rem 0.7rem; background: var(--bg-secondary); border: 1px solid rgba(148,163,184,0.5); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">🥈 Plata</button>
+                <button class="frame-btn" data-frame="diamond" style="font-size: 0.75rem; padding: 0.35rem 0.7rem; background: var(--bg-secondary); border: 1px solid rgba(103,232,249,0.5); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">💎 Diamante</button>
+                <button class="frame-btn" data-frame="snow"    style="font-size: 0.75rem; padding: 0.35rem 0.7rem; background: var(--bg-secondary); border: 1px solid rgba(186,230,253,0.5); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary);">❄️ Nieve</button>
               </div>
             </div>
+
+            <!-- Títulos Desbloqueables y Color del Nombre -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+              <div class="form-group" style="margin: 0;">
+                <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.5rem; font-weight: 600;">🎖️ Título de Perfil</label>
+                <select id="user-title-select" class="form-input" style="background-color: var(--bg-secondary); color: var(--text-primary); height: 40px; font-size: 0.85rem;"></select>
+              </div>
+
+              <div class="form-group" style="margin: 0;">
+                <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.5rem; font-weight: 600;">💬 Color de Nombre en Chat</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="color" id="chat-color-picker" class="form-input" style="padding: 2px; width: 45px; height: 40px; background: none; border: 1px solid var(--border-subtle); cursor: pointer;">
+                  <span id="chat-color-preview" style="font-size: 0.82rem; font-family: var(--font-mono); color: var(--text-secondary);">#FFFFFF</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Efecto de Entrada y Acceso Anticipado Beta -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+              <div class="form-group" style="margin: 0;">
+                <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.5rem; font-weight: 600;">⚡ Efecto de Entrada al Chat</label>
+                <select id="join-effect-select" class="form-input" style="background-color: var(--bg-secondary); color: var(--text-primary); height: 40px; font-size: 0.85rem;">
+                  <option value="none">Ninguno</option>
+                  <option value="confetti">🎉 Lluvia de Confeti</option>
+                  <option value="fire">🔥 Explosión de Fuego</option>
+                  <option value="sparkles">✨ Destellos Mágicos</option>
+                  <option value="thunder">⚡ Rayos del Trueno</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin: 0; display: flex; flex-direction: column; justify-content: center;">
+                <label style="font-size: 0.85rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem; font-weight: 600; cursor: pointer;">
+                  <input type="checkbox" id="beta-access-toggle" style="width: 16px; height: 16px; accent-color: var(--accent-red);">
+                  🚀 Acceso Anticipado Beta
+                </label>
+                <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem;">Prueba antes que nadie las nuevas funciones experimentales.</span>
+              </div>
+            </div>
+
+            <!-- Placa de Fundador -->
+            <div id="founder-badge-box" style="display: none; padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid rgba(245,197,24,0.3); background: rgba(245,197,24,0.06); font-family: var(--font-ui); font-size: 0.82rem; color: var(--gold); display: flex; align-items: center; gap: 0.5rem;">
+              <span>🛡️</span>
+              <div>
+                <strong>Insignia de Fundador:</strong> Eres uno de los pilares de CineVerse. ¡Gracias por tu soporte temprano!
+              </div>
+            </div>
+
           </div>
 
           <!-- COMPRAR / ACTIVAR -->
@@ -377,6 +445,13 @@
                 <div class="plan-card__price">$15 <span>USD</span></div>
                 <div class="plan-card__duration">365 días (1 Año)</div>
               </div>
+            </div>
+
+            <!-- 🎁 Prueba Gratuita de 7 Días (#62) -->
+            <div style="margin-top: 1.5rem; margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.04) 100%); border: 1px solid rgba(99,102,241,0.25); border-radius: var(--radius-md); text-align: center; display: none;" id="free-trial-container">
+              <div style="font-weight: 700; margin-bottom: 0.5rem; font-size: 1rem; color: #fff;">🎁 Prueba Gratuita de 7 Días</div>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">Prueba todas las ventajas de CineVerse Premium sin tarjeta de crédito por una semana.</p>
+              <button class="btn btn--primary" id="activate-trial-btn" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none; padding: 0.6rem 1.5rem; font-weight: 700;">⚡ Activar Mi Prueba Gratis</button>
             </div>
 
             <div style="text-align: center; margin-bottom: 2rem;">
@@ -410,6 +485,53 @@
               </div>
             </div>
 
+          </div>
+
+          <!-- PLAN FAMILIAR (#63) -->
+          <div id="premium-family-box" class="premium-section-card" style="margin-top: 1.5rem;">
+            <h4 class="premium-section-title" style="font-size:1.1rem; display: flex; align-items: center; gap: 0.5rem; margin-bottom:1rem;">👨‍👩‍👧‍👦 Plan Familiar CineVerse</h4>
+            
+            <!-- Vista 1: No suscrito a ningún plan familiar -->
+            <div id="family-unsubscribed-view">
+              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">
+                ¿Tienes un código de Plan Familiar de un amigo o familiar? Ingrésalo aquí para vincular tu cuenta al plan de tu hogar y obtener todos los beneficios Premium.
+              </p>
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <input type="text" id="family-code-input" placeholder="FAM-XXXXXX" class="form-input" style="flex: 2; text-transform: uppercase; font-family: var(--font-mono); letter-spacing: 1px; min-width:180px;">
+                <button id="family-code-claim-btn" class="btn btn--primary" style="flex: 1; padding: 0.6rem; font-weight: 700; white-space: nowrap;">Vincular</button>
+              </div>
+            </div>
+
+            <!-- Vista 2: Es dueño del plan familiar (Premium Pro) -->
+            <div id="family-owner-view" style="display: none;">
+              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">
+                Como miembro **Premium Pro**, puedes generar un código familiar para compartir tu suscripción con hasta 4 personas de tu hogar.
+              </p>
+              <div id="family-code-generator-wrapper" style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1.5rem;">
+                <button id="family-code-gen-btn" class="btn btn--primary" style="padding: 0.6rem 1.5rem; font-weight: 700;">Generar Código</button>
+                <div id="family-generated-code-display" style="display: none; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.03); border: 1px dashed var(--border-subtle); padding: 0.4rem 1rem; border-radius: var(--radius-sm); font-family: var(--font-mono); font-weight: 700; color: #fbbf24; font-size: 1.1rem;">
+                  <span id="family-code-text">FAM-123456</span>
+                  <button id="family-code-copy" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem;" title="Copiar código">📋</button>
+                </div>
+              </div>
+              <h5 style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Miembros vinculados:</h5>
+              <div id="family-members-list" style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+                <!-- Lista de miembros vinculados -->
+              </div>
+            </div>
+
+            <!-- Vista 3: Es miembro vinculado al plan de otro -->
+            <div id="family-member-view" style="display: none;">
+              <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); padding: 1.25rem; border-radius: var(--radius-md); display: flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 1.5rem;">👨‍👩‍👧‍👦</span>
+                <div>
+                  <p style="font-weight: 700; color: #10b981; margin: 0 0 0.15rem; font-size:0.95rem;">Vinculado al Plan Familiar</p>
+                  <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+                    Tu cuenta disfruta de los beneficios Premium provistos por el anfitrión <strong id="family-host-name">Pro Member</strong>.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -483,6 +605,127 @@
       </div>
 
 
+      <!-- Pestaña 11: Social (Seguir / Seguidores) -->
+      <div class="profile-tab-section" id="profile-section-social">
+        <div style="max-width: 800px; margin: 0 auto; font-family: var(--font-ui);">
+          <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">👥 Mi Red Social</h3>
+          <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 2rem;">Conecta con otros cinéfilos, sigue sus listas y recomiéndales contenido.</p>
+
+          <!-- Stats sociales -->
+          <div id="social-stats-row" style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2rem;">
+            <div class="social-stat-card">
+              <span class="social-stat-num" id="social-following-count">-</span>
+              <span class="social-stat-label">Siguiendo</span>
+            </div>
+            <div class="social-stat-card">
+              <span class="social-stat-num" id="social-followers-count">-</span>
+              <span class="social-stat-label">Seguidores</span>
+            </div>
+          </div>
+
+          <!-- Búsqueda de usuarios -->
+          <div style="margin-bottom: 2rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 0.6rem;">🔍 Buscar y seguir usuarios</label>
+            <div style="display: flex; gap: 0.75rem;">
+              <input type="text" id="social-search-input" class="form-input" placeholder="Nombre de usuario..." style="flex: 1;">
+              <button class="btn btn--primary" id="social-search-btn">Buscar</button>
+            </div>
+            <div id="social-search-results" style="margin-top: 1rem;"></div>
+          </div>
+
+          <!-- Lista de quien sigo -->
+          <div>
+            <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">Personas que sigo</h4>
+            <div id="social-following-list" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+          </div>
+
+          <!-- Lista de seguidores -->
+          <div style="margin-top: 2rem;">
+            <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">Mis seguidores</h4>
+            <div id="social-followers-list" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+          </div>
+
+          <!-- Recomendaciones para seguir -->
+          <div style="margin-top: 2.5rem;">
+            <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">✨ Sugerencias para seguir</h4>
+            <div id="social-suggestions-list" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pestaña 12: Referidos -->
+      <div class="profile-tab-section" id="profile-section-referrals">
+        <div style="max-width: 700px; margin: 0 auto; font-family: var(--font-ui);">
+          <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">🎁 Programa de Referidos</h3>
+          <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 2rem;">Invita amigos y gana XP y beneficios exclusivos.</p>
+
+          <!-- Mi código referido -->
+          <div class="referral-code-card">
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">Tu Código de Invitación</div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <code id="my-referral-code" style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent-red); letter-spacing: 3px; background: rgba(229,9,20,0.08); padding: 0.5rem 1rem; border-radius: var(--radius-sm); border: 1px solid rgba(229,9,20,0.2);">Cargando...</code>
+              <button class="btn btn--outline-red" id="copy-referral-btn">📋 Copiar</button>
+              <button class="btn btn--secondary" id="share-referral-btn">↗️ Compartir</button>
+            </div>
+          </div>
+
+          <!-- Stats de referidos -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+            <div class="referral-stat-card">
+              <span class="referral-stat-num" id="referral-total-count">0</span>
+              <span class="referral-stat-label">Amigos Invitados</span>
+            </div>
+            <div class="referral-stat-card">
+              <span class="referral-stat-num" id="referral-active-count">0</span>
+              <span class="referral-stat-label">Activos</span>
+            </div>
+            <div class="referral-stat-card">
+              <span class="referral-stat-num" id="referral-xp-earned">0</span>
+              <span class="referral-stat-label">XP Ganados</span>
+            </div>
+          </div>
+
+          <!-- Cómo funciona -->
+          <div class="referral-how-card">
+            <h4 style="font-weight: 700; margin-bottom: 1rem; font-size: 0.95rem;">🎯 ¿Cómo funciona?</h4>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <div class="referral-step"><span class="referral-step-num">1</span><span>Comparte tu código con amigos</span></div>
+              <div class="referral-step"><span class="referral-step-num">2</span><span>Tu amigo se registra usando tu código en el perfil</span></div>
+              <div class="referral-step"><span class="referral-step-num">3</span><span>Ambos reciben <strong>+150 XP</strong> de bienvenida</span></div>
+              <div class="referral-step"><span class="referral-step-num">4</span><span>Si tu amigo activa Premium, recibes <strong>+500 XP extra</strong></span></div>
+            </div>
+          </div>
+
+          <!-- Canjear código de referido (para nuevos usuarios) -->
+          <div style="margin-top: 2rem; padding: 1.25rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+            <h4 style="font-weight: 700; margin-bottom: 0.75rem; font-size: 0.95rem;">🎟️ Tengo un código de invitación</h4>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">Si alguien te invitó, ingresa su código para que ambos reciban XP.</p>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <input type="text" id="referral-input-code" class="form-input" placeholder="Ej: CV-A1B2C3" style="flex: 1; text-transform: uppercase; font-family: var(--font-mono); min-width: 150px;">
+              <button class="btn btn--primary" id="claim-referral-btn">✅ Canjear</button>
+            </div>
+            <div id="referral-claim-result" style="margin-top: 0.75rem; font-size: 0.82rem;"></div>
+          </div>
+
+          <!-- 🎁 Regalar Premium a un amigo (#64) -->
+          <div style="margin-top: 2rem; padding: 1.25rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);" id="referral-gift-box">
+            <h4 style="font-weight: 700; margin-bottom: 0.75rem; font-size: 0.95rem;">🎁 Regalar 1 mes Premium a un amigo</h4>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">Como miembro Premium, puedes regalar 30 días de Premium gratis a cualquier amigo ingresando su nombre de usuario.</p>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <input type="text" id="gift-username-input" class="form-input" placeholder="Nombre de usuario del amigo" style="flex: 1; min-width: 150px;">
+              <button class="btn btn--primary" id="send-gift-btn" style="white-space:nowrap;">🎁 Enviar Regalo</button>
+            </div>
+            <div id="gift-result-msg" style="margin-top: 0.75rem; font-size: 0.82rem;"></div>
+          </div>
+
+          <!-- Lista de referidos -->
+          <div style="margin-top: 2rem;">
+            <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem;">Amigos que invitaste</h4>
+            <div id="referrals-list"></div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -502,6 +745,169 @@
       color: var(--text-primary) !important;
       background: var(--bg-elevated) !important;
     }
+
+    /* ══════════════════════════════════
+       SOCIAL TAB
+    ══════════════════════════════════ */
+    .social-stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      min-width: 120px;
+      transition: border-color 0.2s;
+    }
+    .social-stat-card:hover { border-color: var(--border-red); }
+    .social-stat-num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent-red);
+      font-family: var(--font-ui);
+      line-height: 1;
+    }
+    .social-stat-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    .social-user-row {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .social-user-row:hover { border-color: var(--border-red); transform: translateY(-1px); }
+    .social-user-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .social-user-info { flex: 1; }
+    .social-user-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      display: block;
+    }
+    .social-user-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .social-follow-btn {
+      font-size: 0.78rem;
+      padding: 0.3rem 0.85rem;
+      border-radius: var(--radius-full);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-ui);
+      white-space: nowrap;
+    }
+    .social-follow-btn--follow {
+      background: var(--accent-red);
+      color: #fff;
+      border: 1px solid var(--accent-red);
+    }
+    .social-follow-btn--follow:hover { background: var(--accent-crimson); }
+    .social-follow-btn--unfollow {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+    .social-follow-btn--unfollow:hover { border-color: var(--accent-red); color: var(--accent-red); }
+
+    /* ══════════════════════════════════
+       REFERRALS TAB
+    ══════════════════════════════════ */
+    .referral-code-card {
+      background: linear-gradient(135deg, rgba(229,9,20,0.05) 0%, rgba(139,0,0,0.03) 100%);
+      border: 1px solid rgba(229,9,20,0.2);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .referral-stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      text-align: center;
+    }
+    .referral-stat-num {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--accent-red);
+      font-family: var(--font-ui);
+    }
+    .referral-stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    .referral-how-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .referral-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+    }
+    .referral-step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--accent-red);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .referral-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.7rem 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.5rem;
+    }
+    .referral-row-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .referral-row-name { flex: 1; font-weight: 700; font-size: 0.85rem; color: var(--text-primary); }
+    .referral-row-xp { font-size: 0.78rem; color: var(--accent-red); font-weight: 700; }
 
     /* ══════════════════════════════════
        PREMIUM PAGE — Nuevo Diseño
@@ -895,5 +1301,6 @@
   <script type="module" src="js/pages/perfil.js?v=3.0.0"></script>
   <script type="module" src="js/ads-helper.js?v=3.0.0"></script>
   <!-- Chat en Vivo en Tiempo Real -->
+  <script src="js/pwa-extras.js"></script>
 </body>
 </html>

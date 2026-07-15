@@ -1,0 +1,419 @@
+/* ═══ cineverse/js/pages/grupos.js ═══
+ * Controlador de la página de Grupos Privados (#36).
+ * Permite listar, crear, invitar y chatear en tiempo real.
+ * ═══════════════════════════════════════════════════════════ */
+
+import { getSupabase, isSupabaseConfigured } from '../supabase.js';
+import { getCurrentUser } from '../auth.js';
+import { SocialManager } from '../social.js';
+import { showToast, getCVLoader } from '../utils.js';
+import '../components/navbar.js';
+
+let supabase = null;
+
+class GruposPageController {
+  constructor() {
+    this.currentUser = null;
+    this.groups = [];
+    this.activeGroup = null;
+    this.activeGroupMembers = [];
+    this.chatChannel = null;
+  }
+
+  async init() {
+    supabase = await getSupabase();
+    this.currentUser = await getCurrentUser();
+
+    if (!this.currentUser) {
+      showToast('Debes iniciar sesión para acceder a los grupos', 'error');
+      setTimeout(() => window.location.href = 'login.html', 1500);
+      return;
+    }
+
+    // Comprobar Premium (Solo Premium Pro/Basic)
+    const isPremium = !!(this.currentUser.profile || {}).is_premium;
+    if (!isPremium) {
+      showToast('🔒 Los Grupos Privados son exclusivos para miembros Premium', 'warning');
+      setTimeout(() => window.location.href = 'perfil.html?tab=premium', 2000);
+      return;
+    }
+
+    this.bindDOMEvents();
+    await this.loadUserGroups();
+  }
+
+  bindDOMEvents() {
+    // Modal de creación
+    const btnOpenCreate  = document.getElementById('btn-open-create-group');
+    const btnCloseCreate = document.getElementById('btn-close-create-group');
+    const modalCreate    = document.getElementById('create-group-modal');
+    const formCreate     = document.getElementById('create-group-form');
+
+    if (btnOpenCreate && modalCreate) {
+      btnOpenCreate.addEventListener('click', () => modalCreate.style.display = 'flex');
+    }
+    if (btnCloseCreate && modalCreate) {
+      btnCloseCreate.addEventListener('click', () => modalCreate.style.display = 'none');
+    }
+
+    if (formCreate) {
+      formCreate.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const inputName = document.getElementById('new-group-name');
+        const groupName = inputName?.value?.trim();
+        if (!groupName) return;
+
+        const btnSubmit = formCreate.querySelector('button[type="submit"]');
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Creando...';
+
+        const group = await SocialManager.createGroup(groupName, this.currentUser.id);
+        
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Crear Grupo';
+
+        if (group) {
+          showToast(`¡Grupo "${group.name}" creado con éxito! 🎉`, 'success');
+          if (modalCreate) modalCreate.style.display = 'none';
+          if (inputName) inputName.value = '';
+          await this.loadUserGroups();
+          this.selectGroup(group.id);
+        } else {
+          showToast('Error al crear el grupo', 'error');
+        }
+      });
+    }
+
+    // Formulario de invitaciones
+    const formInvite = document.getElementById('group-invite-form');
+    if (formInvite) {
+      formInvite.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!this.activeGroup) return;
+
+        const inputUsername = document.getElementById('invite-username');
+        const username = inputUsername?.value?.trim();
+        if (!username) return;
+
+        const btnSubmit = document.getElementById('sidebar-btn-invite');
+        if (btnSubmit) {
+          btnSubmit.disabled = true;
+          btnSubmit.textContent = 'Invitando...';
+        }
+
+        const success = await SocialManager.inviteMember(this.activeGroup.id, username);
+
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = 'Invitar';
+        }
+
+        if (success) {
+          if (inputUsername) inputUsername.value = '';
+          await this.loadGroupMembers(this.activeGroup.id);
+        }
+      });
+    }
+
+    // Formulario del chat
+    const formChat = document.getElementById('chat-send-form');
+    if (formChat) {
+      formChat.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!this.activeGroup) return;
+
+        const inputMsg = document.getElementById('chat-message-input');
+        const messageText = inputMsg?.value?.trim();
+        if (!messageText) return;
+
+        if (inputMsg) inputMsg.value = '';
+
+        try {
+          await supabase.from('group_messages').insert({
+            group_id: this.activeGroup.id,
+            user_id: this.currentUser.id,
+            message: messageText
+          });
+        } catch (err) {
+          console.error(err);
+          showToast('Error al enviar mensaje', 'error');
+        }
+      });
+    }
+  }
+
+  async loadUserGroups() {
+    const listContainer = document.getElementById('groups-list-container');
+    if (listContainer) {
+      listContainer.innerHTML = getCVLoader('');
+    }
+
+    try {
+      // Obtener IDs de grupos a los que pertenece el usuario
+      const { data: memberships, error: memError } = await supabase
+        .from('group_members')
+        .select('group_id')
+        .eq('user_id', this.currentUser.id);
+
+      if (memError) throw memError;
+
+      if (!memberships || memberships.length === 0) {
+        this.groups = [];
+        this.renderGroupsList();
+        return;
+      }
+
+      const groupIds = memberships.map(m => m.group_id);
+
+      // Obtener detalles de esos grupos
+      const { data: groups, error: grError } = await supabase
+        .from('groups')
+        .select('*')
+        .in('id', groupIds)
+        .order('name');
+
+      if (grError) throw grError;
+
+      this.groups = groups || [];
+      this.renderGroupsList();
+
+    } catch (e) {
+      console.error(e);
+      showToast('Error al cargar grupos', 'error');
+    }
+  }
+
+  renderGroupsList() {
+    const container = document.getElementById('groups-list-container');
+    if (!container) return;
+
+    if (this.groups.length === 0) {
+      container.innerHTML = `<p style="text-align:center;color:var(--text-muted);font-size:0.8rem;padding:2rem 1rem;">No perteneces a ningún grupo privado aún.</p>`;
+      return;
+    }
+
+    container.innerHTML = this.groups.map(g => {
+      const initial = g.name.charAt(0).toUpperCase();
+      const isActive = this.activeGroup && this.activeGroup.id === g.id ? 'active' : '';
+      return `
+        <button class="group-item ${isActive}" data-group-id="${g.id}">
+          <div class="group-item__avatar">${initial}</div>
+          <div class="group-item__info">
+            <h4 class="group-item__name">${g.name}</h4>
+          </div>
+        </button>
+      `;
+    }).join('');
+
+    // Agregar event listeners a cada grupo
+    container.querySelectorAll('.group-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const groupId = btn.getAttribute('data-group-id');
+        this.selectGroup(groupId);
+      });
+    });
+  }
+
+  async selectGroup(groupId) {
+    const group = this.groups.find(g => g.id === groupId);
+    if (!group) return;
+
+    this.activeGroup = group;
+
+    // Actualizar clase activa en la lista
+    const container = document.getElementById('groups-list-container');
+    container?.querySelectorAll('.group-item').forEach(btn => {
+      if (btn.getAttribute('data-group-id') === groupId) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Ocultar pantalla de bienvenida, mostrar chat y sidebar de detalles
+    document.getElementById('chat-welcome-screen').style.display = 'none';
+    document.getElementById('chat-container').style.display = 'flex';
+    document.getElementById('group-details-sidebar').style.display = 'flex';
+
+    // Rellenar información de cabecera
+    const titleEl = document.getElementById('active-group-title');
+    if (titleEl) titleEl.textContent = group.name;
+
+    // Cargar miembros
+    await this.loadGroupMembers(groupId);
+
+    // Cargar mensajes pasados
+    await this.loadChatMessages(groupId);
+
+    // Suscribirse a realtime del chat del grupo
+    this.subscribeToGroupChat(groupId);
+  }
+
+  async loadGroupMembers(groupId) {
+    try {
+      const { data, error } = await supabase
+        .from('group_members')
+        .select(`
+          user_id,
+          profiles!group_members_user_id_fkey (
+            username,
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq('group_id', groupId);
+
+      if (error) throw error;
+
+      this.activeGroupMembers = data || [];
+
+      // Actualizar contador en cabecera
+      const countEl = document.getElementById('active-group-member-count');
+      if (countEl) countEl.textContent = `${this.activeGroupMembers.length} miembros`;
+
+      // Renderizar sidebar de miembros
+      const membersContainer = document.getElementById('group-members-container');
+      if (membersContainer) {
+        membersContainer.innerHTML = this.activeGroupMembers.map(m => {
+          const prof = m.profiles || {};
+          const name = prof.display_name || prof.username || 'Miembro';
+          const avatar = prof.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+          return `
+            <div class="member-item">
+              <img src="${avatar}" alt="${name}" class="member-avatar">
+              <span class="member-name">${name}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async loadChatMessages(groupId) {
+    const container = document.getElementById('chat-messages-container');
+    if (container) {
+      container.innerHTML = getCVLoader('Cargando chat...');
+    }
+
+    try {
+      const { data: messages, error } = await supabase
+        .from('group_messages')
+        .select(`
+          id,
+          message,
+          created_at,
+          user_id,
+          profiles!group_messages_user_id_fkey (
+            username,
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq('group_id', groupId)
+        .order('created_at', { ascending: true })
+        .limit(40);
+
+      if (error) throw error;
+
+      if (container) {
+        container.innerHTML = '';
+        if (messages && messages.length > 0) {
+          messages.forEach(msg => {
+            this.appendMessageHTML(msg);
+          });
+          this.scrollToBottom();
+        } else {
+          container.innerHTML = `<div style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:3rem 0;">¡Inicia la conversación en este grupo privado! 👥</div>`;
+        }
+      }
+
+    } catch (e) {
+      console.error(e);
+      showToast('Error al cargar mensajes', 'error');
+    }
+  }
+
+  appendMessageHTML(msg) {
+    const container = document.getElementById('chat-messages-container');
+    if (!container) return;
+
+    // Remover mensaje vacío si existe
+    if (container.innerHTML.includes('¡Inicia la conversación')) {
+      container.innerHTML = '';
+    }
+
+    const isOwn = msg.user_id === this.currentUser.id;
+    const prof = msg.profiles || {};
+    const name = prof.display_name || prof.username || 'Usuario';
+    const avatar = prof.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+    const time = new Date(msg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+    const bubble = document.createElement('div');
+    bubble.className = `message-bubble ${isOwn ? 'message-bubble--own' : ''}`;
+    bubble.innerHTML = `
+      <img src="${avatar}" alt="${name}" class="message-avatar">
+      <div class="message-content">
+        <span class="message-author">${name}</span>
+        <div>${this.escapeHTML(msg.message)}</div>
+        <span class="message-time">${time}</span>
+      </div>
+    `;
+
+    container.appendChild(bubble);
+  }
+
+  subscribeToGroupChat(groupId) {
+    // Cancelar suscripción anterior si existe
+    if (this.chatChannel) {
+      supabase.removeChannel(this.chatChannel);
+    }
+
+    this.chatChannel = supabase
+      .channel(`group_chat_${groupId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'group_messages',
+        filter: `group_id=eq.${groupId}`
+      }, async (payload) => {
+        // Cargar los perfiles para el mensaje inyectado
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, display_name, avatar_url')
+          .eq('id', payload.new.user_id)
+          .maybeSingle();
+
+        const fullMsgObj = {
+          ...payload.new,
+          profiles: profile
+        };
+
+        this.appendMessageHTML(fullMsgObj);
+        this.scrollToBottom();
+      })
+      .subscribe();
+  }
+
+  scrollToBottom() {
+    const container = document.getElementById('chat-messages-container');
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }
+
+  escapeHTML(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+}
+
+const controller = new GruposPageController();
+document.addEventListener('DOMContentLoaded', () => controller.init());
+export default controller;

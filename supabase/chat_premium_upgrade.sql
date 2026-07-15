@@ -37,7 +37,8 @@ CREATE POLICY "Solo el autor puede borrar su reacción"
 ALTER TABLE chat_messages
   ADD COLUMN IF NOT EXISTS reply_to_id UUID REFERENCES chat_messages(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS reply_preview TEXT DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS rich_card TEXT DEFAULT NULL;
+  ADD COLUMN IF NOT EXISTS rich_card TEXT DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS voice_url TEXT DEFAULT NULL;
 
 -- 4. Tabla de trivias de CineBot
 CREATE TABLE IF NOT EXISTS cinebot_trivias (

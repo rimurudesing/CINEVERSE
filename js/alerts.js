@@ -100,7 +100,124 @@ export async function checkUpcomingAlerts() {
         }
       }
     }
+
+    // 3. Ejecutar las nuevas verificaciones sociales / notificaciones
+    await checkWelcomeBack(currentUser, supabase);
+    await checkUnwatchedWatchlistReminders(currentUser, supabase);
+    await checkNewSeasonFavorites(currentUser, supabase);
+
   } catch (err) {
     console.warn('[Alerts] Error al procesar alertas de estreno:', err);
   }
 }
+
+// #90 Welcome back notification after 7 days of inactivity
+async function checkWelcomeBack(currentUser, supabase) {
+  try {
+    const profile = currentUser.profile || {};
+    const lastActive = profile.last_active_date;
+    if (!lastActive) return;
+
+    const lastActiveDate = new Date(lastActive);
+    const now = new Date();
+    const diffTime = Math.abs(now - lastActiveDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays >= 7) {
+      const notifKey = `cv_notif_welcomeback_${currentUser.id}_${lastActive}`;
+      if (!localStorage.getItem(notifKey)) {
+        localStorage.setItem(notifKey, '1');
+        await supabase.from('notifications').insert({
+          user_id: currentUser.id,
+          type: 'welcome_back',
+          title: '¡Te extrañamos! ❤️',
+          body: `Hace ${diffDays} días que no te veíamos por CineVerse. ¡Bienvenido de vuelta, cinéfilo!`,
+          link: 'index.html'
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('[Alerts] Error en checkWelcomeBack:', e);
+  }
+}
+
+// #86 Unwatched Watchlist reminders (30+ days notification)
+async function checkUnwatchedWatchlistReminders(currentUser, supabase) {
+  try {
+    const { data: watchlist } = await supabase
+      .from('watchlist')
+      .select('*')
+      .eq('user_id', currentUser.id);
+
+    if (!watchlist || watchlist.length === 0) return;
+
+    const now = new Date();
+    for (const item of watchlist) {
+      const addedAt = new Date(item.added_at);
+      const diffTime = Math.abs(now - addedAt);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays >= 30) {
+        const notifKey = `cv_notif_watchlist_reminder_${item.id}`;
+        if (!localStorage.getItem(notifKey)) {
+          localStorage.setItem(notifKey, '1');
+          await supabase.from('notifications').insert({
+            user_id: currentUser.id,
+            type: 'watchlist_reminder',
+            title: '📌 Recordatorio de pendiente',
+            body: `Tienes "${item.title}" en tu lista desde hace más de un mes. ¡Es un buen día para verla!`,
+            link: `${item.media_type}.html?id=${item.tmdb_id}`
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[Alerts] Error en checkUnwatchedWatchlistReminders:', e);
+  }
+}
+
+// #87 TMDB New Season notification for favorite series
+async function checkNewSeasonFavorites(currentUser, supabase) {
+  try {
+    const { data: favorites } = await supabase
+      .from('favorites')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .eq('media_type', 'tv');
+
+    if (!favorites || favorites.length === 0) return;
+
+    // Procesar máximo 3 en paralelo
+    const itemsToProcess = favorites.slice(0, 3);
+    for (const item of itemsToProcess) {
+      const details = await api.getTVDetails(item.tmdb_id);
+      if (!details || !details.seasons) continue;
+
+      const lastSeason = details.seasons[details.seasons.length - 1];
+      if (lastSeason && lastSeason.air_date) {
+        const airDate = new Date(lastSeason.air_date);
+        const today = new Date();
+        const diffTime = today - airDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        // Si se estrenó en los últimos 30 días
+        if (diffDays >= 0 && diffDays <= 30) {
+          const notifKey = `cv_notif_newseason_${item.tmdb_id}_${lastSeason.id}`;
+          if (!localStorage.getItem(notifKey)) {
+            localStorage.setItem(notifKey, '1');
+            await supabase.from('notifications').insert({
+              user_id: currentUser.id,
+              type: 'new_season',
+              title: '📺 ¡Nueva Temporada!',
+              body: `Se ha estrenado la ${lastSeason.name} de tu serie favorita "${details.name}".`,
+              link: `tv.html?id=${item.tmdb_id}`
+            });
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[Alerts] Error en checkNewSeasonFavorites:', e);
+  }
+}
+

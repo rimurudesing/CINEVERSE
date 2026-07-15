@@ -84,9 +84,9 @@
 
     .public-stats-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
       gap: 1rem;
-      max-width: 500px;
+      max-width: 650px;
       width: 100%;
       margin: 2rem 0;
     }
@@ -173,6 +173,7 @@
         <p style="color: var(--text-secondary); margin-top: 0.25rem; font-family: var(--font-mono); font-size: 0.88rem;" id="public-username">@username</p>
         
         <span class="public-badge" id="public-premium-badge" style="display: none;">👑 Mecenas VIP</span>
+        <span id="public-user-title" style="display: inline-block; font-size: 0.85rem; font-weight: 700; color: var(--accent-red); margin-top: 0.4rem; padding: 0.2rem 0.6rem; background: rgba(229,9,20,0.1); border-radius: var(--radius-sm); border: 1px solid rgba(229,9,20,0.25);"></span>
         
         <p style="color: var(--text-secondary); max-width: 500px; margin-top: 1rem; font-size: 0.95rem; line-height: 1.5;" id="public-bio"></p>
 
@@ -190,11 +191,24 @@
             <div class="public-stat-num" id="stat-reviews">0</div>
             <div class="public-stat-label">Reseñas</div>
           </div>
+          <div class="public-stat-card">
+            <div class="public-stat-num" id="stat-followers">0</div>
+            <div class="public-stat-label">Seguidores</div>
+          </div>
+          <div class="public-stat-card">
+            <div class="public-stat-num" id="stat-following">0</div>
+            <div class="public-stat-label">Siguiendo</div>
+          </div>
         </div>
 
-        <button class="btn btn--primary" id="btn-share-profile" style="display: flex; align-items: center; gap: 0.5rem;">
-          🔗 Compartir Perfil
-        </button>
+        <div style="display: flex; gap: 0.75rem; justify-content: center; align-items: center; width: 100%; flex-wrap: wrap;">
+          <button class="btn btn--primary" id="btn-follow" style="display: none; padding: 0.6rem 2rem; font-weight: 700;">
+             Seguir
+          </button>
+          <button class="btn btn--secondary" id="btn-share-profile" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.5rem;">
+            🔗 Compartir
+          </button>
+        </div>
       </div>
 
       <!-- Reseña Anclada -->
