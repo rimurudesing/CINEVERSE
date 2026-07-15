@@ -620,10 +620,10 @@ export function injectGlobalPromoBanner() {
 // NOTIFICACIÓN DE ACTUALIZACIÓN DE APK
 // ══════════════════════════════════════════════════════════════
 
-const APP_VERSION_KEY    = 'cv_app_version';
-const CURRENT_APP_VER    = '1.1.0';   // ← Actualiza este valor con cada release
+const CURRENT_APP_VER    = '1.2.0';   // ← Actualiza este valor con cada release
 const UPDATE_NOTIF_ID    = 'cv-update-notif';
 const UPDATE_STYLE_ID    = 'cv-update-notif-styles';
+const DISMISSED_VER_KEY  = 'cv_update_dismissed_ver'; // Versión que el usuario ya descargó/descartó
 
 function _injectUpdateNotifStyles() {
   if (document.getElementById(UPDATE_STYLE_ID)) return;
@@ -766,11 +766,14 @@ export function checkForAppUpdate() {
     .then(res => { if (!res.ok) throw new Error('No response'); return res.json(); })
     .then(data => {
       const remoteVersion = data.version;
-      if (!remoteVersion || remoteVersion === CURRENT_APP_VER) return;
+      if (!remoteVersion) return;
 
-      // No molestar si ya fue descartada en las últimas 24 horas
-      const dismissedAt = localStorage.getItem('cv_update_dismissed_at');
-      if (dismissedAt && (Date.now() - parseInt(dismissedAt)) < 86400000) return;
+      // Si la versión instalada ya es igual o mayor a la remota → no mostrar nada
+      if (!_isNewerThan(CURRENT_APP_VER, remoteVersion)) return;
+
+      // Si el usuario ya descartó/descargó exactamente esta versión → no volver a molestar
+      const dismissedVer = localStorage.getItem(DISMISSED_VER_KEY);
+      if (dismissedVer === remoteVersion) return;
 
       _injectUpdateNotifStyles();
 
@@ -781,7 +784,7 @@ export function checkForAppUpdate() {
           <div class="cv-update-icon">📲</div>
           <div class="cv-update-content">
             <div class="cv-update-title">¡Actualización disponible! v${remoteVersion}</div>
-            <div class="cv-update-desc">Hay una nueva versión de CineVerse. ¡Descárgala para tener todo lo nuevo!</div>
+            <div class="cv-update-desc">Tienes la v${CURRENT_APP_VER}. ¡Descarga la nueva versión para tener todo lo nuevo!</div>
           </div>
           <div class="cv-update-actions">
             <a class="cv-update-btn-primary" href="https://cineverse.pages.dev/descargar.html" target="_blank" rel="noopener" id="cv-update-download-btn">
@@ -793,13 +796,15 @@ export function checkForAppUpdate() {
       `;
       document.body.appendChild(notif);
 
+      // Al hacer click en descargar → guardar que ya se descargó/descartó ESTA versión
       document.getElementById('cv-update-download-btn')?.addEventListener('click', () => {
-        localStorage.setItem(APP_VERSION_KEY, remoteVersion);
+        localStorage.setItem(DISMISSED_VER_KEY, remoteVersion);
         _closeUpdateNotif(notif);
       });
 
+      // Al descartar → también guardar la versión para no volver a molestar
       document.getElementById('cv-update-dismiss-btn')?.addEventListener('click', () => {
-        localStorage.setItem('cv_update_dismissed_at', Date.now().toString());
+        localStorage.setItem(DISMISSED_VER_KEY, remoteVersion);
         _closeUpdateNotif(notif);
       });
 
@@ -811,6 +816,22 @@ export function checkForAppUpdate() {
     .catch(() => {
       // Fallo silencioso — sin conexión o servidor no disponible
     });
+}
+
+/**
+ * Retorna true si remoteVersion es MAYOR que localVersion (semver).
+ */
+function _isNewerThan(localVersion, remoteVersion) {
+  if (!remoteVersion || remoteVersion === localVersion) return false;
+  const local  = localVersion.split('.').map(Number);
+  const remote = remoteVersion.split('.').map(Number);
+  for (let i = 0; i < Math.max(local.length, remote.length); i++) {
+    const l = local[i]  ?? 0;
+    const r = remote[i] ?? 0;
+    if (r > l) return true;
+    if (r < l) return false;
+  }
+  return false;
 }
 
 // Auto-mount

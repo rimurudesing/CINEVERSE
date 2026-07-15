@@ -267,7 +267,15 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ DEFAULT now(),
   ADD COLUMN IF NOT EXISTS banner_position TEXT DEFAULT '50',
   ADD COLUMN IF NOT EXISTS family_code TEXT DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS family_owner_id UUID REFERENCES public.profiles(id) DEFAULT NULL;
+  ADD COLUMN IF NOT EXISTS family_owner_id UUID REFERENCES public.profiles(id) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS admin_config JSONB DEFAULT NULL; -- Configuración global del admin (NO usar bio para esto)
+
+-- Migrar: limpiar bio del admin si tiene JSON (era el sistema anterior)
+UPDATE public.profiles
+SET bio = NULL
+WHERE is_admin = true
+  AND bio IS NOT NULL
+  AND bio LIKE '{%}';
 
 -- Generar referral codes aleatorios para quienes no tengan
 UPDATE public.profiles 

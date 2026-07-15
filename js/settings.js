@@ -8,8 +8,8 @@ let cacheTime = 0;
 /**
  * Obtener las configuraciones globales del sitio.
  * Utiliza caché en memoria (60 segundos) para evitar múltiples consultas.
- * Intenta leer de la tabla 'site_settings'. Si no existe o falla, recurre
- * al campo 'bio' del primer perfil administrador.
+ * Lee de 'site_settings' primero; si no existe, usa la columna 'admin_config'
+ * del primer perfil administrador (NUNCA usa 'bio' para evitar sobreescribirla).
  */
 export async function getGlobalSettings() {
   const now = Date.now();
@@ -41,23 +41,41 @@ export async function getGlobalSettings() {
     console.warn("[Settings] La tabla site_settings no está lista. Usando fallback...", e);
   }
 
-  // 2. Fallback: Buscar en el 'bio' del primer administrador
+  // 2. Fallback: Buscar en la columna 'admin_config' del primer administrador.
+  // IMPORTANTE: NO usamos 'bio' para no sobreescribirla ni mostrarla rara al público.
   try {
     const { data: adminProfile, error: adminError } = await supabase
       .from('profiles')
-      .select('bio')
+      .select('admin_config, bio')
       .eq('is_admin', true)
       .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle();
 
-    if (!adminError && adminProfile && adminProfile.bio) {
-      const bioStr = adminProfile.bio.trim();
-      if (bioStr.startsWith('{') && bioStr.endsWith('}')) {
-        const parsed = JSON.parse(bioStr);
-        cachedSettings = parsed;
-        cacheTime = now;
-        return cachedSettings;
+    if (!adminError && adminProfile) {
+      // Primero intentar admin_config (columna dedicada, nueva)
+      if (adminProfile.admin_config) {
+        try {
+          const parsed = typeof adminProfile.admin_config === 'object'
+            ? adminProfile.admin_config
+            : JSON.parse(adminProfile.admin_config);
+          cachedSettings = parsed;
+          cacheTime = now;
+          return cachedSettings;
+        } catch {}
+      }
+
+      // Compatibilidad hacia atrás: si la bio vieja todavía tiene JSON (migración)
+      if (adminProfile.bio) {
+        const bioStr = adminProfile.bio.trim();
+        if (bioStr.startsWith('{') && bioStr.endsWith('}')) {
+          try {
+            const parsed = JSON.parse(bioStr);
+            cachedSettings = parsed;
+            cacheTime = now;
+            return cachedSettings;
+          } catch {}
+        }
       }
     }
   } catch (e) {
@@ -72,7 +90,8 @@ export async function getGlobalSettings() {
 
 /**
  * Guardar las configuraciones globales del sitio.
- * Intenta escribir en 'site_settings' y en el perfil de administrador como respaldo.
+ * Escribe en 'site_settings' y en 'admin_config' del perfil admin como respaldo.
+ * NUNCA modifica la columna 'bio' del administrador.
  */
 export async function saveGlobalSettings(settings) {
   const supabase = await getSupabase();
@@ -93,17 +112,18 @@ export async function saveGlobalSettings(settings) {
     console.warn("[Settings] Error al guardar en site_settings, intentando fallback:", e);
   }
 
-  // 2. Guardar en el 'bio' del usuario administrador actual
+  // 2. Guardar en 'admin_config' del usuario administrador actual (NO en bio)
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (!userError && user) {
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ bio: JSON.stringify(settings), updated_at: new Date().toISOString() })
+        .update({ admin_config: settings, updated_at: new Date().toISOString() })
         .eq('id', user.id);
 
       if (profileError) {
-        if (!savedSuccessfully) throw profileError;
+        // Si admin_config no existe aún en la tabla, no fallar
+        console.warn("[Settings] admin_config no disponible aún. Solo se guardó en site_settings.");
       } else {
         savedSuccessfully = true;
       }
