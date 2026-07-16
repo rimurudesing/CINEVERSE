@@ -143,7 +143,8 @@ export const SocialManager = {
     if (!supabase) return false;
 
     try {
-      const { data: profile } = await supabase.from('profiles').select('id').eq('username', username).maybeSingle();
+      // Buscar el perfil de forma case-insensitive
+      const { data: profile } = await supabase.from('profiles').select('id').ilike('username', username).maybeSingle();
       if (!profile) {
         showToast('Usuario no encontrado', 'error');
         return false;

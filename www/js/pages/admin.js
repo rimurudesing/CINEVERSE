@@ -1104,7 +1104,7 @@ class AdminDashboardController {
           id, reason, created_at, resolved,
           chat_messages (
             id, message,
-            profiles (username)
+            profiles!chat_messages_user_id_fkey (username)
           )
         `)
         .eq('resolved', false)

@@ -535,25 +535,36 @@ class ChatPageLobby {
     if (!container || !this.supabase) return;
 
     try {
-      // Intentar con columnas completas primero
+      // Intentar con columnas completas y relación explícita para evitar PGRST201
       let data, error;
       ({ data, error } = await this.supabase
         .from('chat_messages')
-        .select('*, profiles(username, display_name, avatar_url, is_premium, avatar_frame, level, xp)')
+        .select('*, profiles!chat_messages_user_id_fkey(username, display_name, avatar_url, is_premium, avatar_frame, level, xp)')
         .order('created_at', { ascending: false })
         .limit(50));
 
-      // Fallback: si falla por columnas faltantes (ej: avatar_frame, level, xp no aplicados aún)
-      if (error && (error.code === '42703' || error.message?.includes('column') || error.message?.includes('does not exist'))) {
-        console.warn('ChatLobby: Columnas extendidas no disponibles, usando query básica:', error.message);
+      // Fallback 1: Si falla por columnas extendidas no disponibles
+      if (error) {
+        console.warn('ChatLobby: Query completa falló, intentando query básica con relación explícita:', error.message || error);
         ({ data, error } = await this.supabase
           .from('chat_messages')
-          .select('*, profiles(username, display_name, avatar_url, is_premium)')
+          .select('*, profiles!chat_messages_user_id_fkey(username, display_name, avatar_url, is_premium)')
+          .order('created_at', { ascending: false })
+          .limit(50));
+      }
+
+      // Fallback 2: Si sigue fallando por cualquier problema de relación o políticas, traer solo mensajes sin perfil
+      if (error) {
+        console.warn('ChatLobby: Falló join con perfiles, intentando query de solo chat_messages:', error.message || error);
+        ({ data, error } = await this.supabase
+          .from('chat_messages')
+          .select('id, user_id, message, created_at, rich_card, reply_to_id, reply_preview')
           .order('created_at', { ascending: false })
           .limit(50));
       }
 
       if (error) throw error;
+
 
       this.messages = (data || []).reverse();
 
