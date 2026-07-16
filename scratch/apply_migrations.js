@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Usamos el pooler IPv4 de Supabase ya que la conexión directa IPv6 no está disponible en este entorno local.
-const connectionString = "postgresql://postgres.oeibxtnltxxcaiwvpldi:cineverse2126@aws-0-us-east-1.pooler.supabase.com:6543/postgres";
+const connectionString = "postgresql://postgres.oeibxtnltxxcaiwvpldi:cineverse2126@aws-1-us-east-1.pooler.supabase.com:6543/postgres";
 
 async function main() {
   const client = new pg.Client({

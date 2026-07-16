@@ -49,12 +49,33 @@ CREATE TABLE IF NOT EXISTS public.group_messages (
 );
 ALTER TABLE public.group_messages ENABLE ROW LEVEL SECURITY;
 
+-- Helper Functions to avoid recursion in RLS policies
+CREATE OR REPLACE FUNCTION public.is_group_member(group_id_val UUID, user_id_val UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.group_members
+    WHERE group_id = group_id_val AND user_id = user_id_val
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.is_group_owner(group_id_val UUID, user_id_val UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.groups
+    WHERE id = group_id_val AND owner_id = user_id_val
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Políticas de Grupos
 DROP POLICY IF EXISTS "Lectura de grupos si eres miembro" ON public.groups;
 CREATE POLICY "Lectura de grupos si eres miembro" ON public.groups
   FOR SELECT USING (
     owner_id = auth.uid() OR
-    EXISTS (SELECT 1 FROM public.group_members WHERE group_id = id AND user_id = auth.uid())
+    public.is_group_member(id, auth.uid())
   );
 
 DROP POLICY IF EXISTS "Solo el owner puede actualizar el grupo" ON public.groups;
@@ -68,42 +89,38 @@ CREATE POLICY "Cualquiera puede crear grupos" ON public.groups
 DROP POLICY IF EXISTS "Miembros del grupo pueden ver integrantes" ON public.group_members;
 CREATE POLICY "Miembros del grupo pueden ver integrantes" ON public.group_members
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.groups
-      WHERE id = group_id AND (owner_id = auth.uid() OR EXISTS (SELECT 1 FROM public.group_members WHERE group_id = id AND user_id = auth.uid()))
-    )
+    public.is_group_member(group_id, auth.uid()) OR
+    public.is_group_owner(group_id, auth.uid())
   );
 
 DROP POLICY IF EXISTS "Owner puede agregar miembros" ON public.group_members;
 CREATE POLICY "Owner puede agregar miembros" ON public.group_members
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM public.groups WHERE id = group_id AND owner_id = auth.uid()) OR auth.uid() = user_id
+    public.is_group_owner(group_id, auth.uid()) OR auth.uid() = user_id
   );
 
 DROP POLICY IF EXISTS "Owner o el propio miembro pueden borrar miembro" ON public.group_members;
 CREATE POLICY "Owner o el propio miembro pueden borrar miembro" ON public.group_members
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM public.groups WHERE id = group_id AND owner_id = auth.uid()) OR auth.uid() = user_id
+    public.is_group_owner(group_id, auth.uid()) OR auth.uid() = user_id
   );
 
 DROP POLICY IF EXISTS "Miembros pueden ver mensajes de su grupo" ON public.group_messages;
 CREATE POLICY "Miembros pueden ver mensajes de su grupo" ON public.group_messages
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.groups
-      WHERE id = group_id AND (owner_id = auth.uid() OR EXISTS (SELECT 1 FROM public.group_members WHERE group_id = id AND user_id = auth.uid()))
-    )
+    public.is_group_member(group_id, auth.uid()) OR
+    public.is_group_owner(group_id, auth.uid())
   );
 
 DROP POLICY IF EXISTS "Miembros pueden enviar mensajes a su grupo" ON public.group_messages;
 CREATE POLICY "Miembros pueden enviar mensajes a su grupo" ON public.group_messages
   FOR INSERT WITH CHECK (
-    auth.uid() = user_id AND
-    EXISTS (
-      SELECT 1 FROM public.groups
-      WHERE id = group_id AND (owner_id = auth.uid() OR EXISTS (SELECT 1 FROM public.group_members WHERE group_id = id AND user_id = auth.uid()))
+    auth.uid() = user_id AND (
+      public.is_group_member(group_id, auth.uid()) OR
+      public.is_group_owner(group_id, auth.uid())
     )
   );
+
 
 
 -- 3. REPORTES DEL CHAT
@@ -282,10 +299,57 @@ UPDATE public.profiles
 SET referral_code = upper(substring(md5(random()::text), 1, 8))
 WHERE referral_code IS NULL;
 
--- 11. HABILITAR PUBLICACIÓN REALTIME
-ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.chat_polls;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.chat_poll_votes;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.message_reactions;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.group_messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
+-- 11. HABILITAR PUBLICACIÓN REALTIME (Seguro e Idempotente)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    -- Agregar public.notifications
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables 
+      WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'notifications'
+    ) THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+    END IF;
+
+    -- Agregar public.chat_polls
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables 
+      WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'chat_polls'
+    ) THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.chat_polls;
+    END IF;
+
+    -- Agregar public.chat_poll_votes
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables 
+      WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'chat_poll_votes'
+    ) THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.chat_poll_votes;
+    END IF;
+
+    -- Agregar public.message_reactions
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables 
+      WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'message_reactions'
+    ) THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.message_reactions;
+    END IF;
+
+    -- Agregar public.group_messages
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables 
+      WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'group_messages'
+    ) THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.group_messages;
+    END IF;
+
+    -- Agregar public.profiles
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables 
+      WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'profiles'
+    ) THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
+    END IF;
+  END IF;
+END $$;
+
