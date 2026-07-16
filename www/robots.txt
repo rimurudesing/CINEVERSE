@@ -1,0 +1,27 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /peliculas.html
+Allow: /series.html
+Allow: /estrenos.html
+Allow: /buscar.html
+Allow: /chat.html
+Allow: /descargar.html
+Allow: /login.html
+
+# No indexar páginas privadas
+Disallow: /admin.html
+Disallow: /perfil.html
+Disallow: /grupos.html
+Disallow: /watch.html
+Disallow: /movie.html
+Disallow: /serie.html
+Disallow: /publico.html
+Disallow: /info.html
+
+# No indexar directorios de build/assets internos
+Disallow: /dist/
+Disallow: /android/
+Disallow: /scratch/
+
+Sitemap: https://cineverse-7u5.pages.dev/sitemap.xml
