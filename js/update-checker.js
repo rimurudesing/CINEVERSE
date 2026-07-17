@@ -9,7 +9,7 @@
 import { getGlobalSettings } from './settings.js';
 
 // Versión actual hardcodeada en el cliente. Actualiza esto en cada build.
-export const CURRENT_VERSION = '1.3.0';
+export const CURRENT_VERSION = '1.3.1';
 
 const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
 
