@@ -43,9 +43,9 @@ logs/
 *.temp
 
 # Ignorar todos los archivos APK para evitar limites de tamaño en Cloudflare y advertencias de GitHub
+# IMPORTANTE: nunca poner APKs dentro de www/ — Capacitor los empaqueta dentro del build
 *.apk
-dist/CineVerse-debug.apk
-www/CineVerse-debug.apk
+www/*.apk
+dist/*.apk
 
 # dist/ y build.js son necesarios para Cloudflare Pages — NO ignorar
-
