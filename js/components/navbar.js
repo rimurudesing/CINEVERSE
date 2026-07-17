@@ -139,10 +139,7 @@ export function renderNavbar() {
     }
   });
 
-  // Evitar scroll por arrastre táctil dentro del menú móvil
-  mobileMenu.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-  }, { passive: false });
+
 
   // Cerrar menú al hacer click en un link móvil
   mobileMenu.querySelectorAll('.navbar__mobile-link').forEach(link => {

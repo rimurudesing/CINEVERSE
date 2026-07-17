@@ -192,11 +192,7 @@ class WatchPageController {
           allow="autoplay; fullscreen; picture-in-picture"
         ></iframe>
 
-        <!-- #59 CAPTURA DE GESTOS OVERLAY -->
-        <div id="player-gesture-capture" style="
-          position: absolute; inset: 0; z-index: 10;
-          cursor: pointer;
-        "></div>
+
 
         <!-- #59 BRIGHTNESS DIMMING OVERLAY -->
         <div id="player-brightness-overlay" style="
@@ -235,17 +231,7 @@ class WatchPageController {
           ">✕</button>
         </div>
 
-        <!-- Toggle Switch Gestos -->
-        <div id="gesture-toggle-pill" style="
-          position: absolute; bottom: 0.75rem; left: 0.75rem; z-index: 12;
-          display: flex; align-items: center; gap: 0.35rem;
-          background: rgba(0,0,0,0.75); padding: 0.3rem 0.6rem;
-          border-radius: 20px; font-size: 0.72rem;
-          border: 1px solid rgba(255,255,255,0.15);
-        ">
-          <input type="checkbox" id="gesture-active-chk" checked style="accent-color: var(--accent-red); cursor: pointer; margin:0;">
-          <label for="gesture-active-chk" style="color: #fff; font-weight: 700; cursor: pointer; user-select: none;">Gestos Táctiles</label>
-        </div>
+
       </div>
 
       <!-- Botón de Cast a TV con Web Video Caster -->
@@ -956,80 +942,7 @@ class WatchPageController {
       };
     }
 
-    const gestureArea = document.getElementById('player-gesture-capture');
-    const brightnessOverlay = document.getElementById('player-brightness-overlay');
-    const hudToast = document.getElementById('player-hud-toast');
-    const gestureChk = document.getElementById('gesture-active-chk');
 
-    if (gestureArea && brightnessOverlay && hudToast && gestureChk) {
-      let startX = 0, startY = 0;
-      let isSwipe = false;
-      let startBrightness = 0;
-      let currentOpacity = 0;
-
-      currentOpacity = parseFloat(brightnessOverlay.style.opacity) || 0;
-
-      const showHUD = (text, icon) => {
-        hudToast.innerHTML = `<span>${icon}</span> <span>${text}</span>`;
-        hudToast.style.display = 'flex';
-        clearTimeout(hudToast.timer);
-        hudToast.timer = setTimeout(() => hudToast.style.display = 'none', 1500);
-      };
-
-      gestureArea.addEventListener('touchstart', (e) => {
-        if (!gestureChk.checked) return;
-        const touch = e.touches[0];
-        startX = touch.clientX;
-        startY = touch.clientY;
-        isSwipe = false;
-        startBrightness = 1 - currentOpacity;
-      }, { passive: true });
-
-      gestureArea.addEventListener('touchmove', (e) => {
-        if (!gestureChk.checked) return;
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - startX;
-        const deltaY = touch.clientY - startY;
-
-        if (Math.abs(deltaX) > 15 || Math.abs(deltaY) > 15) {
-          isSwipe = true;
-          if (e.cancelable) e.preventDefault();
-
-          const rect = gestureArea.getBoundingClientRect();
-          const touchXRelative = touch.clientX - rect.left;
-
-          if (Math.abs(deltaY) > Math.abs(deltaX)) {
-            const pctChange = -(deltaY / rect.height);
-
-            if (touchXRelative < rect.width / 2) {
-              let newBrightness = startBrightness + pctChange;
-              newBrightness = Math.max(0.1, Math.min(1, newBrightness));
-              currentOpacity = 1 - newBrightness;
-              brightnessOverlay.style.opacity = currentOpacity;
-              showHUD(`Brillo: ${Math.round(newBrightness * 100)}%`, '🔆');
-            } else {
-              let mockVol = Math.round(50 + (pctChange * 50));
-              mockVol = Math.max(0, Math.min(100, mockVol));
-              showHUD(`Volumen: ${mockVol}%`, '🔊');
-            }
-          } else {
-            const seekSeconds = Math.round(deltaX * 0.5);
-            const sign = seekSeconds >= 0 ? '+' : '';
-            showHUD(`Seek: ${sign}${seekSeconds}s`, '⏩');
-          }
-        }
-      }, { passive: false });
-
-      gestureArea.addEventListener('touchend', (e) => {
-        if (!gestureChk.checked) return;
-        if (!isSwipe) {
-          gestureArea.style.pointerEvents = 'none';
-          setTimeout(() => {
-            gestureArea.style.pointerEvents = 'auto';
-          }, 350);
-        }
-      });
-    }
   }
 
   // ── Historial ──────────────────────────────────────────────────────────────
