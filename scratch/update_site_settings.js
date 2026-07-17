@@ -12,10 +12,10 @@ async function main() {
     await client.connect();
     
     const newConfig = {
-      latest_version: "1.3.1",
+      latest_version: "1.3.2",
       latest_changelog: "- Arreglo de clics y gestos táctiles en reproductor y menús\n- Mensajes de voz (audios) habilitados en el chat\n- Rediseño responsivo de estadísticas e historial en perfil\n- Optimización de tamaño de APK de 768MB a 15MB",
       global_ads_enabled: true,
-      latest_download_url: "https://www.mediafire.com/file/ybo29qv03qypv25/Cineverse.apk/file"
+      latest_download_url: "https://www.mediafire.com/file/1xhsh8vi2qo9ve8/Cineverse.apk/file"
     };
 
     const query = "UPDATE public.site_settings SET value = $1 WHERE key = 'global_config' RETURNING *;";
