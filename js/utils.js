@@ -9,6 +9,20 @@ import './tv.js';
  */
 export function formatDate(dateStr) {
   if (!dateStr) return "N/A";
+  
+  // Soporte robusto para timestamps ISO de bases de datos (ej: 2026-07-10T05:53:31)
+  const isoMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1], 10);
+    const month = parseInt(isoMatch[2], 10) - 1;
+    const day = parseInt(isoMatch[3], 10);
+    const date = new Date(year, month, day);
+    if (!isNaN(date.getTime())) {
+      const options = { day: 'numeric', month: 'short', year: 'numeric' };
+      return date.toLocaleDateString('es-ES', options);
+    }
+  }
+
   const parts = dateStr.split('-');
   if (parts.length !== 3) return dateStr;
   

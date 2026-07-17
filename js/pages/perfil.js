@@ -625,18 +625,18 @@ class ProfilePageController {
         section.innerHTML = `
           <h3 style="font-size:1.25rem;font-weight:700;color:var(--accent-red);margin-bottom:1rem;border-bottom:1px solid var(--border-subtle);padding-bottom:0.25rem;">${monthYear}</h3>
           <div class="flex flex--col flex--gap-sm">
-            ${items.map(item => `
-              <div class="history-item" data-id="${item.id}" style="background-color:var(--bg-secondary);border:1px solid var(--border-subtle);padding:0.75rem 1.25rem;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between;">
-                <div class="flex flex--align-center flex--gap-md">
-                  <img src="${buildTMDBImageURL(item.poster_path,'w92')}" alt="${item.title}" loading="lazy" style="width:35px;height:50px;object-fit:cover;border-radius:var(--radius-sm);">
-                  <div>
-                    <h4 style="font-size:0.95rem;font-weight:700;">${item.title}</h4>
+             ${items.map(item => `
+              <div class="history-item" data-id="${item.id}" style="background-color:var(--bg-secondary);border:1px solid var(--border-subtle);padding:0.75rem 1.25rem;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+                <div class="flex flex--align-center flex--gap-md" style="min-width:0;flex:1;">
+                  <img src="${buildTMDBImageURL(item.poster_path,'w92')}" alt="${item.title}" loading="lazy" style="width:35px;height:50px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0;">
+                  <div style="min-width:0;flex:1;">
+                    <h4 style="font-size:0.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.title}</h4>
                     <span style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;">${item.media_type==='movie'?'Cine':'TV'}</span>
                   </div>
                 </div>
-                <div class="flex flex--align-center flex--gap-md">
+                <div class="flex flex--align-center flex--gap-md" style="flex-wrap:wrap;justify-content:flex-end;margin-left:auto;">
                   <span style="font-size:0.75rem;color:var(--text-muted);">${formatDate(item.watched_at)}</span>
-                  <button class="delete-history-btn" data-id="${item.id}" style="color:var(--text-muted);cursor:pointer;font-size:0.85rem;font-weight:700;">✕ Quitar</button>
+                  <button class="delete-history-btn" data-id="${item.id}" style="color:var(--text-muted);background:none;border:none;cursor:pointer;font-size:0.85rem;font-weight:700;padding:0;">✕ Quitar</button>
                 </div>
               </div>
             `).join('')}
@@ -957,7 +957,7 @@ class ProfilePageController {
           </div>
 
           <!-- Gráficas Principales -->
-          <div style="display:grid;grid-template-columns: 1.2fr 1fr; gap:1.5rem; margin-bottom:2rem; align-items: start;">
+          <div class="stats-grid" style="margin-bottom:2rem; align-items: start;">
             <!-- Gráfica: Actividad Mensual -->
             <div style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.5rem; height: 100%;">
               <h4 style="font-size:1.05rem;font-weight:700;margin-bottom:1.25rem;">📈 Actividad Mensual (Últimos 12 meses)</h4>

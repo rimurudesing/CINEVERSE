@@ -1363,8 +1363,20 @@
       }
       .vip-logo { font-size: 1.2rem; }
       .vip-card-number { font-size: 0.65rem; letter-spacing: 2px; }
-      .vip-value { font-size: 0.72rem; max-width: 100px; }
       .profile-tab-section > div { padding: 1.25rem !important; }
+    }
+
+    /* Gráfica de estadísticas responsiva */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 
   <script type="module" src="js/pages/perfil.js?v=3.0.0"></script>
