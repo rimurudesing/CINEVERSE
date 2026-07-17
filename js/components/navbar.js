@@ -623,7 +623,7 @@ export function injectGlobalPromoBanner() {
 // NOTIFICACIÓN DE ACTUALIZACIÓN DE APK
 // ══════════════════════════════════════════════════════════════
 
-const CURRENT_APP_VER    = '1.2.0';   // ← Actualiza este valor con cada release
+const CURRENT_APP_VER    = '1.3.2';   // ← Actualiza este valor con cada release
 const UPDATE_NOTIF_ID    = 'cv-update-notif';
 const UPDATE_STYLE_ID    = 'cv-update-notif-styles';
 const DISMISSED_VER_KEY  = 'cv_update_dismissed_ver'; // Versión que el usuario ya descargó/descartó
@@ -765,7 +765,7 @@ export function checkForAppUpdate() {
   if (!isNativeApp) return;
 
   // Consultar la versión más reciente desde el servidor en vivo
-  fetch('https://cineverse.pages.dev/version.json')
+  fetch('https://cineverse-7u5.pages.dev/version.json')
     .then(res => { if (!res.ok) throw new Error('No response'); return res.json(); })
     .then(data => {
       const remoteVersion = data.version;

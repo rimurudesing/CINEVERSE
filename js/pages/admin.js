@@ -200,14 +200,22 @@ class AdminDashboardController {
   // GESTOR DE ACTUALIZACIONES APK
   // ══════════════════════════════════════════════════════════════
   async loadUpdateManager() {
-    const infoEl = document.getElementById('update-current-info');
-    const urlEl  = document.getElementById('update-download-url');
+    const infoEl    = document.getElementById('update-current-info');
+    const urlEl     = document.getElementById('update-download-url');
+    const versionEl = document.getElementById('update-version');
+    const changeEl  = document.getElementById('update-changelog');
     try {
       const settings = await getGlobalSettings();
-      const version  = settings?.latest_version  || '—';
+      const version  = settings?.latest_version  || '';
       const url      = settings?.latest_download_url || '';
-      if (infoEl) infoEl.textContent = `Versión publicada actualmente: v${version}`;
-      if (urlEl && !urlEl.value) urlEl.value = url;
+      const changelog = settings?.latest_changelog || '';
+      if (infoEl) infoEl.textContent = version
+        ? `✅ Versión publicada actualmente: v${version}`
+        : 'No hay ninguna versión publicada aún.';
+      // Pre-rellenar inputs con los valores actuales de la DB
+      if (versionEl && !versionEl.value) versionEl.value = version;
+      if (urlEl     && !urlEl.value)     urlEl.value     = url;
+      if (changeEl  && !changeEl.value)  changeEl.value  = changelog;
     } catch (e) {
       if (infoEl) infoEl.textContent = 'Error al cargar versión.';
     }
@@ -241,7 +249,11 @@ class AdminDashboardController {
           latest_changelog:    changelog || '',
         });
 
-        if (infoEl) infoEl.textContent = `Versión publicada actualmente: v${version}`;
+        if (infoEl) infoEl.textContent = `✅ Versión publicada actualmente: v${version}`;
+        // Limpiar la sesión para que el checker corra de nuevo en este cliente
+        sessionStorage.removeItem('cv_update_checked');
+        // Registrar en auditoría
+        await this.logAdminAction('apk_update_publicado', null, { version, url });
         showToast(`🚀 Versión v${version} publicada. Los usuarios recibirán la notificación.`, 'success');
       } catch (err) {
         console.error('[Admin] Error publicando actualización:', err);
