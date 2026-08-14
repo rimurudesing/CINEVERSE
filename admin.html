@@ -457,7 +457,7 @@
         <div class="kpi-number" id="kpi-codes-used">–</div>
         <div class="kpi-label">Códigos Canjeados</div>
       </div>
-      <div class="kpi-card" style="border-color: rgba(16,185,129,0.3);">
+      <div class="kpi-card" id="kpi-card-online" style="border-color: rgba(16,185,129,0.3); cursor: pointer;" data-target="section-online-users" title="Ver lista de usuarios en línea">
         <span class="kpi-icon">🟢</span>
         <div class="kpi-number" id="kpi-users-online" style="color: #10B981;">–</div>
         <div class="kpi-label">Usuarios Online ahora</div>
@@ -479,6 +479,7 @@
     <!-- ══════════════════════════════════════════════════ -->
     <nav class="dashboard-tabs">
       <button class="dashboard-tab-btn active" data-target="section-licenses">🎫 Licencias y APK</button>
+      <button class="dashboard-tab-btn" data-target="section-online-users">🟢 Usuarios Online</button>
       <button class="dashboard-tab-btn" data-target="section-requests">🍿 Pedidos de Películas</button>
       <button class="dashboard-tab-btn" data-target="section-moderation">🛡️ Moderación Chat</button>
       <button class="dashboard-tab-btn" data-target="section-cinebot">🤖 CineBot Trivias</button>
@@ -643,6 +644,59 @@
             </thead>
             <tbody id="premium-users-tbody">
               <tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">Cargando usuarios premium...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECCIÓN: USUARIOS EN LÍNEA EN TIEMPO REAL         -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="admin-panel-section" id="section-online-users">
+      <div class="admin-card">
+        <div class="flex flex--justify-between flex--align-center flex--wrap" style="gap: 1rem; margin-bottom: 1.25rem;">
+          <div>
+            <h2 class="admin-subtitle" style="margin-bottom: 0.35rem; color: #10B981;">🟢 Usuarios Conectados en Tiempo Real</h2>
+            <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 0;">
+              Lista detallada de usuarios interactuando o activos en CineVerse.
+            </p>
+          </div>
+          <div class="flex flex--align-center flex--gap-sm">
+            <span id="online-users-live-badge" style="font-size: 0.75rem; font-weight: 700; color: #10B981; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); padding: 0.35rem 0.75rem; border-radius: 20px; display: flex; align-items: center; gap: 0.4rem;">
+              <span style="width: 8px; height: 8px; background: #10B981; border-radius: 50%; display: inline-block;"></span>
+              <span id="online-count-badge-text">Cargando...</span>
+            </span>
+            <button id="refresh-online-users-btn" class="btn btn--secondary" style="padding: 0.45rem 0.85rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+              🔄 Actualizar
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtros y Búsqueda -->
+        <div class="flex flex--justify-between flex--align-center flex--wrap" style="gap: 0.75rem; margin-bottom: 1.25rem; background: rgba(255,255,255,0.02); padding: 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 220px;">
+            <input type="text" id="search-online-users-input" class="form-input" placeholder="🔍 Buscar por usuario o nombre..." style="padding: 0.45rem 0.85rem; font-size: 0.85rem;">
+          </div>
+          <div class="filter-tabs" style="margin-bottom: 0;" id="online-filter-tabs">
+            <button class="filter-tab active" data-filter="all">Todos los activos</button>
+            <button class="filter-tab" data-filter="premium">👑 Solo Premium</button>
+          </div>
+        </div>
+
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Nombre Visible</th>
+                <th>Membresía / Rol</th>
+                <th>Última Actividad</th>
+                <th style="text-align: right;">Acciones Rápidas</th>
+              </tr>
+            </thead>
+            <tbody id="online-users-tbody">
+              <tr><td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">Cargando usuarios en línea...</td></tr>
             </tbody>
           </table>
         </div>

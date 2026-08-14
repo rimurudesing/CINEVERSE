@@ -53,6 +53,7 @@ class AdminDashboardController {
       this.loadStats(),
       this.loadCodes(),
       this.loadPremiumUsers(),
+      this.loadOnlineUsers(),
       this.loadAdsToggle(),
       this.loadUpdateManager(),
       this.loadRequests(),
@@ -69,6 +70,14 @@ class AdminDashboardController {
     this.setupExport();
     this.setupAdsToggle();
     this.setupUpdatePublisher();
+    this.setupOnlineUsersEvents();
+
+    // Auto-actualizar lista de usuarios online cada 15s si la pestaña está activa
+    setInterval(() => {
+      if (document.getElementById('section-online-users')?.classList.contains('active')) {
+        this.loadOnlineUsers();
+      }
+    }, 15000);
 
     // 6. Configurar nuevos eventos (Moderación, CineBot, Enlaces de publicidad, Sistema)
     this.setupModeration();
@@ -95,7 +104,17 @@ class AdminDashboardController {
         if (targetSection) {
           targetSection.classList.add('active');
         }
+
+        if (targetId === 'section-online-users') {
+          this.loadOnlineUsers();
+        }
       });
+    });
+
+    // Permitir clic directo en la tarjeta KPI de Usuarios Online para ir a la pestaña
+    document.getElementById('kpi-card-online')?.addEventListener('click', () => {
+      const onlineTabBtn = document.querySelector('.dashboard-tab-btn[data-target="section-online-users"]');
+      if (onlineTabBtn) onlineTabBtn.click();
     });
   }
 
@@ -459,6 +478,167 @@ class AdminDashboardController {
       console.error('Error al cargar usuarios Premium:', err);
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--accent-red)">Error al cargar usuarios Premium.</td></tr>`;
     }
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // SECCIÓN: USUARIOS EN LÍNEA
+  // ══════════════════════════════════════════════════════════════
+  async loadOnlineUsers() {
+    const tbody = document.getElementById('online-users-tbody');
+    const badgeText = document.getElementById('online-count-badge-text');
+    if (!tbody) return;
+
+    try {
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url, is_online, last_seen, is_premium, role, is_admin, created_at')
+        .or(`is_online.eq.true,last_seen.gt.${fiveMinAgo}`)
+        .order('last_seen', { ascending: false });
+
+      if (error) throw error;
+
+      this.rawOnlineUsers = data || [];
+      this.renderOnlineUsers(this.rawOnlineUsers);
+
+      const totalCount = this.rawOnlineUsers.length;
+      if (badgeText) {
+        badgeText.textContent = `${totalCount} usuario${totalCount === 1 ? '' : 's'} online`;
+      }
+      this._animateNumber('kpi-users-online', totalCount);
+
+    } catch (err) {
+      console.error('Error al cargar usuarios en línea:', err);
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--accent-red)">Error al consultar usuarios en línea: ${err.message || err}</td></tr>`;
+      }
+    }
+  }
+
+  renderOnlineUsers(usersList) {
+    const tbody = document.getElementById('online-users-tbody');
+    if (!tbody) return;
+
+    const searchTerm = (document.getElementById('search-online-users-input')?.value || '').toLowerCase().trim();
+    const filterTab = document.querySelector('#online-filter-tabs .filter-tab.active')?.getAttribute('data-filter') || 'all';
+
+    let filtered = usersList.filter(u => {
+      const matchSearch = (u.username || '').toLowerCase().includes(searchTerm) ||
+                          (u.display_name || '').toLowerCase().includes(searchTerm);
+      const matchFilter = filterTab === 'premium' ? u.is_premium : true;
+      return matchSearch && matchFilter;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2.5rem;color:var(--text-muted)">
+        ${usersList.length === 0 ? '🟢 No hay usuarios en línea actualmente.' : '🔍 No se encontraron usuarios que coincidan con la búsqueda.'}
+      </td></tr>`;
+      return;
+    }
+
+    const defaultAvatar = 'assets/icon.png';
+
+    tbody.innerHTML = filtered.map(u => {
+      const avatar = u.avatar_url || defaultAvatar;
+      const displayName = u.display_name || u.username || 'Usuario';
+      const username = u.username ? `@${u.username}` : 'Sin usuario';
+
+      const isRoleAdmin = u.is_admin || u.role === 'admin';
+      let roleBadge = `<span style="font-size:0.7rem; font-weight:700; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:var(--text-secondary); padding:2px 8px; border-radius:12px;">Standard</span>`;
+      if (isRoleAdmin) {
+        roleBadge = `<span style="font-size:0.7rem; font-weight:700; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#EF4444; padding:2px 8px; border-radius:12px;">🛡️ Admin</span>`;
+      } else if (u.is_premium) {
+        roleBadge = `<span style="font-size:0.7rem; font-weight:700; background:rgba(245,197,24,0.15); border:1px solid rgba(245,197,24,0.3); color:#F5C518; padding:2px 8px; border-radius:12px;">👑 Premium</span>`;
+      }
+
+      let lastSeenText = 'En línea ahora';
+      if (u.last_seen) {
+        const diffSec = Math.floor((Date.now() - new Date(u.last_seen).getTime()) / 1000);
+        if (diffSec > 120) {
+          const mins = Math.floor(diffSec / 60);
+          lastSeenText = `Hace ${mins} min`;
+        } else if (diffSec > 30) {
+          lastSeenText = `Hace unos segundos`;
+        }
+      }
+
+      return `
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <div style="position:relative; width:38px; height:38px; flex-shrink:0;">
+                <img src="${avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:1px solid var(--border-subtle);" onError="this.src='${defaultAvatar}'">
+                <span style="position:absolute; bottom:0; right:0; width:10px; height:10px; background:#10B981; border:2px solid var(--bg-secondary); border-radius:50%;"></span>
+              </div>
+              <div>
+                <strong style="color:#fff; font-size:0.88rem; display:block;">${username}</strong>
+                <span style="font-size:0.72rem; color:var(--text-muted); font-family:var(--font-mono);">${u.id ? u.id.slice(0, 8) + '...' : ''}</span>
+              </div>
+            </div>
+          </td>
+          <td style="font-weight:600; color:var(--text-primary);">${displayName}</td>
+          <td>${roleBadge}</td>
+          <td>
+            <span style="display:inline-flex; align-items:center; gap:0.35rem; color:#10B981; font-weight:600; font-size:0.8rem;">
+              <span style="width:6px; height:6px; background:#10B981; border-radius:50%;"></span>
+              ${lastSeenText}
+            </span>
+          </td>
+          <td style="text-align:right;">
+            <div style="display:inline-flex; gap:0.35rem; justify-content:flex-end;">
+              ${u.username ? `
+                <a href="publico.html?user=${encodeURIComponent(u.username)}" target="_blank" class="btn btn--secondary" style="padding:0.3rem 0.6rem; font-size:0.75rem;" title="Ver perfil público">
+                  👁️ Perfil
+                </a>
+              ` : ''}
+              <button class="btn btn--primary btn-mod-online-user" data-username="${u.username || ''}" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(229,9,20,0.15); border-color:rgba(229,9,20,0.3); color:var(--accent-red);" title="Moderar usuario">
+                🛡️ Moderar
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    tbody.querySelectorAll('.btn-mod-online-user').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const username = btn.getAttribute('data-username');
+        if (!username) return;
+
+        const modTabBtn = document.querySelector('.dashboard-tab-btn[data-target="section-moderation"]');
+        if (modTabBtn) modTabBtn.click();
+
+        const modInput = document.getElementById('mod-search-username');
+        const modBtn = document.getElementById('mod-search-btn');
+        if (modInput && modBtn) {
+          modInput.value = username;
+          modBtn.click();
+        }
+      });
+    });
+  }
+
+  setupOnlineUsersEvents() {
+    document.getElementById('refresh-online-users-btn')?.addEventListener('click', () => {
+      this.loadOnlineUsers();
+      showToast('Lista de usuarios online actualizada', 'info');
+    });
+
+    document.getElementById('search-online-users-input')?.addEventListener('input', () => {
+      if (this.rawOnlineUsers) {
+        this.renderOnlineUsers(this.rawOnlineUsers);
+      }
+    });
+
+    document.querySelectorAll('#online-filter-tabs .filter-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('#online-filter-tabs .filter-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        if (this.rawOnlineUsers) {
+          this.renderOnlineUsers(this.rawOnlineUsers);
+        }
+      });
+    });
   }
 
   // ══════════════════════════════════════════════════════════════
