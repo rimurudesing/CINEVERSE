@@ -110,11 +110,6 @@ class WatchPageController {
         return;
       }
 
-      // Auto-activar modo anime si el contenido es animación japonesa
-      if (params.get('server') !== 'standard' && isAnimeContent(this.mediaDetails)) {
-        this.isAnimeMode = true;
-      }
-
       // 2. Actualizar título de pestaña
       const title = this.mediaDetails.title || this.mediaDetails.name;
       document.title = `${title} — CineVerse`;
