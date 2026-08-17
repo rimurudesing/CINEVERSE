@@ -3,9 +3,9 @@
  * Módulos Administrados:
  * ✅ 1. Licencias y Códigos Premium (KPIs, Gen masivo, Revocaciones)
  * ✅ 2. Gestor de Pedidos de Películas (Request Queue)
- * ✅ 3. Usuarios en Línea (Online Presence Monitor)
- * ✅ 4. Enlaces de Publicidad Dinámica (Smartlink, PopAds, Banners)
- * ✅ 5. Configuración del Sistema
+ * ✅ 3. Moderación del Chat en Vivo (Baneo, Mute, Panico Clear Chat)
+ * ✅ 4. CineBot Editor de Trivias y Activador
+ * ✅ 5. Enlaces de Publicidad Dinámica (Smartlink, PopAds, Banners)
  * ═══════════════════════════════════════════════════════════ */
 
 import { getSupabase, isSupabaseConfigured } from '../supabase.js';
@@ -439,7 +439,7 @@ class AdminDashboardController {
             <td>${expiryDisplay}</td>
             <td>${daysDisplay}</td>
             <td style="text-align:right">
-              <button class="btn btn--outline-red btn-revoke-premium" data-id="${u.id}" data-username="${u.username}" style="padding:0.3rem 0.6rem;font-size:0.72rem">
+              <button class="btn btn--outline-red btn-revoke-premium" data-id="${u.id}" data-username="${u.username}" style="padding:0.3rem 0.65rem;font-size:0.72rem">
                 Revocar
               </button>
             </td>
@@ -584,31 +584,11 @@ class AdminDashboardController {
                   👁️ Perfil
                 </a>
               ` : ''}
-              <button class="btn btn--primary btn-mod-online-user" data-username="${u.username || ''}" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(229,9,20,0.15); border-color:rgba(229,9,20,0.3); color:var(--accent-red);" title="Moderar usuario">
-                🛡️ Moderar
-              </button>
             </div>
           </td>
         </tr>
       `;
     }).join('');
-
-    tbody.querySelectorAll('.btn-mod-online-user').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const username = btn.getAttribute('data-username');
-        if (!username) return;
-
-        const modTabBtn = document.querySelector('.dashboard-tab-btn[data-target="section-moderation"]');
-        if (modTabBtn) modTabBtn.click();
-
-        const modInput = document.getElementById('mod-search-username');
-        const modBtn = document.getElementById('mod-search-btn');
-        if (modInput && modBtn) {
-          modInput.value = username;
-          modBtn.click();
-        }
-      });
-    });
   }
 
   setupOnlineUsersEvents() {
@@ -754,286 +734,7 @@ class AdminDashboardController {
   }
 
   // ══════════════════════════════════════════════════════════════
-  // SECCIÓN 3: MODERACIÓN DEL CHAT EN VIVO
-  // ══════════════════════════════════════════════════════════════
-  setupModeration() {
-    const searchBtn = document.getElementById('mod-search-btn');
-    const searchInput = document.getElementById('mod-search-username');
-
-    if (searchBtn && searchInput) {
-      searchBtn.addEventListener('click', async () => {
-        const username = searchInput.value.trim();
-        if (!username) { showToast('Ingresa un nombre de usuario', 'error'); return; }
-
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('username', username)
-            .maybeSingle();
-
-          if (error) throw error;
-          if (!data) {
-            showToast('Usuario no encontrado', 'error');
-            document.getElementById('mod-user-card').style.display = 'none';
-            this.selectedModUser = null;
-            return;
-          }
-
-          this.selectedModUser = data;
-          this.renderUserModCard(data);
-        } catch (e) {
-          showToast('Error al buscar el usuario', 'error');
-        }
-      });
-    }
-
-    // Botones para silenciar (Mute)
-    document.querySelectorAll('.mod-btn-mute').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        if (!this.selectedModUser) return;
-        const hours = parseInt(btn.getAttribute('data-hours'));
-        const muteUntil = new Date();
-        muteUntil.setHours(muteUntil.getHours() + hours);
-
-        try {
-          const { error } = await supabase
-            .from('profiles')
-            .update({ chat_muted_until: muteUntil.toISOString() })
-            .eq('id', this.selectedModUser.id);
-
-          if (error) throw error;
-          showToast(`Usuario silenciado por ${hours} horas`, 'success');
-          this.selectedModUser.chat_muted_until = muteUntil.toISOString();
-          this.renderUserModCard(this.selectedModUser);
-        } catch (e) {
-          showToast('Error al silenciar usuario', 'error');
-        }
-      });
-    });
-
-    // Botón quitar Silenciamiento (Unmute)
-    const unmuteBtn = document.getElementById('mod-btn-unmute');
-    if (unmuteBtn) {
-      unmuteBtn.addEventListener('click', async () => {
-        if (!this.selectedModUser) return;
-        try {
-          const { error } = await supabase
-            .from('profiles')
-            .update({ chat_muted_until: null })
-            .eq('id', this.selectedModUser.id);
-
-          if (error) throw error;
-          showToast('Silencio removido correctamente', 'success');
-          this.selectedModUser.chat_muted_until = null;
-          this.renderUserModCard(this.selectedModUser);
-        } catch (e) {
-          showToast('Error al remover silencio', 'error');
-        }
-      });
-    }
-
-    // Botón toggle baneo
-    const toggleBanBtn = document.getElementById('mod-btn-toggle-ban');
-    if (toggleBanBtn) {
-      toggleBanBtn.addEventListener('click', async () => {
-        if (!this.selectedModUser) return;
-        const targetState = !this.selectedModUser.banned;
-        try {
-          const { error } = await supabase
-            .from('profiles')
-            .update({ banned: targetState })
-            .eq('id', this.selectedModUser.id);
-
-          if (error) throw error;
-          showToast(targetState ? '🚫 Usuario baneado del sistema' : '🔓 Usuario desbaneado', 'info');
-          this.selectedModUser.banned = targetState;
-          this.renderUserModCard(this.selectedModUser);
-        } catch (e) {
-          showToast('Error al aplicar baneo', 'error');
-        }
-      });
-    }
-
-    // Botón de pánico limpieza masiva de chat
-    const clearChatBtn = document.getElementById('panic-clear-chat-btn');
-    if (clearChatBtn) {
-      clearChatBtn.addEventListener('click', async () => {
-        if (!confirm('🚨 ¡ALERTA! Esto eliminará permanentemente TODOS los mensajes del chat global. ¿Confirmar acción?')) return;
-        try {
-          const { data, error } = await supabase.rpc('truncate_chat');
-          if (error) throw error;
-          showToast('🔥 Historial del chat general eliminado por completo', 'success');
-        } catch (e) {
-          showToast('Error de permisos al limpiar chat', 'error');
-        }
-      });
-    }
-  }
-
-  renderUserModCard(user) {
-    const card = document.getElementById('mod-user-card');
-    if (!card) return;
-
-    card.style.display = 'flex';
-    document.getElementById('mod-user-avatar').src = user.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.username)}`;
-    document.getElementById('mod-user-name').textContent = user.display_name || user.username;
-    document.getElementById('mod-user-meta').textContent = `@${user.username} · Nivel ${user.level || 1} (${user.xp || 0} XP)`;
-
-    const premiumSpan = document.getElementById('mod-user-premium-status');
-    const bannedSpan = document.getElementById('mod-user-banned-status');
-    const mutedSpan = document.getElementById('mod-user-muted-status');
-    
-    const toggleBanBtn = document.getElementById('mod-btn-toggle-ban');
-    const unmuteBtn    = document.getElementById('mod-btn-unmute');
-
-    // Premium status
-    if (user.is_premium) {
-      premiumSpan.textContent = '👑 VIP'; premiumSpan.style.color = 'var(--gold)';
-    } else {
-      premiumSpan.textContent = 'FREE'; premiumSpan.style.color = 'var(--text-muted)';
-    }
-
-    // Banned status
-    if (user.banned) {
-      bannedSpan.textContent = 'BANEADO'; bannedSpan.style.color = 'var(--accent-red)';
-      toggleBanBtn.textContent = '🔓 Desbanear Usuario';
-      toggleBanBtn.style.background = '#10B981'; toggleBanBtn.style.borderColor = '#10B981';
-    } else {
-      bannedSpan.textContent = 'ACTIVO'; bannedSpan.style.color = '#10B981';
-      toggleBanBtn.textContent = '🚫 Banear Usuario';
-      toggleBanBtn.style.background = 'var(--accent-red)'; toggleBanBtn.style.borderColor = 'var(--accent-red)';
-    }
-
-    // Muted status
-    const isMuted = user.chat_muted_until && new Date(user.chat_muted_until) > new Date();
-    if (isMuted) {
-      const date = new Date(user.chat_muted_until).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
-      mutedSpan.textContent = `SILENCIADO (hasta ${date})`; mutedSpan.style.color = 'var(--accent-red)';
-      unmuteBtn.style.display = 'inline-block';
-    } else {
-      mutedSpan.textContent = 'HABILITADO'; mutedSpan.style.color = '#10B981';
-      unmuteBtn.style.display = 'none';
-    }
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  // SECCIÓN 4: CONTROL DE CINEBOT TRIVIAS
-  // ══════════════════════════════════════════════════════════════
-  async loadTrivias() {
-    const tbody = document.getElementById('trivias-list-tbody');
-    if (!tbody) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('cinebot_trivias')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted)">No hay trivias cargadas.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = data.map(t => `
-        <tr data-trivia-id="${t.id}">
-          <td style="font-weight:600;color:var(--text-primary)">${t.question}</td>
-          <td><code style="background:rgba(255,255,255,0.05);padding:0.15rem 0.4rem;border-radius:3px;font-family:var(--font-mono);">${t.answer}</code> (${t.answer_display})</td>
-          <td>+${t.xp_reward} XP</td>
-          <td style="text-align:right">
-            <button class="btn btn--outline-red btn-delete-trivia" data-id="${t.id}" style="padding:0.25rem 0.5rem;font-size:0.72rem;">Eliminar</button>
-          </td>
-        </tr>
-      `).join('');
-
-      // Botón Eliminar Trivia
-      tbody.querySelectorAll('.btn-delete-trivia').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const id = btn.getAttribute('data-id');
-          if (!confirm('¿Seguro que deseas eliminar esta pregunta del banco de trivias?')) return;
-          try {
-            const { error } = await supabase.from('cinebot_trivias').delete().eq('id', id);
-            if (error) throw error;
-            showToast('Trivia eliminada del banco', 'info');
-            await this.loadTrivias();
-          } catch (e) {
-            showToast('Error al eliminar trivia', 'error');
-          }
-        });
-      });
-
-    } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--accent-red)">Error al cargar trivias.</td></tr>`;
-    }
-  }
-
-  setupCineBot() {
-    const toggle = document.getElementById('cinebot-toggle');
-    const form   = document.getElementById('trivia-creator-form');
-
-    // Cargar estado inicial
-    getGlobalSettings().then(settings => {
-      const enabled = settings.cinebot_enabled !== false;
-      if (toggle) toggle.checked = enabled;
-      this.updateCineBotBadge(enabled);
-    });
-
-    if (toggle) {
-      toggle.addEventListener('change', async () => {
-        const enabled = toggle.checked;
-        this.updateCineBotBadge(enabled);
-        try {
-          const current = await getGlobalSettings();
-          await saveGlobalSettings({ ...current, cinebot_enabled: enabled });
-          showToast(enabled ? '🤖 CineBot activado' : '🤖 CineBot apagado', 'info');
-        } catch (e) {
-          showToast('Error al actualizar CineBot', 'error');
-          toggle.checked = !enabled;
-          this.updateCineBotBadge(!enabled);
-        }
-      });
-    }
-
-    if (form) {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const question      = document.getElementById('trivia-question').value.trim();
-        const answer        = document.getElementById('trivia-answer').value.trim().toLowerCase();
-        const answerDisplay = document.getElementById('trivia-answer-display').value.trim();
-        const reward        = parseInt(document.getElementById('trivia-reward').value);
-        const submitBtn     = document.getElementById('trivia-submit-btn');
-
-        submitBtn.disabled = true;
-        try {
-          const { error } = await supabase.from('cinebot_trivias').insert({
-            question, answer, answer_display: answerDisplay, xp_reward: reward
-          });
-          if (error) throw error;
-          showToast('¡Nueva trivia agregada con éxito!', 'success');
-          form.reset();
-          await this.loadTrivias();
-        } catch (e) {
-          showToast('Error al guardar la trivia', 'error');
-        } finally {
-          submitBtn.disabled = false;
-        }
-      });
-    }
-  }
-
-  updateCineBotBadge(enabled) {
-    const badge = document.getElementById('cinebot-status-badge');
-    if (!badge) return;
-    badge.textContent = enabled ? 'ACTIVO' : 'DESACTIVADO';
-    badge.style.color = enabled ? '#10B981' : '#6b7280';
-    badge.style.borderColor = enabled ? 'rgba(16,185,129,0.4)' : 'rgba(107,114,128,0.4)';
-    badge.style.background = enabled ? 'rgba(16,185,129,0.08)' : 'rgba(107,114,128,0.08)';
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  // SECCIÓN 5: ENLACES DE PUBLICIDAD DINÁMICA
+  // SECCIÓN: ENLACES DE PUBLICIDAD DINÁMICA
   // ══════════════════════════════════════════════════════════════
   setupAdLinks() {
     const form       = document.getElementById('ads-links-form');
@@ -1277,132 +978,6 @@ class AdminDashboardController {
     }
   }
 
-  // ─── REPORTES DEL CHAT ──────────────────────────────────────────────────────
-  async loadChatReports() {
-    const body = document.getElementById('reports-table-body');
-    if (!body) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('chat_reports')
-        .select(`
-          id, reason, created_at, resolved,
-          chat_messages (
-            id, message,
-            profiles!chat_messages_user_id_fkey (username)
-          )
-        `)
-        .eq('resolved', false)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">No hay reportes pendientes 🎉</td></tr>`;
-        return;
-      }
-
-      body.innerHTML = data.map(rep => {
-        const msg = rep.chat_messages || {};
-        const author = msg.profiles?.username || 'Desconocido';
-        const msgText = msg.message || '(Mensaje eliminado)';
-        const date = new Date(rep.created_at).toLocaleString('es-ES');
-
-        return `
-          <tr>
-            <td><strong>@${author}</strong></td>
-            <td><span style="font-family:var(--font-mono);font-size:0.8rem;background:rgba(255,255,255,0.03);padding:0.2rem 0.4rem;border-radius:4px;">${msgText}</span></td>
-            <td><span class="chat-rank-badge" style="color:var(--accent-red);border-color:rgba(229,9,20,0.3);">${rep.reason}</span></td>
-            <td style="font-size:0.75rem;color:var(--text-secondary);">${date}</td>
-            <td>
-              <div class="flex flex--gap-xs">
-                <button class="btn btn--secondary btn-resolve-report" data-id="${rep.id}" style="padding:0.3rem 0.6rem;font-size:0.7rem;background:rgba(16,185,129,0.1);color:#10b981;border-color:rgba(16,185,129,0.2);">Ignorar</button>
-                <button class="btn btn--secondary btn-delete-msg-report" data-id="${rep.id}" data-msg-id="${msg.id}" style="padding:0.3rem 0.6rem;font-size:0.7rem;background:rgba(245,158,11,0.1);color:#f59e0b;border-color:rgba(245,158,11,0.2);">Eliminar</button>
-                <button class="btn btn--secondary btn-ban-user-report" data-id="${rep.id}" data-username="${author}" style="padding:0.3rem 0.6rem;font-size:0.7rem;background:rgba(229,9,20,0.1);color:var(--accent-red);border-color:rgba(229,9,20,0.2);">Banear</button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      body.querySelectorAll('.btn-resolve-report').forEach(btn => {
-        btn.addEventListener('click', () => this.resolveReport(btn.dataset.id));
-      });
-      body.querySelectorAll('.btn-delete-msg-report').forEach(btn => {
-        btn.addEventListener('click', () => this.deleteReportMessage(btn.dataset.id, btn.dataset.msgId));
-      });
-      body.querySelectorAll('.btn-ban-user-report').forEach(btn => {
-        btn.addEventListener('click', () => this.banReportUser(btn.dataset.id, btn.dataset.username));
-      });
-
-    } catch (err) {
-      console.error(err);
-      body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--accent-red);">Error al cargar reportes</td></tr>`;
-    }
-  }
-
-  async resolveReport(reportId) {
-    try {
-      const { error } = await supabase
-        .from('chat_reports')
-        .update({ resolved: true })
-        .eq('id', reportId);
-      
-      if (error) throw error;
-      await this.logAdminAction('reporte_ignorado', null, { reportId });
-      await this.loadChatReports();
-      showToast('Reporte ignorado', 'success');
-    } catch (e) {
-      showToast('No se pudo resolver el reporte', 'error');
-    }
-  }
-
-  async deleteReportMessage(reportId, messageId) {
-    try {
-      const { error: msgErr } = await supabase
-        .from('chat_messages')
-        .delete()
-        .eq('id', messageId);
-      
-      if (msgErr) throw msgErr;
-
-      await supabase
-        .from('chat_reports')
-        .update({ resolved: true })
-        .eq('id', reportId);
-
-      await this.logAdminAction('reporte_borrar_mensaje', null, { reportId, messageId });
-      await this.loadChatReports();
-      showToast('Mensaje eliminado y reporte resuelto', 'success');
-    } catch (e) {
-      showToast('No se pudo eliminar el mensaje', 'error');
-    }
-  }
-
-  async banReportUser(reportId, username) {
-    try {
-      const { data: userProfile, error: profileErr } = await supabase
-        .from('profiles')
-        .update({ banned: true })
-        .eq('username', username)
-        .select()
-        .maybeSingle();
-
-      if (profileErr) throw profileErr;
-
-      await supabase
-        .from('chat_reports')
-        .update({ resolved: true })
-        .eq('id', reportId);
-
-      await this.logAdminAction('reporte_banear_usuario', userProfile?.id || null, { reportId, username });
-      await this.loadChatReports();
-      showToast(`Usuario @${username} baneado exitosamente`, 'success');
-    } catch (e) {
-      showToast('No se pudo banear al usuario', 'error');
-    }
-  }
-
   // ─── PALABRAS PROHIBIDAS ────────────────────────────────────────────────────
   async loadBannedWords() {
     const container = document.getElementById('system-banned-words-container');
@@ -1488,27 +1063,6 @@ class AdminDashboardController {
       
       await this.logAdminAction('mantenimiento_toggle', null, { active });
       showToast(active ? 'Modo mantenimiento activado 🛠️' : 'Modo mantenimiento desactivado ✅', 'success');
-    });
-
-    const annBtn = document.getElementById('system-publish-announcement-btn');
-    annBtn?.addEventListener('click', async () => {
-      const textarea = document.getElementById('system-chat-announcement');
-      const text = textarea?.value?.trim();
-      if (!text) return;
-
-      try {
-        const { error } = await supabase.from('chat_messages').insert({
-          user_id: this.currentUser.id,
-          message: `📢 ANUNCIO OFICIAL: ${text}`
-        });
-
-        if (error) throw error;
-        textarea.value = '';
-        await this.logAdminAction('anuncio_chat', null, { text });
-        showToast('Anuncio publicado en el chat global 📢', 'success');
-      } catch (err) {
-        showToast('No se pudo publicar el anuncio', 'error');
-      }
     });
 
     const wordForm = document.getElementById('system-banned-word-form');
