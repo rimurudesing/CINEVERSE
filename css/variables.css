@@ -3,11 +3,12 @@
 :root {
   /* ── Paleta oscura ultra-premium ── */
   --bg-void:          #030303;    /* Fondo absoluto */
-  --bg-primary:       #080808;    /* Fondo principal */
-  --bg-secondary:     #0f0f0f;    /* Tarjetas base */
-  --bg-elevated:      #161616;    /* Modales, dropdowns */
-  --bg-overlay:       #1c1c1c;    /* Navbar scrolled */
-  --bg-glass:         rgba(15,15,15,0.7); /* Glassmorphism */
+  --bg-primary:       #070709;    /* Fondo principal con tinte profundo */
+  --bg-secondary:     #0e0f12;    /* Tarjetas base con textura sutil */
+  --bg-elevated:      #15171c;    /* Modales, dropdowns */
+  --bg-overlay:       #1c1f26;    /* Navbar scrolled */
+  --bg-glass:         rgba(14, 15, 18, 0.75); /* Glassmorphism */
+  --bg-glass-strong:  rgba(10, 11, 14, 0.90);
 
   /* ── Rojo CineVerse — la firma ── */
   --accent-red:       #E50914;
@@ -15,42 +16,44 @@
   --accent-ember:     #FF3040;
   --accent-dark-red:  #8B0000;
 
-  /* ── Acento secundario — violeta profundo ── */
+  /* ── Acentos secundarios armoniosos ── */
   --accent-violet:    #7C3AED;
   --accent-violet-glow: rgba(124,58,237,0.25);
+  --accent-cyan:      #06B6D4;
+  --accent-emerald:   #10B981;
 
   /* ── Dorado IMDb ── */
   --gold:             #F5C518;
   --gold-dim:         rgba(245,197,24,0.2);
 
-  /* ── Texto ── */
+  /* ── Texto con máxima legibilidad ── */
   --text-primary:     #FFFFFF;
-  --text-secondary:   #A8A8A8;
-  --text-muted:       #4a4a4a;
+  --text-secondary:   #A1A1AA;
+  --text-muted:       #52525B;
 
-  /* ── Bordes ── */
-  --border-subtle:    rgba(255,255,255,0.06);
-  --border-medium:    rgba(255,255,255,0.1);
+  /* ── Bordes refinados ── */
+  --border-subtle:    rgba(255,255,255,0.07);
+  --border-medium:    rgba(255,255,255,0.12);
   --border-red:       rgba(229,9,20,0.35);
 
-  /* ── Glows ── */
+  /* ── Glows cinematográficos ── */
   --glow-red:         rgba(229,9,20,0.3);
   --glow-red-intense: rgba(229,9,20,0.6);
   --glow-violet:      rgba(124,58,237,0.3);
 
-  /* ── Radios ── */
+  /* ── Radios modernos ── */
   --radius-xs:        4px;
   --radius-sm:        8px;
-  --radius-md:        14px;
-  --radius-lg:        22px;
-  --radius-xl:        32px;
+  --radius-md:        12px;
+  --radius-lg:        18px;
+  --radius-xl:        26px;
   --radius-full:      9999px;
 
-  /* ── Transiciones ── */
-  --transition-fast:  150ms cubic-bezier(0.4,0,0.2,1);
-  --transition-med:   320ms cubic-bezier(0.4,0,0.2,1);
-  --transition-slow:  500ms cubic-bezier(0.4,0,0.2,1);
-  --transition-spring:400ms cubic-bezier(0.34,1.56,0.64,1);
+  /* ── Transiciones con curvas fluidas ── */
+  --transition-fast:  150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-med:   300ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow:  500ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-spring:400ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* ── Tipografía ── */
   --font-display:     'Bebas Neue', sans-serif;
@@ -58,8 +61,9 @@
   --font-body:        'Crimson Pro', serif;
   --font-mono:        'JetBrains Mono', monospace;
 
-  /* ── Sombras premium ── */
-  --shadow-card:      0 4px 24px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.04) inset;
-  --shadow-elevated:  0 8px 40px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.06) inset;
-  --shadow-glow-red:  0 0 40px rgba(229,9,20,0.25), 0 0 80px rgba(229,9,20,0.1);
+  /* ── Sombras de profundidad ── */
+  --shadow-card:      0 8px 30px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.05) inset;
+  --shadow-elevated:  0 16px 50px rgba(0,0,0,0.85), 0 1px 0 rgba(255,255,255,0.08) inset;
+  --shadow-glow-red:  0 0 35px rgba(229,9,20,0.3), 0 0 70px rgba(229,9,20,0.12);
 }
+

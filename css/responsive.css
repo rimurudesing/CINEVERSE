@@ -281,20 +281,13 @@ body.tv-mode * {
 /* Reemplazo de transparencias con desenfoque por fondos opacos o semi-transparentes planos en TV */
 body.tv-mode .navbar,
 body.tv-mode .modal__content,
-body.tv-mode .movie-card__hover-content,
-body.tv-mode .chat-sidebar {
+body.tv-mode .movie-card__hover-content {
   background-color: var(--bg-secondary) !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.9) !important;
 }
 
 body.tv-mode .hero__overlay {
   background: linear-gradient(to top, rgba(10, 10, 10, 1) 0%, rgba(10, 10, 10, 0.9) 50%, rgba(10, 10, 10, 0.4) 100%) !important;
-}
-
-/* En TV: el chat bubble sube para no quedar fuera del viewport */
-body.tv-mode .chat-bubble {
-  bottom: 40px !important;
-  right: 40px !important;
 }
 
 /* En TV: aumentar tamaño de fuente para legibilidad en pantalla grande */
@@ -309,32 +302,26 @@ body.tv-mode .btn {
 }
 
 /* ==========================================================================
-   OPTIMIZACIONES PARA ANDROID WEBVIEW (APK)
+   OPTIMIZACIONES PARA ANDROID WEBVIEW (APK) & MÓVIL
    ========================================================================== */
 
 /* Mejorar rendimiento de scroll en Android WebView */
 .container,
-.chat-messages-container,
 #cast-track,
 .carousel-section__track {
   -webkit-overflow-scrolling: touch;
   will-change: auto;
 }
 
-/* Evitar tap delay en Android */
-a, button, [tabindex] {
+/* Evitar tap delay en Android e iOS */
+a, button, [tabindex], input, select {
   touch-action: manipulation;
 }
 
-/* En APK (Android) el chat bubble debe estar por encima del banner AdMob (50px) */
-@media (max-width: 768px) {
-  .chat-bubble {
-    bottom: 80px !important; /* 50px banner AdMob + 30px margen */
-  }
-
-  .chat-panel {
-    /* En móvil el panel ocupa toda la pantalla */
-    height: 100dvh !important;
-    height: 100vh !important;
+/* Safe Area Insets para dispositivos con notch/gestos */
+@supports (padding: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
+

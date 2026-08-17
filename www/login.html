@@ -35,68 +35,114 @@
     .login-container {
       position: relative;
       width: 100vw;
-      height: 100vh;
-      overflow: hidden;
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       background-color: var(--bg-void);
+      padding: 2rem 1rem;
     }
     
     .login-bg {
-      position: absolute;
+      position: fixed;
       inset: 0;
       background-size: cover;
       background-position: center;
-      filter: blur(4px) brightness(0.4);
+      filter: blur(16px) brightness(0.28);
+      transform: scale(1.08);
       z-index: 1;
-      transition: background-image var(--transition-slow);
+      transition: background-image 0.8s ease-in-out;
     }
 
     .login-overlay {
-      position: absolute;
+      position: fixed;
       inset: 0;
-      background: linear-gradient(135deg, rgba(229, 9, 20, 0.2) 0%, rgba(5, 5, 5, 0.8) 70%);
+      background: radial-gradient(circle at center, rgba(229, 9, 20, 0.12) 0%, rgba(5, 5, 8, 0.88) 75%);
       z-index: 2;
+    }
+
+    .login-back-btn {
+      position: fixed;
+      top: 1.5rem;
+      left: 1.5rem;
+      z-index: 20;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.1rem;
+      background: rgba(14, 15, 18, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-full);
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: all var(--transition-med);
+    }
+
+    .login-back-btn:hover {
+      background: rgba(229, 9, 20, 0.15);
+      border-color: rgba(229, 9, 20, 0.4);
+      color: #fff;
+      transform: translateX(-3px);
     }
 
     .login-card {
       position: relative;
       z-index: 10;
-      width: 90%;
-      max-width: 450px;
-      background-color: rgba(10, 10, 10, 0.85);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: 3rem 2.5rem;
-      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px var(--glow-red);
+      width: 100%;
+      max-width: 440px;
+      background: rgba(12, 13, 16, 0.82);
+      backdrop-filter: blur(32px) saturate(200%);
+      -webkit-backdrop-filter: blur(32px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-xl);
+      padding: 2.75rem 2.25rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(229, 9, 20, 0.15), 0 1px 0 rgba(255,255,255,0.08) inset;
       font-family: var(--font-ui);
+    }
+
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 2rem 1.5rem;
+        border-radius: var(--radius-lg);
+      }
+      .login-back-btn {
+        top: 1rem;
+        left: 1rem;
+        font-size: 0.8rem;
+        padding: 0.45rem 0.85rem;
+      }
     }
 
     .auth-tab-btn {
       background: none;
       border: none;
       font-family: var(--font-ui);
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 700;
       color: var(--text-secondary);
       cursor: pointer;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid transparent;
-      transition: var(--transition-fast);
+      padding: 0.4rem 0.8rem;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+    }
+
+    .auth-tab-btn:hover {
+      color: #fff;
     }
 
     .auth-tab-btn.active {
-      color: var(--text-primary);
-      border-bottom-color: var(--accent-red);
+      color: var(--accent-red);
+      background: rgba(229, 9, 20, 0.1);
     }
 
     .auth-form {
       display: none;
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(8px);
       transition: opacity var(--transition-med) ease, transform var(--transition-med) ease;
     }
 
@@ -134,23 +180,23 @@
 
     .form-input.input-error {
       border-color: #ff4d4d !important;
-      box-shadow: 0 0 0 3px rgba(255, 77, 77, 0.15);
+      box-shadow: 0 0 0 3px rgba(255, 77, 77, 0.18);
     }
 
     .form-input.input-success {
       border-color: #22c55e !important;
-      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
     }
 
     @keyframes shake {
       0%,100% { transform: translateX(0); }
-      20%      { transform: translateX(-7px); }
-      40%      { transform: translateX(7px); }
-      60%      { transform: translateX(-5px); }
-      80%      { transform: translateX(5px); }
+      20%      { transform: translateX(-6px); }
+      40%      { transform: translateX(6px); }
+      60%      { transform: translateX(-4px); }
+      80%      { transform: translateX(4px); }
     }
 
-    .shake { animation: shake 0.4s ease; }
+    .shake { animation: shake 0.35s ease; }
 
     /* Wrapper para input + icono ojo */
     .input-wrapper {
@@ -173,7 +219,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0.2rem;
+      padding: 0.25rem;
       transition: color 0.2s ease;
       font-size: 1rem;
     }
@@ -183,13 +229,13 @@
     /* Barra de fortaleza de contraseña */
     .password-strength-bar {
       display: flex;
-      gap: 4px;
-      margin-top: 0.4rem;
+      gap: 5px;
+      margin-top: 0.45rem;
     }
 
     .strength-segment {
       flex: 1;
-      height: 3px;
+      height: 4px;
       border-radius: 99px;
       background: rgba(255, 255, 255, 0.08);
       transition: background 0.3s ease;
@@ -230,20 +276,20 @@
     }
 
     .form-alert.alert-error {
-      background: rgba(255, 77, 77, 0.08);
-      border: 1px solid rgba(255, 77, 77, 0.25);
-      color: #ff8080;
+      background: rgba(255, 77, 77, 0.1);
+      border: 1px solid rgba(255, 77, 77, 0.3);
+      color: #ff9999;
     }
 
     .form-alert.alert-success {
-      background: rgba(34, 197, 94, 0.08);
-      border: 1px solid rgba(34, 197, 94, 0.25);
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
       color: #4ade80;
     }
 
     .form-alert.alert-info {
-      background: rgba(59, 130, 246, 0.08);
-      border: 1px solid rgba(59, 130, 246, 0.25);
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
       color: #93c5fd;
     }
   </style>
@@ -254,19 +300,28 @@
   <div class="page-transition-overlay out"></div>
 
   <div class="login-container">
-    <!-- Fondo de película dinámico -->
+    <!-- Fondo de película dinámico con viñeta ambiental -->
     <div class="login-bg" id="login-bg"></div>
     <div class="login-overlay"></div>
 
-    <!-- Panel de login con glassmorphism -->
+    <!-- Botón Volver a Inicio Flotante -->
+    <a href="index.html" class="login-back-btn" aria-label="Volver al Inicio" title="Volver al inicio">
+      <span>←</span> Volver a CineVerse
+    </a>
+
+    <!-- Panel de login con glassmorphism ultra-pulido -->
     <div class="login-card">
-      <div style="text-align: center; margin-bottom: 2rem;">
-        <h1 style="font-family: var(--font-display); font-size: 3rem; letter-spacing: 2px; line-height: 1; margin-bottom: 0.5rem;">CINE<span style="color: var(--accent-red)">VERSE</span></h1>
-        <p style="color: var(--text-secondary); font-size: 0.85rem;">Tu portal definitivo de películas y series</p>
+      <div style="text-align: center; margin-bottom: 1.75rem;">
+        <a href="index.html" style="text-decoration: none; display: inline-block;">
+          <h1 style="font-family: var(--font-display); font-size: 3.2rem; letter-spacing: 2px; line-height: 1; margin-bottom: 0.35rem; color: #fff;">
+            CINE<span style="color: var(--accent-red); text-shadow: 0 0 25px rgba(229,9,20,0.6);">VERSE</span>
+          </h1>
+        </a>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; letter-spacing: 0.3px;">Tu portal definitivo de películas y series</p>
       </div>
 
-      <!-- Tabs de Control -->
-      <div class="flex flex--justify-between" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; margin-bottom: 2rem;">
+      <!-- Tabs de Control con microindicador -->
+      <div class="flex flex--justify-between auth-tabs-bar" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; margin-bottom: 1.75rem;">
         <button class="auth-tab-btn active" data-form="login">Entrar</button>
         <button class="auth-tab-btn" data-form="register">Registrarse</button>
         <button class="auth-tab-btn" data-form="recover">Recuperar</button>
@@ -294,10 +349,14 @@
             </button>
           </div>
           <div id="login-password-error" class="field-error" role="alert"></div>
-          <a href="#" id="login-forgot-link" style="font-size:0.78rem; color:var(--text-muted); margin-top:0.4rem; display:inline-block; transition:color 0.2s;" onmouseover="this.style.color='var(--accent-red)'" onmouseout="this.style.color='var(--text-muted)'">¿Olvidaste tu contraseña?</a>
+          <div style="display: flex; justify-content: flex-end; margin-top: 0.35rem;">
+            <a href="#" id="login-forgot-link" style="font-size:0.8rem; color:var(--text-secondary); text-decoration: none; transition:color 0.2s;" onmouseover="this.style.color='var(--accent-red)'" onmouseout="this.style.color='var(--text-secondary)'">¿Olvidaste tu contraseña?</a>
+          </div>
         </div>
 
-        <button type="submit" id="login-submit-btn" class="btn btn--primary" style="margin-top: 0.5rem;">Iniciar Sesión</button>
+        <button type="submit" id="login-submit-btn" class="btn btn--primary" style="margin-top: 0.75rem; width: 100%; padding: 0.85rem 1.5rem; font-size: 1rem; font-weight: 700;">
+          Iniciar Sesión
+        </button>
       </form>
 
       <!-- Formulario 2: Registro -->
@@ -339,13 +398,15 @@
           <div id="register-password-error" class="field-error" role="alert"></div>
         </div>
 
-        <button type="submit" id="register-submit-btn" class="btn btn--primary" style="margin-top: 0.5rem;">Crear Cuenta</button>
+        <button type="submit" id="register-submit-btn" class="btn btn--primary" style="margin-top: 0.75rem; width: 100%; padding: 0.85rem 1.5rem; font-size: 1rem; font-weight: 700;">
+          Crear Cuenta
+        </button>
       </form>
 
       <!-- Formulario 3: Recuperar Contraseña -->
       <form id="form-recover" class="auth-form flex flex--col flex--gap-md">
         <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">
-          Ingresa el correo de tu cuenta y te enviaremos un enlace para restablecer tu contraseña.
+          Ingresa el correo de tu cuenta y te enviaremos un enlace seguro para restablecer tu contraseña.
         </p>
         <!-- Alerta general de recuperación -->
         <div id="recover-alert" class="form-alert" role="alert" aria-live="polite"></div>
@@ -357,9 +418,10 @@
           <div id="recover-email-error" class="field-error" role="alert"></div>
         </div>
 
-        <button type="submit" id="recover-submit-btn" class="btn btn--primary" style="margin-top: 0.5rem;">Enviar Enlace</button>
+        <button type="submit" id="recover-submit-btn" class="btn btn--primary" style="margin-top: 0.75rem; width: 100%; padding: 0.85rem 1.5rem; font-size: 1rem; font-weight: 700;">
+          Enviar Enlace
+        </button>
       </form>
-
 
     </div>
   </div>
