@@ -22,19 +22,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Hojas de Estilo -->
-  <link rel="stylesheet" href="css/variables.css?v=3.0.1">
-  <link rel="stylesheet" href="css/reset.css?v=3.0.1">
-  <link rel="stylesheet" href="css/layout.css?v=3.0.1">
-  <link rel="stylesheet" href="css/components.css?v=3.0.1">
-  <link rel="stylesheet" href="css/navbar.css?v=3.0.1">
-  <link rel="stylesheet" href="css/hero.css?v=3.0.1">
-  <link rel="stylesheet" href="css/carousel.css?v=3.0.1">
-  <link rel="stylesheet" href="css/modal.css?v=3.0.1">
-  <link rel="stylesheet" href="css/skeleton.css?v=3.0.1">
-  <link rel="stylesheet" href="css/forms.css?v=3.0.1">
-  <link rel="stylesheet" href="css/animations.css?v=3.0.1">
-  <link rel="stylesheet" href="css/responsive.css?v=3.0.1">
-  <link rel="stylesheet" href="css/ads.css?v=3.0.1">
+  <link rel="stylesheet" href="css/variables.css?v=3.0.2">
+  <link rel="stylesheet" href="css/reset.css?v=3.0.2">
+  <link rel="stylesheet" href="css/layout.css?v=3.0.2">
+  <link rel="stylesheet" href="css/components.css?v=3.0.2">
+  <link rel="stylesheet" href="css/navbar.css?v=3.0.2">
+  <link rel="stylesheet" href="css/hero.css?v=3.0.2">
+  <link rel="stylesheet" href="css/carousel.css?v=3.0.2">
+  <link rel="stylesheet" href="css/modal.css?v=3.0.2">
+  <link rel="stylesheet" href="css/skeleton.css?v=3.0.2">
+  <link rel="stylesheet" href="css/forms.css?v=3.0.2">
+  <link rel="stylesheet" href="css/animations.css?v=3.0.2">
+  <link rel="stylesheet" href="css/responsive.css?v=3.0.2">
+  <link rel="stylesheet" href="css/ads.css?v=3.0.2">
 
   <style>
     /* ── Watch Page Layout ─────────────────────────────────────────────────── */
@@ -46,6 +46,18 @@
     body {
       padding-top: 70px;
       background: var(--bg-void);
+    }
+
+    /* ── Quitar el borde rojo en focus de SELECTS e INPUTS ──────────────────── */
+    select:focus,
+    select:focus-visible,
+    input:focus,
+    input:focus-visible,
+    textarea:focus,
+    textarea:focus-visible {
+      outline: none !important;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.12) !important;
+      border-color: rgba(255,255,255,0.25) !important;
     }
 
     /* Contenedor principal */
@@ -165,26 +177,19 @@
       .watch-container { padding: 2rem 3rem 5rem; }
     }
 
-    /* ── Foco para TV (D-Pad navigation) ────────────────────────────────────── */
-    @media (hover: none) and (pointer: coarse) {
-      /* TV con control remoto */
+    /* ── Foco para navegación con teclado / TV D-Pad ────────────────────────── */
+    /* Solo botones y links se iluminan con foco */
+    .btn:focus-visible,
+    a:focus-visible {
+      outline: 2.5px solid rgba(229,9,20,0.7) !important;
+      outline-offset: 2px !important;
+      border-radius: 6px;
     }
 
-    *:focus-visible {
-      outline: 3.5px solid var(--accent-red) !important;
-      outline-offset: 3px !important;
-      border-radius: 4px;
-    }
-
-    /* Foco especial para botones grandes en TV */
-    .btn:focus-visible {
-      transform: scale(1.06) !important;
-      box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.45), 0 8px 24px rgba(0,0,0,0.6) !important;
-    }
-
-    /* Selects TV-friendly */
+    /* Selects: foco discreto sin borde rojo */
     select:focus-visible {
-      outline: 3px solid var(--accent-red) !important;
+      outline: none !important;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.15) !important;
     }
 
     /* ── Anuncios ────────────────────────────────────────────────────────────── */
@@ -291,8 +296,8 @@
 
   </main>
 
-  <script type="module" src="js/pages/watch.js?v=3.0.1"></script>
-  <script type="module" src="js/ads-helper.js?v=3.0.1"></script>
+  <script type="module" src="js/pages/watch.js?v=3.0.2"></script>
+  <script type="module" src="js/ads-helper.js?v=3.0.2"></script>
   <script src="js/pwa-extras.js"></script>
 </body>
 </html>
