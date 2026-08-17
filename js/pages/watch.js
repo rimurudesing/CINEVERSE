@@ -22,42 +22,41 @@ import { detectAdBlock, showAdBlockModal } from '../adblock-detector.js';
 const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
 
 // ── Configuración de Vimeus ──────────────────────────────────────────────────
-const VIMEUS_VIEW_KEY = 'ncCgc27D6rB9PBhrNZiOvLMiuYuhJ19esjnRPwNykLQ';
-
+// view_key hardcodeada directamente en cada URL para máxima fiabilidad
 function isAnimeContent(mediaDetails) {
   if (!mediaDetails) return false;
-  // 1. Género Animación (ID 16 en TMDB)
   const genres = mediaDetails.genres || [];
-  const hasAnimation = genres.some(g => g.id === 16 || (g.name && g.name.toLowerCase().includes('animaci')));
-  // 2. País de origen Japón (JP) o idioma original japonés (ja)
+  const hasAnimation = genres.some(function(g) {
+    return g.id === 16 || (g.name && g.name.toLowerCase().indexOf('animaci') !== -1);
+  });
   const originCountry = mediaDetails.origin_country || [];
-  const isJapanese = mediaDetails.original_language === 'ja' || originCountry.includes('JP');
-
+  const isJapanese = mediaDetails.original_language === 'ja' || originCountry.indexOf('JP') !== -1;
   return hasAnimation && isJapanese;
 }
 
 function getVimeusURL(mediaType, tmdbId, season, episode, forceAnime) {
-  const key = VIMEUS_VIEW_KEY;
-  const id  = String(tmdbId);
-  const se  = season  ? String(season)  : null;
-  const ep  = episode ? String(episode) : null;
+  var id = String(tmdbId || '');
+  var se = season  ? String(season)  : '';
+  var ep = episode ? String(episode) : '';
 
   if (forceAnime === true || mediaType === 'anime') {
-    let url = 'https://vimeus.com/e/anime?tmdb=' + id + '&view_key=' + key;
-    if (se)  url += '&se=' + se;
-    if (ep)  url += '&ep=' + ep;
-    return url;
+    var animeUrl = 'https://vimeus.com/e/anime?tmdb=' + id + '&view_key=ncCgc27D6rB9PBhrNZiOvLMiuYuhJ19esjnRPwNykLQ';
+    if (se) animeUrl += '&se=' + se;
+    if (ep) animeUrl += '&ep=' + ep;
+    return animeUrl;
   }
 
   if (mediaType === 'movie') {
-    return 'https://vimeus.com/e/movie?tmdb=' + id + '&view_key=' + key;
-  } else {
-    let url = 'https://vimeus.com/e/serie?tmdb=' + id + '&view_key=' + key;
-    if (se)  url += '&se=' + se;
-    if (ep)  url += '&ep=' + ep;
-    return url;
+    return 'https://vimeus.com/e/movie?tmdb=' + id + '&view_key=ncCgc27D6rB9PBhrNZiOvLMiuYuhJ19esjnRPwNykLQ';
   }
+
+  // Serie / TV
+  var serieUrl = 'https://vimeus.com/e/serie?tmdb=' + id + '&view_key=ncCgc27D6rB9PBhrNZiOvLMiuYuhJ19esjnRPwNykLQ';
+  if (se) serieUrl += '&se=' + se;
+  if (ep) serieUrl += '&ep=' + ep;
+  return serieUrl;
 }
+
 
 // ── Controlador Principal ────────────────────────────────────────────────────
 class WatchPageController {
