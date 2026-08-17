@@ -24,8 +24,26 @@
   padding: 0.75rem 1rem;
   font-family: var(--font-ui);
   font-size: 0.95rem;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
   outline: none;
+}
+
+.form-select {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e50914' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+.form-select option {
+  background-color: #121316;
+  color: #fff;
+  padding: 0.5rem;
 }
 
 .form-input::placeholder, .form-textarea::placeholder {
@@ -34,7 +52,7 @@
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
   border-color: var(--accent-red);
-  box-shadow: 0 0 10px var(--glow-red);
+  box-shadow: 0 0 12px var(--glow-red);
   background-color: var(--bg-elevated);
 }
 

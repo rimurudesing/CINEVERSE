@@ -8,31 +8,153 @@
  */
 
 /* ═════════════════════════════════════════════════════════════
-   #55 — MODO TV
-   Detecta Smart TV o resolución >1920px y aplica clase .tv-mode
+   #55 — MODO TV Y NAVEGACIÓN D-PAD ESPACIAL (CONTROLES REMOTOS)
+   Detecta Smart TV / Android TV / WebOS / Tizen y habilita navegación fluida
    ═════════════════════════════════════════════════════════════ */
-(function detectTVMode() {
-  const tvUA  = /SmartTV|SMART-TV|HbbTV|Opera TV|TV Safari|Tizen|WebOS|Viera|NETRANGEMMH/i.test(navigator.userAgent);
-  const tvRes = window.screen.width > 1920;
-  if (!tvUA && !tvRes) return;
+(function setupTVAndDPadEngine() {
+  const isTV = /SmartTV|SMART-TV|HbbTV|Opera TV|TV Safari|Tizen|WebOS|Viera|NETRANGEMMH|Android.*TV|BRAVIA|AFTT|AFTM|AFTB|MiBOX|Shield/i.test(navigator.userAgent) || window.screen.width >= 2560;
 
-  document.documentElement.classList.add('tv-mode');
+  if (isTV) {
+    document.documentElement.classList.add('tv-mode');
+    document.body.classList.add('tv-mode');
+  }
 
+  // Estilos de TV y foco luminoso para control remoto
   const style = document.createElement('style');
-  style.id = 'cv-tv-styles';
+  style.id = 'cv-tv-dpad-styles';
   style.textContent = `
-    .tv-mode body { font-size: 120%; }
-    .tv-mode .navbar { padding: 0.75rem 3rem !important; }
-    .tv-mode .btn, .tv-mode button { min-height: 3.2rem; font-size: 1.2rem !important; padding: 0.85rem 1.8rem !important; }
-    .tv-mode .card, .tv-mode .result-card, .tv-mode .media-card { transform: scale(1.06) !important; }
-    .tv-mode .hero { min-height: 75vh !important; }
-    .tv-mode input, .tv-mode textarea { font-size: 1.2rem !important; }
-    /* Sin cursor en TV */
-    .tv-mode * { cursor: none !important; }
+    .tv-mode body { font-size: 110%; }
+    .tv-mode .navbar { height: 85px !important; }
+    .tv-mode .btn, .tv-mode button { min-height: 3rem; font-size: 1.1rem !important; }
+    .tv-mode .movie-card { transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), box-shadow 0.2s !important; }
+
+    /* Foco visible de control remoto */
+    :focus-visible,
+    .tv-focus-active :focus,
+    .dpad-focused {
+      outline: 3.5px solid var(--accent-red, #E50914) !important;
+      outline-offset: 4px !important;
+      box-shadow: 0 0 30px rgba(229, 9, 20, 0.8), 0 0 10px rgba(255, 255, 255, 0.5) !important;
+      transform: scale(1.06) !important;
+      z-index: 100 !important;
+      border-radius: inherit;
+    }
+
+    .movie-card:focus,
+    .movie-card.dpad-focused {
+      transform: scale(1.08) translateY(-6px) !important;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.9), 0 0 35px rgba(229,9,20,0.7) !important;
+    }
   `;
   document.head.appendChild(style);
 
-  console.info('[CineVerse] 📺 Modo TV activado');
+  // Motor de navegación direccional (Spatial D-Pad)
+  function getFocusableElements() {
+    const selector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), .movie-card, [tabindex="0"]';
+    return Array.from(document.querySelectorAll(selector)).filter(el => {
+      const rect = el.getBoundingClientRect();
+      const style = window.getComputedStyle(el);
+      return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none' && style.opacity !== '0';
+    });
+  }
+
+  function findNextElement(currentEl, direction) {
+    const focusables = getFocusableElements();
+    if (!focusables.length) return null;
+    if (!currentEl || !document.contains(currentEl)) return focusables[0];
+
+    const curRect = currentEl.getBoundingClientRect();
+    const curCenter = {
+      x: curRect.left + curRect.width / 2,
+      y: curRect.top + curRect.height / 2
+    };
+
+    let bestElem = null;
+    let minDistance = Infinity;
+
+    focusables.forEach(target => {
+      if (target === currentEl) return;
+      const targetRect = target.getBoundingClientRect();
+      const targetCenter = {
+        x: targetRect.left + targetRect.width / 2,
+        y: targetRect.top + targetRect.height / 2
+      };
+
+      const dx = targetCenter.x - curCenter.x;
+      const dy = targetCenter.y - curCenter.y;
+
+      let isValidDir = false;
+      let primaryDiff = 0;
+      let secondaryDiff = 0;
+
+      if (direction === 'up' && dy < -5) {
+        isValidDir = true;
+        primaryDiff = Math.abs(dy);
+        secondaryDiff = Math.abs(dx);
+      } else if (direction === 'down' && dy > 5) {
+        isValidDir = true;
+        primaryDiff = Math.abs(dy);
+        secondaryDiff = Math.abs(dx);
+      } else if (direction === 'left' && dx < -5) {
+        isValidDir = true;
+        primaryDiff = Math.abs(dx);
+        secondaryDiff = Math.abs(dy);
+      } else if (direction === 'right' && dx > 5) {
+        isValidDir = true;
+        primaryDiff = Math.abs(dx);
+        secondaryDiff = Math.abs(dy);
+      }
+
+      if (isValidDir) {
+        // Ponderar distancia en la dirección principal vs secundaria
+        const dist = primaryDiff + (secondaryDiff * 1.8);
+        if (dist < minDistance) {
+          minDistance = dist;
+          bestElem = target;
+        }
+      }
+    });
+
+    return bestElem;
+  }
+
+  window.addEventListener('keydown', (e) => {
+    // Teclas estándar de control remoto y flechas del teclado
+    const key = e.key;
+    const keyCode = e.keyCode;
+
+    let dir = null;
+    if (key === 'ArrowUp' || keyCode === 38 || keyCode === 29460) dir = 'up';
+    else if (key === 'ArrowDown' || keyCode === 40 || keyCode === 29461) dir = 'down';
+    else if (key === 'ArrowLeft' || keyCode === 37 || keyCode === 4) dir = 'left';
+    else if (key === 'ArrowRight' || keyCode === 39 || keyCode === 5) dir = 'right';
+
+    if (dir) {
+      document.body.classList.add('tv-focus-active');
+      const current = document.activeElement;
+      const next = findNextElement(current, dir);
+
+      if (next) {
+        e.preventDefault();
+        next.focus();
+        next.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      }
+    } else if (key === 'Enter' || keyCode === 13) {
+      const active = document.activeElement;
+      if (active && active.classList.contains('movie-card')) {
+        e.preventDefault();
+        active.click();
+      }
+    } else if (key === 'Back' || key === 'Escape' || keyCode === 10009 || keyCode === 27) {
+      // Botón volver de control remoto
+      if (window.location.pathname.length > 1 && !window.location.pathname.endsWith('index.html')) {
+        e.preventDefault();
+        window.history.back();
+      }
+    }
+  });
+
+  console.info('[CineVerse] 📺 Motor de navegación para TV y control remoto activo.');
 })();
 
 /* ═════════════════════════════════════════════════════════════

@@ -112,6 +112,9 @@ export function createMovieCard(item, options = {}) {
   card.className = `movie-card ${sizeClass}`;
   card.setAttribute('data-id', item.id);
   card.setAttribute('data-type', type);
+  card.setAttribute('tabindex', '0');
+  card.setAttribute('role', 'button');
+  card.setAttribute('aria-label', `${title} (${year}), valoración ${rating}`);
 
   // Mapear color de glow dinámico según el género principal
   const primaryGenreId = genreIds[0] || 0;

@@ -260,7 +260,8 @@ class SeriesPageController {
       }
 
       this.results = [...this.results, ...newItems];
-      this.resultsCounter.textContent = `${data.total_results || this.results.length} series encontradas`;
+      const totalCount = data.total_results || this.results.length;
+      this.resultsCounter.textContent = `${totalCount.toLocaleString('es-ES')} series encontradas`;
 
       this.renderResults(newItems);
       this.setupInfiniteScroll();

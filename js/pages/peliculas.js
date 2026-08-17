@@ -261,7 +261,8 @@ class PeliculasPageController {
       }
 
       this.results = [...this.results, ...newItems];
-      this.resultsCounter.textContent = `${data.total_results || this.results.length} películas encontradas`;
+      const totalCount = data.total_results || this.results.length;
+      this.resultsCounter.textContent = `${totalCount.toLocaleString('es-ES')} películas encontradas`;
 
       this.renderResults(newItems);
       this.setupInfiniteScroll();
