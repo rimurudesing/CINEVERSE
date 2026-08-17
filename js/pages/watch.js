@@ -22,39 +22,21 @@ import { detectAdBlock, showAdBlockModal } from '../adblock-detector.js';
 const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
 
 // ── Configuración de Vimeus ──────────────────────────────────────────────────
-// view_key hardcodeada directamente en cada URL para máxima fiabilidad
-function isAnimeContent(mediaDetails) {
-  if (!mediaDetails) return false;
-  const genres = mediaDetails.genres || [];
-  const hasAnimation = genres.some(function(g) {
-    return g.id === 16 || (g.name && g.name.toLowerCase().indexOf('animaci') !== -1);
-  });
-  const originCountry = mediaDetails.origin_country || [];
-  const isJapanese = mediaDetails.original_language === 'ja' || originCountry.indexOf('JP') !== -1;
-  return hasAnimation && isJapanese;
-}
+const VIMEUS_VIEW_KEY = 'SIdNplTsfvK71V6ZRXUI1tti-rS3EwKRolj0mmqedZ4';
 
-function getVimeusURL(mediaType, tmdbId, season, episode, forceAnime) {
+function getVimeusURL(mediaType, tmdbId, season, episode) {
   var id = String(tmdbId || '');
   var se = season  ? String(season)  : '';
   var ep = episode ? String(episode) : '';
 
-  if (forceAnime === true || mediaType === 'anime') {
-    var animeUrl = 'https://vimeus.com/e/anime?tmdb=' + id + '&view_key=ncCgc27D6rB9PBhrNZiOvLMiuYuhJ19esjnRPwNykLQ';
-    if (se) animeUrl += '&se=' + se;
-    if (ep) animeUrl += '&ep=' + ep;
-    return animeUrl;
-  }
-
   if (mediaType === 'movie') {
-    return 'https://vimeus.com/e/movie?tmdb=' + id + '&view_key=ncCgc27D6rB9PBhrNZiOvLMiuYuhJ19esjnRPwNykLQ';
+    return 'https://vimeus.com/e/movie?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
+  } else {
+    var url = 'https://vimeus.com/e/serie?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
+    if (se) url += '&se=' + se;
+    if (ep) url += '&ep=' + ep;
+    return url;
   }
-
-  // Serie / TV
-  var serieUrl = 'https://vimeus.com/e/serie?tmdb=' + id + '&view_key=ncCgc27D6rB9PBhrNZiOvLMiuYuhJ19esjnRPwNykLQ';
-  if (se) serieUrl += '&se=' + se;
-  if (ep) serieUrl += '&ep=' + ep;
-  return serieUrl;
 }
 
 
@@ -155,7 +137,7 @@ class WatchPageController {
     const playerRoot = document.getElementById('player-area-root');
     if (!playerRoot) return;
 
-    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, this.isAnimeMode);
+    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
 
     // Comprobar estado Premium
     const profile   = this.currentUser ? (this.currentUser.profile || {}) : {};
@@ -328,7 +310,7 @@ class WatchPageController {
   }
 
   castToTV() {
-    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, this.isAnimeMode);
+    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
     const title   = this.mediaDetails?.title || this.mediaDetails?.name || 'CineVerse';
     const poster  = this.mediaDetails?.poster_path
       ? buildTMDBImageURL(this.mediaDetails.poster_path, 'w500')
@@ -818,7 +800,7 @@ class WatchPageController {
 
       const iframe  = document.getElementById('vimeus-iframe');
       if (iframe) {
-        iframe.src = getVimeusURL(this.mediaType, this.mediaId, season, episode, this.isAnimeMode);
+        iframe.src = getVimeusURL(this.mediaType, this.mediaId, season, episode);
         showToast(`T${season} E${episode} cargando...`, 'info');
         
         // Guardar reproducción en el historial
