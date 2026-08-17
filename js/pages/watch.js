@@ -22,9 +22,28 @@ import { detectAdBlock, showAdBlockModal } from '../adblock-detector.js';
 const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
 
 // ── Configuración de Vimeus ──────────────────────────────────────────────────
-const VIMEUS_VIEW_KEY = 'SIdNplTsfvK71V6ZRXUI1tti-rS3EwKRolj0mmqedZ4';
+const VIMEUS_VIEW_KEY = 'ncCgc27D6rB9PBhrNZiOvLMiuYuhJ19esjnRPwNykLQ';
 
-function getVimeusURL(mediaType, tmdbId, season = null, episode = null) {
+function isAnimeContent(mediaDetails) {
+  if (!mediaDetails) return false;
+  // 1. Género Animación (ID 16 en TMDB)
+  const genres = mediaDetails.genres || [];
+  const hasAnimation = genres.some(g => g.id === 16 || (g.name && g.name.toLowerCase().includes('animaci')));
+  // 2. País de origen Japón (JP) o idioma original japonés (ja)
+  const originCountry = mediaDetails.origin_country || [];
+  const isJapanese = mediaDetails.original_language === 'ja' || originCountry.includes('JP');
+
+  return hasAnimation && isJapanese;
+}
+
+function getVimeusURL(mediaType, tmdbId, season = null, episode = null, forceAnime = false) {
+  if (forceAnime || mediaType === 'anime') {
+    let url = `https://vimeus.com/e/anime?tmdb=${tmdbId}&view_key=${VIMEUS_VIEW_KEY}`;
+    if (season)  url += `&se=${season}`;
+    if (episode) url += `&ep=${episode}`;
+    return url;
+  }
+
   if (mediaType === 'movie') {
     return `https://vimeus.com/e/movie?tmdb=${tmdbId}&view_key=${VIMEUS_VIEW_KEY}`;
   } else {
@@ -44,6 +63,7 @@ class WatchPageController {
     this.currentUser  = null;
     this.season  = null;
     this.episode = null;
+    this.isAnimeMode = false;
     this.smartlinkUrl = 'https://www.effectivecpmnetwork.com/n8bfacm3rn?key=dae2ae5c2f289ded4d55b6217baeed0c';
   }
 
@@ -56,6 +76,7 @@ class WatchPageController {
     this.mediaType = (params.get('type') || 'movie').toLowerCase();
     this.season    = params.get('season')  ? parseInt(params.get('season'))  : null;
     this.episode   = params.get('episode') ? parseInt(params.get('episode')) : null;
+    this.isAnimeMode = params.get('server') === 'anime';
 
     if (!this.mediaId) {
       navigateTo('index.html');
@@ -103,6 +124,11 @@ class WatchPageController {
         return;
       }
 
+      // Auto-activar modo anime si el contenido es animación japonesa
+      if (params.get('server') !== 'standard' && isAnimeContent(this.mediaDetails)) {
+        this.isAnimeMode = true;
+      }
+
       // 2. Actualizar título de pestaña
       const title = this.mediaDetails.title || this.mediaDetails.name;
       document.title = `${title} — CineVerse`;
@@ -125,7 +151,7 @@ class WatchPageController {
     const playerRoot = document.getElementById('player-area-root');
     if (!playerRoot) return;
 
-    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
+    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, this.isAnimeMode);
 
     // Comprobar estado Premium
     const profile   = this.currentUser ? (this.currentUser.profile || {}) : {};
@@ -253,7 +279,36 @@ class WatchPageController {
 
   // ── Web Video Caster — Cast a TV ───────────────────────────────────────────
   buildCastButton() {
+    const isAnime = this.isAnime || isAnimeContent(this.mediaDetails);
+
     return `
+      <!-- Selector de Servidor / Modo Anime -->
+      <div id="player-server-selector" style="
+        margin-top: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 0.75rem 1.25rem;
+        flex-wrap: wrap;
+      ">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.1rem;">⚡</span>
+          <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-ui);">Servidor de Reproducción:</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <button id="server-standard-btn" class="btn ${!this.isAnimeMode ? 'btn--primary' : 'btn--secondary'}" style="padding: 0.35rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-sm);">
+            🎬 Servidor Principal ${this.mediaType === 'movie' ? 'Película' : 'Serie'}
+          </button>
+          <button id="server-anime-btn" class="btn ${this.isAnimeMode ? 'btn--primary' : 'btn--secondary'}" style="padding: 0.35rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-sm);">
+            ⛩️ Servidor Anime ${isAnime ? '✨ (Recomendado)' : ''}
+          </button>
+        </div>
+      </div>
+
       <div id="wvc-cast-bar" style="
         margin-top: 0.75rem;
         display: flex;
@@ -276,6 +331,22 @@ class WatchPageController {
             <strong style="color:var(--text-primary);">Opciones de Reproducción:</strong> Transmite a tu Smart TV o activa la reproducción flotante.
           </p>
         </div>
+        <button id="wvc-cast-btn" class="btn" style="
+          background: linear-gradient(135deg, #0277BD 0%, #039BE5 100%);
+          color: white;
+          border: none;
+          padding: 0.55rem 1.15rem;
+          font-size: 0.85rem;
+          font-weight: 700;
+          border-radius: var(--radius-sm);
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(3,155,229,0.35);
+          transition: transform 0.2s, box-shadow 0.2s;
+        ">
+          <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="white">
             <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2C12 12.94 7.06 8 1 10zm20-7H3C1.9 3 1 3.9 1 5v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
           </svg>
           Enviar a TV
@@ -286,23 +357,55 @@ class WatchPageController {
 
   bindCastButton() {
     const btn = document.getElementById('wvc-cast-btn');
-    if (!btn) return;
+    if (btn) {
+      // Efectos hover
+      btn.addEventListener('mouseenter', () => {
+        btn.style.transform = 'translateY(-1px)';
+        btn.style.boxShadow = '0 6px 16px rgba(3,155,229,0.5)';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.transform = 'translateY(0)';
+        btn.style.boxShadow = '0 4px 12px rgba(3,155,229,0.35)';
+      });
 
-    // Efectos hover
-    btn.addEventListener('mouseenter', () => {
-      btn.style.transform = 'translateY(-1px)';
-      btn.style.boxShadow = '0 6px 16px rgba(3,155,229,0.5)';
-    });
-    btn.addEventListener('mouseleave', () => {
-      btn.style.transform = 'translateY(0)';
-      btn.style.boxShadow = '0 4px 12px rgba(3,155,229,0.35)';
-    });
+      btn.addEventListener('click', () => this.castToTV());
+    }
 
-    btn.addEventListener('click', () => this.castToTV());
+    // Botones de cambio de Servidor (Estándar vs Anime)
+    const stdBtn = document.getElementById('server-standard-btn');
+    const animeBtn = document.getElementById('server-anime-btn');
+
+    if (stdBtn) {
+      stdBtn.addEventListener('click', () => {
+        if (!this.isAnimeMode) return;
+        this.isAnimeMode = false;
+        const iframe = document.getElementById('vimeus-iframe');
+        if (iframe) {
+          iframe.src = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, false);
+          showToast('Cambiando a Servidor Principal...', 'info');
+        }
+        stdBtn.className = 'btn btn--primary';
+        if (animeBtn) animeBtn.className = 'btn btn--secondary';
+      });
+    }
+
+    if (animeBtn) {
+      animeBtn.addEventListener('click', () => {
+        if (this.isAnimeMode) return;
+        this.isAnimeMode = true;
+        const iframe = document.getElementById('vimeus-iframe');
+        if (iframe) {
+          iframe.src = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, true);
+          showToast('⛩️ Cambiando a Servidor Anime...', 'info');
+        }
+        animeBtn.className = 'btn btn--primary';
+        if (stdBtn) stdBtn.className = 'btn btn--secondary';
+      });
+    }
   }
 
   castToTV() {
-    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
+    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, this.isAnimeMode);
     const title   = this.mediaDetails?.title || this.mediaDetails?.name || 'CineVerse';
     const poster  = this.mediaDetails?.poster_path
       ? buildTMDBImageURL(this.mediaDetails.poster_path, 'w500')
@@ -781,7 +884,7 @@ class WatchPageController {
 
       const iframe  = document.getElementById('vimeus-iframe');
       if (iframe) {
-        iframe.src = getVimeusURL(this.mediaType, this.mediaId, season, episode);
+        iframe.src = getVimeusURL(this.mediaType, this.mediaId, season, episode, this.isAnimeMode);
         showToast(`T${season} E${episode} cargando...`, 'info');
         
         // Guardar reproducción en el historial
