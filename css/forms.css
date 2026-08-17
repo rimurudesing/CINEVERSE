@@ -28,32 +28,127 @@
   outline: none;
 }
 
-.form-select {
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e50914' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 1rem;
-  padding-right: 2.5rem;
-}
-
-.form-select option {
-  background-color: #121316;
-  color: #fff;
-  padding: 0.5rem;
-}
-
 .form-input::placeholder, .form-textarea::placeholder {
   color: var(--text-muted);
 }
 
-.form-input:focus, .form-select:focus, .form-textarea:focus {
+.form-input:focus, .form-textarea:focus {
   border-color: var(--accent-red);
   box-shadow: 0 0 12px var(--glow-red);
   background-color: var(--bg-elevated);
+}
+
+/* ════════════════ CUSTOM LUXURY SELECT ════════════════ */
+.cv-custom-select {
+  position: relative;
+  width: 100%;
+  font-family: var(--font-ui);
+  user-select: none;
+  outline: none;
+}
+
+.cv-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cv-custom-select:focus-visible .cv-select-trigger,
+.cv-custom-select:hover .cv-select-trigger {
+  border-color: rgba(229, 9, 20, 0.4);
+  background-color: var(--bg-elevated);
+}
+
+.cv-custom-select.open .cv-select-trigger {
+  border-color: var(--accent-red);
+  box-shadow: 0 0 16px var(--glow-red);
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.cv-select-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-red);
+  transition: transform var(--transition-med);
+}
+
+.cv-custom-select.open .cv-select-arrow {
+  transform: rotate(180deg);
+}
+
+.cv-select-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(15, 16, 20, 0.96);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(229, 9, 20, 0.3);
+  border-radius: var(--radius-md);
+  padding: 0.4rem;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.85), 0 0 25px rgba(229,9,20,0.2);
+  display: none;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.cv-custom-select.open .cv-select-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cv-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cv-select-option:hover {
+  background: rgba(229, 9, 20, 0.12);
+  color: #fff;
+  transform: translateX(3px);
+}
+
+.cv-select-option.selected {
+  background: linear-gradient(135deg, rgba(229, 9, 20, 0.22) 0%, rgba(193, 18, 31, 0.1) 100%);
+  color: #fff;
+  font-weight: 700;
+  border-left: 3px solid var(--accent-red);
+}
+
+.cv-option-check {
+  display: none;
+  color: var(--accent-red);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.cv-select-option.selected .cv-option-check {
+  display: inline-block;
 }
 
 .form-textarea {

@@ -7,6 +7,7 @@ import { initPageTransition, navigateTo, debounce } from '../utils.js';
 import { initCustomCursor } from '../cursor.js';
 import '../components/navbar.js';
 import { skeleton } from '../components/skeleton.js';
+import { initCustomSelects } from '../components/customSelect.js';
 
 class PeliculasPageController {
   constructor() {
@@ -32,6 +33,7 @@ class PeliculasPageController {
 
     this.cacheDOM();
     this.bindEvents();
+    initCustomSelects();
     
     // Cargar checkboxes de géneros de películas
     await this.loadGenres();
