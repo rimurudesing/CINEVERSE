@@ -3,9 +3,9 @@
  * Módulos Administrados:
  * ✅ 1. Licencias y Códigos Premium (KPIs, Gen masivo, Revocaciones)
  * ✅ 2. Gestor de Pedidos de Películas (Request Queue)
- * ✅ 3. Moderación del Chat en Vivo (Baneo, Mute, Panico Clear Chat)
- * ✅ 4. CineBot Editor de Trivias y Activador
- * ✅ 5. Enlaces de Publicidad Dinámica (Smartlink, PopAds, Banners)
+ * ✅ 3. Usuarios en Línea (Online Presence Monitor)
+ * ✅ 4. Enlaces de Publicidad Dinámica (Smartlink, PopAds, Banners)
+ * ✅ 5. Configuración del Sistema
  * ═══════════════════════════════════════════════════════════ */
 
 import { getSupabase, isSupabaseConfigured } from '../supabase.js';
@@ -57,9 +57,7 @@ class AdminDashboardController {
       this.loadAdsToggle(),
       this.loadUpdateManager(),
       this.loadRequests(),
-      this.loadTrivias(),
       this.loadSystemSettings(),
-      this.loadChatReports(),
       this.loadAdminLogs(),
       this.loadBannedWords()
     ]);
@@ -79,9 +77,7 @@ class AdminDashboardController {
       }
     }, 15000);
 
-    // 6. Configurar nuevos eventos (Moderación, CineBot, Enlaces de publicidad, Sistema)
-    this.setupModeration();
-    this.setupCineBot();
+    // 6. Configurar eventos (Publicidad, Sistema)
     this.setupAdLinks();
     this.setupSystemSettings();
   }
@@ -123,12 +119,11 @@ class AdminDashboardController {
   // ══════════════════════════════════════════════════════════════
   async loadStats() {
     try {
-      const [usersRes, premiumRes, codesRes, onlineRes, msgsRes, todayRes] = await Promise.all([
+      const [usersRes, premiumRes, codesRes, onlineRes, todayRes] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_premium', true),
         supabase.from('premium_codes').select('is_used'),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_online', true),
-        supabase.from('chat_messages').select('id', { count: 'exact', head: true }).gt('created_at', new Date(Date.now() - 60000).toISOString()),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).gt('created_at', new Date(new Date().setHours(0,0,0,0)).toISOString())
       ]);
 
@@ -138,7 +133,6 @@ class AdminDashboardController {
       const activeCodes  = allCodes.filter(c => !c.is_used).length;
       const usedCodes    = allCodes.filter(c => c.is_used).length;
       const onlineUsers  = onlineRes.count ?? 0;
-      const msgsMin      = msgsRes.count ?? 0;
       const newToday     = todayRes.count ?? 0;
 
       this._animateNumber('kpi-users',        totalUsers);
@@ -146,7 +140,6 @@ class AdminDashboardController {
       this._animateNumber('kpi-codes-active', activeCodes);
       this._animateNumber('kpi-codes-used',   usedCodes);
       this._animateNumber('kpi-users-online', onlineUsers);
-      this._animateNumber('kpi-msgs-min',      msgsMin);
       this._animateNumber('kpi-users-today',   newToday);
 
     } catch (err) {

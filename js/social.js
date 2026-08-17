@@ -112,73 +112,7 @@ export const SocialManager = {
     }
   },
 
-  // ─── GRUPOS PRIVADOS (#36) ────────────────────────────────────────────────
-  async createGroup(name, ownerId) {
-    const supabase = await getSupabase();
-    if (!supabase) return null;
 
-    try {
-      const { data, error } = await supabase.from('groups').insert({
-        name,
-        owner_id: ownerId
-      }).select().single();
-
-      if (error) throw error;
-
-      // Unir al creador automáticamente
-      await supabase.from('group_members').insert({
-        group_id: data.id,
-        user_id: ownerId
-      });
-
-      return data;
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
-  },
-
-  async inviteMember(groupId, username) {
-    const supabase = await getSupabase();
-    if (!supabase) return false;
-
-    try {
-      // Buscar el perfil de forma case-insensitive
-      const { data: profile } = await supabase.from('profiles').select('id').ilike('username', username).maybeSingle();
-      if (!profile) {
-        showToast('Usuario no encontrado', 'error');
-        return false;
-      }
-
-      const { error } = await supabase.from('group_members').insert({
-        group_id: groupId,
-        user_id: profile.id
-      });
-
-      if (error) {
-        if (error.code === '23505') showToast('El usuario ya pertenece a este grupo', 'warning');
-        else throw error;
-        return false;
-      }
-
-      // Notificación in-app
-      const { data: group } = await supabase.from('groups').select('name').eq('id', groupId).maybeSingle();
-      await supabase.from('notifications').insert({
-        user_id: profile.id,
-        type: 'group_invite',
-        title: 'Invitación a grupo 👥',
-        body: `Fuiste añadido al grupo "${group?.name || 'Privado'}"`,
-        link: `grupos.html?id=${groupId}`
-      });
-
-      showToast('Miembro agregado', 'success');
-      return true;
-    } catch (e) {
-      console.error(e);
-      showToast('No se pudo invitar al miembro', 'error');
-      return false;
-    }
-  },
 
   // ─── HEARTBEAT DE ESTADO ONLINE (#84) ─────────────────────────────────────
   async updateOnlineStatus(userId, isOnline) {

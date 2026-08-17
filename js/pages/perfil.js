@@ -1313,39 +1313,7 @@ class ProfilePageController {
         });
       }
 
-      // 2. Color de Nombre en Chat (#44)
-      const colorPicker = document.getElementById('chat-color-picker');
-      const colorPreview = document.getElementById('chat-color-preview');
-      if (colorPicker && !colorPicker.dataset.bound) {
-        colorPicker.dataset.bound = 'true';
-        const currentColor = profile.name_color || '#FFFFFF';
-        colorPicker.value = currentColor;
-        if (colorPreview) colorPreview.textContent = currentColor.toUpperCase();
-        colorPicker.addEventListener('input', (e) => {
-          if (colorPreview) colorPreview.textContent = e.target.value.toUpperCase();
-        });
-        colorPicker.addEventListener('change', async (e) => {
-          const val = e.target.value;
-          await supabase.from('profiles').update({ name_color: val }).eq('id', this.currentUser.id);
-          if (this.currentUser.profile) this.currentUser.profile.name_color = val;
-          showToast('Color de nombre actualizado', 'success');
-        });
-      }
-
-      // 3. Efecto de entrada al chat (#46)
-      const effectSelect = document.getElementById('join-effect-select');
-      if (effectSelect && !effectSelect.dataset.bound) {
-        effectSelect.dataset.bound = 'true';
-        effectSelect.value = profile.join_effect || 'none';
-        effectSelect.addEventListener('change', async () => {
-          const val = effectSelect.value;
-          await supabase.from('profiles').update({ join_effect: val }).eq('id', this.currentUser.id);
-          if (this.currentUser.profile) this.currentUser.profile.join_effect = val;
-          showToast('Efecto de entrada actualizado', 'success');
-        });
-      }
-
-      // 4. Acceso anticipado beta (#67)
+      // 2. Acceso anticipado beta (#67)
       const betaToggle = document.getElementById('beta-access-toggle');
       if (betaToggle && !betaToggle.dataset.bound) {
         betaToggle.dataset.bound = 'true';
