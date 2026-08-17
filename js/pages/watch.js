@@ -36,20 +36,25 @@ function isAnimeContent(mediaDetails) {
   return hasAnimation && isJapanese;
 }
 
-function getVimeusURL(mediaType, tmdbId, season = null, episode = null, forceAnime = false) {
-  if (forceAnime || mediaType === 'anime') {
-    let url = `https://vimeus.com/e/anime?tmdb=${tmdbId}&view_key=${VIMEUS_VIEW_KEY}`;
-    if (season)  url += `&se=${season}`;
-    if (episode) url += `&ep=${episode}`;
+function getVimeusURL(mediaType, tmdbId, season, episode, forceAnime) {
+  const key = VIMEUS_VIEW_KEY;
+  const id  = String(tmdbId);
+  const se  = season  ? String(season)  : null;
+  const ep  = episode ? String(episode) : null;
+
+  if (forceAnime === true || mediaType === 'anime') {
+    let url = 'https://vimeus.com/e/anime?tmdb=' + id + '&view_key=' + key;
+    if (se)  url += '&se=' + se;
+    if (ep)  url += '&ep=' + ep;
     return url;
   }
 
   if (mediaType === 'movie') {
-    return `https://vimeus.com/e/movie?tmdb=${tmdbId}&view_key=${VIMEUS_VIEW_KEY}`;
+    return 'https://vimeus.com/e/movie?tmdb=' + id + '&view_key=' + key;
   } else {
-    let url = `https://vimeus.com/e/serie?tmdb=${tmdbId}&view_key=${VIMEUS_VIEW_KEY}`;
-    if (season)  url += `&se=${season}`;
-    if (episode) url += `&ep=${episode}`;
+    let url = 'https://vimeus.com/e/serie?tmdb=' + id + '&view_key=' + key;
+    if (se)  url += '&se=' + se;
+    if (ep)  url += '&ep=' + ep;
     return url;
   }
 }
@@ -279,129 +284,48 @@ class WatchPageController {
 
   // ── Web Video Caster — Cast a TV ───────────────────────────────────────────
   buildCastButton() {
-    const isAnime = this.isAnime || isAnimeContent(this.mediaDetails);
-
-    return `
-      <!-- Selector de Servidor / Modo Anime -->
-      <div id="player-server-selector" style="
-        margin-top: 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-md);
-        padding: 0.75rem 1.25rem;
-        flex-wrap: wrap;
-      ">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-size: 1.1rem;">⚡</span>
-          <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-ui);">Servidor de Reproducción:</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <button id="server-standard-btn" class="btn ${!this.isAnimeMode ? 'btn--primary' : 'btn--secondary'}" style="padding: 0.35rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-sm);">
-            🎬 Servidor Principal ${this.mediaType === 'movie' ? 'Película' : 'Serie'}
-          </button>
-          <button id="server-anime-btn" class="btn ${this.isAnimeMode ? 'btn--primary' : 'btn--secondary'}" style="padding: 0.35rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-sm);">
-            ⛩️ Servidor Anime ${isAnime ? '✨ (Recomendado)' : ''}
-          </button>
-        </div>
-      </div>
-
-      <div id="wvc-cast-bar" style="
-        margin-top: 0.75rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        background: linear-gradient(135deg, rgba(3,155,229,0.08) 0%, rgba(124,58,237,0.04) 100%);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-md);
-        padding: 0.9rem 1.25rem;
-        flex-wrap: wrap;
-      ">
-        <!-- Icono TV -->
-        <svg style="width:24px;height:24px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#039BE5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="3" width="20" height="14" rx="2"/>
-          <polyline points="8 21 12 17 16 21"/>
-          <circle cx="12" cy="10" r="2" fill="#039BE5" stroke="none"/>
-        </svg>
-        <div style="flex:1;min-width:0;">
-          <p style="font-size:0.82rem;color:var(--text-secondary);margin:0;font-family:var(--font-ui);">
-            <strong style="color:var(--text-primary);">Opciones de Reproducción:</strong> Transmite a tu Smart TV o activa la reproducción flotante.
-          </p>
-        </div>
-        <button id="wvc-cast-btn" class="btn" style="
-          background: linear-gradient(135deg, #0277BD 0%, #039BE5 100%);
-          color: white;
-          border: none;
-          padding: 0.55rem 1.15rem;
-          font-size: 0.85rem;
-          font-weight: 700;
-          border-radius: var(--radius-sm);
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-          box-shadow: 0 4px 12px rgba(3,155,229,0.35);
-          transition: transform 0.2s, box-shadow 0.2s;
-        ">
-          <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="white">
-            <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2C12 12.94 7.06 8 1 10zm20-7H3C1.9 3 1 3.9 1 5v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
-          </svg>
-          Enviar a TV
-        </button>
-      </div>
-    `;
+    return [
+      '<div id="wvc-cast-bar" style="',
+        'margin-top:0.75rem;display:flex;align-items:center;gap:0.75rem;',
+        'background:linear-gradient(135deg,rgba(3,155,229,0.08) 0%,rgba(124,58,237,0.04) 100%);',
+        'border:1px solid var(--border-subtle);border-radius:var(--radius-md);',
+        'padding:0.9rem 1.25rem;flex-wrap:wrap;">',
+        '<svg style="width:24px;height:24px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#039BE5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">',
+          '<rect x="2" y="3" width="20" height="14" rx="2"/>',
+          '<polyline points="8 21 12 17 16 21"/>',
+          '<circle cx="12" cy="10" r="2" fill="#039BE5" stroke="none"/>',
+        '</svg>',
+        '<div style="flex:1;min-width:0;">',
+          '<p style="font-size:0.82rem;color:var(--text-secondary);margin:0;font-family:var(--font-ui);">',
+            '<strong style="color:var(--text-primary);">Transmitir a TV:</strong> Envía el contenido a tu Smart TV.',
+          '</p>',
+        '</div>',
+        '<button id="wvc-cast-btn" class="btn" style="',
+          'background:linear-gradient(135deg,#0277BD 0%,#039BE5 100%);color:white;border:none;',
+          'padding:0.55rem 1.15rem;font-size:0.85rem;font-weight:700;',
+          'border-radius:var(--radius-sm);display:flex;align-items:center;gap:0.5rem;',
+          'cursor:pointer;box-shadow:0 4px 12px rgba(3,155,229,0.35);transition:transform 0.2s,box-shadow 0.2s;">',
+          '<svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="white">',
+            '<path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2C12 12.94 7.06 8 1 10zm20-7H3C1.9 3 1 3.9 1 5v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>',
+          '</svg>',
+          'Enviar a TV',
+        '</button>',
+      '</div>'
+    ].join('');
   }
 
   bindCastButton() {
     const btn = document.getElementById('wvc-cast-btn');
-    if (btn) {
-      // Efectos hover
-      btn.addEventListener('mouseenter', () => {
-        btn.style.transform = 'translateY(-1px)';
-        btn.style.boxShadow = '0 6px 16px rgba(3,155,229,0.5)';
-      });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.transform = 'translateY(0)';
-        btn.style.boxShadow = '0 4px 12px rgba(3,155,229,0.35)';
-      });
-
-      btn.addEventListener('click', () => this.castToTV());
-    }
-
-    // Botones de cambio de Servidor (Estándar vs Anime)
-    const stdBtn = document.getElementById('server-standard-btn');
-    const animeBtn = document.getElementById('server-anime-btn');
-
-    if (stdBtn) {
-      stdBtn.addEventListener('click', () => {
-        if (!this.isAnimeMode) return;
-        this.isAnimeMode = false;
-        const iframe = document.getElementById('vimeus-iframe');
-        if (iframe) {
-          iframe.src = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, false);
-          showToast('Cambiando a Servidor Principal...', 'info');
-        }
-        stdBtn.className = 'btn btn--primary';
-        if (animeBtn) animeBtn.className = 'btn btn--secondary';
-      });
-    }
-
-    if (animeBtn) {
-      animeBtn.addEventListener('click', () => {
-        if (this.isAnimeMode) return;
-        this.isAnimeMode = true;
-        const iframe = document.getElementById('vimeus-iframe');
-        if (iframe) {
-          iframe.src = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, true);
-          showToast('⛩️ Cambiando a Servidor Anime...', 'info');
-        }
-        animeBtn.className = 'btn btn--primary';
-        if (stdBtn) stdBtn.className = 'btn btn--secondary';
-      });
-    }
+    if (!btn) return;
+    btn.addEventListener('mouseenter', () => {
+      btn.style.transform = 'translateY(-1px)';
+      btn.style.boxShadow = '0 6px 16px rgba(3,155,229,0.5)';
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = 'translateY(0)';
+      btn.style.boxShadow = '0 4px 12px rgba(3,155,229,0.35)';
+    });
+    btn.addEventListener('click', () => this.castToTV());
   }
 
   castToTV() {
@@ -808,51 +732,62 @@ class WatchPageController {
     const currentSeasonData = seasons.find(s => s.season_number === currentSeason) || seasons[0];
     const episodeCount = currentSeasonData ? currentSeasonData.episode_count : 24;
 
-    return `
-      <div class="episode-bar" style="
-        margin-top: 1rem;
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-md);
-        padding: 1rem 1.5rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        align-items: center;
-      ">
-        <span style="color: var(--accent-red); font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">Episodio:</span>
+    return [
+      '<div class="episode-bar" style="',
+        'margin-top:1rem;',
+        'background:var(--bg-secondary);',
+        'border:1px solid var(--border-subtle);',
+        'border-radius:var(--radius-md);',
+        'padding:clamp(0.75rem,2vw,1.25rem) clamp(1rem,3vw,1.5rem);',
+        'display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;">',
 
-        <!-- Selector de Temporada -->
-        <select id="season-select" style="
-          background: var(--bg-void); color: var(--text-primary);
-          border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
-          padding: 0.4rem 0.75rem; font-family: var(--font-ui); font-size: 0.85rem;
-        ">
-          ${seasons.map(s => `
-            <option value="${s.season_number}" ${s.season_number === currentSeason ? 'selected' : ''}>
-              Temporada ${s.season_number}
-            </option>
-          `).join('')}
-        </select>
+        '<span style="',
+          'color:var(--accent-red);font-weight:800;',
+          'font-size:clamp(0.75rem,1.5vw,0.9rem);',
+          'text-transform:uppercase;letter-spacing:0.08em;',
+          'white-space:nowrap;">EPISODIO</span>',
 
-        <!-- Selector de Episodio -->
-        <select id="episode-select" style="
-          background: var(--bg-void); color: var(--text-primary);
-          border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
-          padding: 0.4rem 0.75rem; font-family: var(--font-ui); font-size: 0.85rem;
-        ">
-          ${Array.from({ length: episodeCount }, (_, i) => i + 1).map(ep => `
-            <option value="${ep}" ${ep === currentEpisode ? 'selected' : ''}>
-              Episodio ${ep}
-            </option>
-          `).join('')}
-        </select>
+        /* Selector temporada */
+        '<select id="season-select" tabindex="0" aria-label="Seleccionar temporada" style="',
+          'background:var(--bg-void);color:var(--text-primary);',
+          'border:1.5px solid var(--border-subtle);border-radius:var(--radius-sm);',
+          'padding:clamp(0.5rem,1vw,0.65rem) clamp(0.6rem,2vw,1rem);',
+          'font-family:var(--font-ui);',
+          'font-size:clamp(0.85rem,1.5vw,0.95rem);',
+          'min-height:44px;',
+          'cursor:pointer;',
+          'flex:1;min-width:120px;max-width:200px;">',
+          seasons.map(function(s) {
+            return '<option value="' + s.season_number + '"' + (s.season_number === currentSeason ? ' selected' : '') + '>Temporada ' + s.season_number + '</option>';
+          }).join(''),
+        '</select>',
 
-        <button id="play-episode-btn" class="btn btn--primary" style="padding: 0.4rem 1.2rem; font-size: 0.85rem;">
-          ▶ Reproducir
-        </button>
-      </div>
-    `;
+        /* Selector episodio */
+        '<select id="episode-select" tabindex="0" aria-label="Seleccionar episodio" style="',
+          'background:var(--bg-void);color:var(--text-primary);',
+          'border:1.5px solid var(--border-subtle);border-radius:var(--radius-sm);',
+          'padding:clamp(0.5rem,1vw,0.65rem) clamp(0.6rem,2vw,1rem);',
+          'font-family:var(--font-ui);',
+          'font-size:clamp(0.85rem,1.5vw,0.95rem);',
+          'min-height:44px;',
+          'cursor:pointer;',
+          'flex:1;min-width:120px;max-width:200px;">',
+          Array.from({ length: episodeCount }, function(_, i) { return i + 1; }).map(function(ep) {
+            return '<option value="' + ep + '"' + (ep === currentEpisode ? ' selected' : '') + '>Episodio ' + ep + '</option>';
+          }).join(''),
+        '</select>',
+
+        /* Botón reproducir — grande para TV y móvil */
+        '<button id="play-episode-btn" class="btn btn--primary" tabindex="0" aria-label="Reproducir episodio" style="',
+          'padding:clamp(0.55rem,1.5vw,0.75rem) clamp(1rem,3vw,1.75rem);',
+          'font-size:clamp(0.85rem,1.5vw,0.95rem);',
+          'min-height:44px;',
+          'flex-shrink:0;">',
+          '▶ Reproducir',
+        '</button>',
+
+      '</div>'
+    ].join('');
   }
 
   bindEpisodeBarEvents() {

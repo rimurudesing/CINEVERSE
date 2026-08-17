@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="CineVerse">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>CineVerse — Reproductor</title>
   <meta name="description" content="Reproduce películas y series directamente en CineVerse con el mejor reproductor online.">
 
@@ -22,102 +22,245 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Hojas de Estilo -->
-  <link rel="stylesheet" href="css/variables.css?v=3.0.0">
-  <link rel="stylesheet" href="css/reset.css?v=3.0.0">
-  <link rel="stylesheet" href="css/layout.css?v=3.0.0">
-  <link rel="stylesheet" href="css/components.css?v=3.0.0">
-  <link rel="stylesheet" href="css/navbar.css?v=3.0.0">
-  <link rel="stylesheet" href="css/hero.css?v=3.0.0">
-  <link rel="stylesheet" href="css/carousel.css?v=3.0.0">
-  <link rel="stylesheet" href="css/modal.css?v=3.0.0">
-  <link rel="stylesheet" href="css/skeleton.css?v=3.0.0">
-  <link rel="stylesheet" href="css/forms.css?v=3.0.0">
-  <link rel="stylesheet" href="css/animations.css?v=3.0.0">
-  <link rel="stylesheet" href="css/responsive.css?v=3.0.0">
-  <link rel="stylesheet" href="css/ads.css?v=3.0.0">
-
+  <link rel="stylesheet" href="css/variables.css?v=3.0.1">
+  <link rel="stylesheet" href="css/reset.css?v=3.0.1">
+  <link rel="stylesheet" href="css/layout.css?v=3.0.1">
+  <link rel="stylesheet" href="css/components.css?v=3.0.1">
+  <link rel="stylesheet" href="css/navbar.css?v=3.0.1">
+  <link rel="stylesheet" href="css/hero.css?v=3.0.1">
+  <link rel="stylesheet" href="css/carousel.css?v=3.0.1">
+  <link rel="stylesheet" href="css/modal.css?v=3.0.1">
+  <link rel="stylesheet" href="css/skeleton.css?v=3.0.1">
+  <link rel="stylesheet" href="css/forms.css?v=3.0.1">
+  <link rel="stylesheet" href="css/animations.css?v=3.0.1">
+  <link rel="stylesheet" href="css/responsive.css?v=3.0.1">
+  <link rel="stylesheet" href="css/ads.css?v=3.0.1">
 
   <style>
-    /* Player page específico */
+    /* ── Watch Page Layout ─────────────────────────────────────────────────── */
+    :root {
+      --player-sidebar-width: 340px;
+      --player-gap: 2rem;
+    }
+
+    body {
+      padding-top: 70px;
+      background: var(--bg-void);
+    }
+
+    /* Contenedor principal */
+    .watch-container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 1.5rem clamp(0.75rem, 3vw, 2rem) 4rem;
+    }
+
+    /* Layout 2 columnas (desktop) */
     .watch-layout {
       display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 2rem;
+      grid-template-columns: 1fr var(--player-sidebar-width);
+      gap: var(--player-gap);
       align-items: flex-start;
     }
-    @media (max-width: 1024px) {
-      .watch-layout {
-        grid-template-columns: 1fr;
-      }
+
+    /* Columna del player */
+    .watch-main {
+      min-width: 0;
     }
+
+    /* Meta box debajo del player */
+    .watch-meta-box {
+      margin-top: 1.25rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: clamp(1rem, 3vw, 1.75rem);
+    }
+
+    .watch-meta-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+    }
+
+    #watch-meta-title {
+      font-size: clamp(1.25rem, 3vw, 1.75rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 0.35rem;
+    }
+
+    /* Sidebar */
+    .watch-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
     .watch-sidebar-card {
       background: var(--bg-secondary);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
       padding: 1.5rem;
     }
+
     .watch-sidebar-card h3 {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 700;
       text-transform: uppercase;
       color: var(--accent-red);
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       margin-bottom: 1rem;
       padding-bottom: 0.5rem;
       border-bottom: 1px solid var(--border-subtle);
     }
-    .watch-meta-box {
-      margin-top: 1.5rem;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: 1.75rem;
+
+    /* ── Responsive: Tablet ──────────────────────────────────────────────────── */
+    @media (max-width: 1100px) {
+      :root { --player-sidebar-width: 290px; --player-gap: 1.25rem; }
+    }
+
+    @media (max-width: 900px) {
+      .watch-layout {
+        grid-template-columns: 1fr;
+      }
+      .watch-sidebar {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      .watch-sidebar-card {
+        flex: 1 1 280px;
+      }
+    }
+
+    /* ── Responsive: Móvil ───────────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      body { padding-top: 60px; }
+      .watch-container { padding: 0.75rem 0.75rem 3rem; }
+      .watch-layout { gap: 1rem; }
+      .watch-sidebar { flex-direction: column; }
+      .watch-sidebar-card { flex: unset; }
+
+      #watch-meta-title { font-size: 1.2rem; }
+
+      /* Player de borde a borde en móvil */
+      #player-area-root {
+        margin: 0 -0.75rem;
+        border-radius: 0 !important;
+      }
+    }
+
+    /* ── TV / Big Screen: 1280px+ ────────────────────────────────────────────── */
+    @media (min-width: 1400px) {
+      :root { --player-sidebar-width: 380px; }
+    }
+
+    @media (min-width: 1800px) {
+      :root { --player-sidebar-width: 420px; }
+      .watch-container { padding: 2rem 3rem 5rem; }
+    }
+
+    /* ── Foco para TV (D-Pad navigation) ────────────────────────────────────── */
+    @media (hover: none) and (pointer: coarse) {
+      /* TV con control remoto */
+    }
+
+    *:focus-visible {
+      outline: 3.5px solid var(--accent-red) !important;
+      outline-offset: 3px !important;
+      border-radius: 4px;
+    }
+
+    /* Foco especial para botones grandes en TV */
+    .btn:focus-visible {
+      transform: scale(1.06) !important;
+      box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.45), 0 8px 24px rgba(0,0,0,0.6) !important;
+    }
+
+    /* Selects TV-friendly */
+    select:focus-visible {
+      outline: 3px solid var(--accent-red) !important;
+    }
+
+    /* ── Anuncios ────────────────────────────────────────────────────────────── */
+    .adsterra-banner { width: 100%; margin-bottom: 1rem; text-align: center; }
+    @media (max-width: 600px) {
+      .adsterra-banner--desktop { display: none; }
+    }
+    @media (min-width: 601px) {
+      .adsterra-banner--mobile { display: none; }
     }
   </style>
 </head>
-<body style="padding-top: 100px;">
+<body>
 
   <!-- Transición de página -->
   <div class="page-transition-overlay out"></div>
 
   <!-- Contenido Principal -->
-  <main class="container" style="padding-bottom: 4rem;">
+  <main class="watch-container">
 
-    <!-- Anuncio Adsterra — Superior (solo web) -->
-    <!-- Banner 728x90 (Escritorio) -->
+    <!-- Anuncio Superior -->
     <div class="adsterra-banner adsterra-banner--desktop"></div>
-    <!-- Banner 320x50 (Móvil) -->
     <div class="adsterra-banner adsterra-banner--mobile"></div>
 
     <div class="watch-layout">
 
       <!-- ══ Columna Principal: Player ══ -->
-      <section>
+      <section class="watch-main">
+
         <!-- Player root — JS inyecta el iframe de Vimeus aquí -->
         <div id="player-area-root">
-          <div style="aspect-ratio:16/9;width:100%;background:var(--bg-secondary);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;border:1px solid var(--border-subtle);">
+          <div style="
+            aspect-ratio: 16/9;
+            width: 100%;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-subtle);
+          ">
             <div class="spinner"></div>
           </div>
         </div>
 
         <!-- Meta información -->
         <div class="watch-meta-box">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border-subtle);">
-            <div>
-              <h1 id="watch-meta-title" style="font-size:1.75rem;font-weight:700;line-height:1.2;margin-bottom:0.35rem;">Cargando...</h1>
+          <div class="watch-meta-header">
+            <div style="flex:1;min-width:0;">
+              <h1 id="watch-meta-title">Cargando...</h1>
               <span id="watch-meta-year" style="font-size:0.9rem;color:var(--text-secondary);font-family:var(--font-mono);"></span>
             </div>
-            <span id="watch-meta-rating" style="font-family:var(--font-display);font-size:1.5rem;color:var(--gold);white-space:nowrap;flex-shrink:0;">★ —</span>
+            <span id="watch-meta-rating" style="
+              font-family: var(--font-display);
+              font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+              color: var(--gold);
+              white-space: nowrap;
+              flex-shrink: 0;
+            ">★ —</span>
           </div>
-          <p id="watch-meta-overview" style="font-family:var(--font-body);font-size:1.05rem;color:var(--text-secondary);line-height:1.65;"></p>
-          <a id="watch-more-info-link" href="#" class="btn btn--outline-red" style="margin-top: 1.25rem; display: inline-flex; width: fit-content; text-decoration: none;">
+          <p id="watch-meta-overview" style="
+            font-family: var(--font-body);
+            font-size: clamp(0.92rem, 1.5vw, 1.05rem);
+            color: var(--text-secondary);
+            line-height: 1.65;
+          "></p>
+          <a id="watch-more-info-link" href="#" class="btn btn--outline-red"
+             tabindex="0" role="button" aria-label="Más información"
+             style="margin-top:1.25rem;display:inline-flex;width:fit-content;text-decoration:none;">
             ℹ️ Más información
           </a>
         </div>
       </section>
 
       <!-- ══ Sidebar ══ -->
-      <aside style="display:flex;flex-direction:column;gap:1.25rem;">
+      <aside class="watch-sidebar">
 
         <!-- Plataformas de Streaming -->
         <div class="watch-sidebar-card">
@@ -142,16 +285,14 @@
 
     </div>
 
-    <!-- Anuncio Adsterra — Inferior (solo web) -->
-    <!-- Banner 728x90 (Escritorio) -->
-    <div class="adsterra-banner adsterra-banner--desktop"></div>
-    <!-- Banner 320x50 (Móvil) -->
-    <div class="adsterra-banner adsterra-banner--mobile"></div>
+    <!-- Anuncio Inferior -->
+    <div class="adsterra-banner adsterra-banner--desktop" style="margin-top:1.5rem;"></div>
+    <div class="adsterra-banner adsterra-banner--mobile" style="margin-top:1.5rem;"></div>
+
   </main>
 
-
-  <script type="module" src="js/pages/watch.js?v=3.0.0"></script>
-  <script type="module" src="js/ads-helper.js?v=3.0.0"></script>
+  <script type="module" src="js/pages/watch.js?v=3.0.1"></script>
+  <script type="module" src="js/ads-helper.js?v=3.0.1"></script>
   <script src="js/pwa-extras.js"></script>
 </body>
 </html>
