@@ -326,3 +326,96 @@
   pointer-events: none;
   animation: orbDrift 12s ease-in-out infinite;
 }
+
+
+/* ═══ Web Animation Design (Emil Kowalski) Microinteractions ═══ */
+.active-press,
+.btn:active,
+.navbar__link:active,
+.server-tab:active {
+  transform: scale(0.97) !important;
+  transition: transform 100ms var(--ease-out-quad) !important;
+}
+
+.tactile-lift {
+  transition: transform 200ms var(--ease-out-quad), box-shadow 200ms var(--ease-out-quad);
+}
+.tactile-lift:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--spatial-glass-border-hover);
+}
+
+/* Taste Skill v2: Spatial Glass & Pills */
+.spatial-glass {
+  background: var(--spatial-glass-bg) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid var(--spatial-glass-border) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.spatial-glass-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: all 180ms var(--ease-out-quad);
+}
+.spatial-glass-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+/* Skeleton Shimmer with Physics Curves */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.8s var(--ease-in-out-cubic) infinite;
+}
+
+@keyframes skeletonPulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Iconly Icon Micro-Motion */
+.iconly-icon {
+  display: inline-block;
+  vertical-align: middle;
+  stroke-width: 1.8;
+  stroke: currentColor;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 200ms var(--ease-out-quad), stroke 200ms var(--ease-out-quad);
+}
+.navbar__link:hover .iconly-icon,
+.navbar__mobile-link:hover .iconly-icon,
+.btn:hover .iconly-icon {
+  transform: translateY(-1.5px) scale(1.08);
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

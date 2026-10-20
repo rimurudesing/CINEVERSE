@@ -85,6 +85,9 @@ body.menu-open {
 }
 
 .navbar__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-family: var(--font-ui);
   font-size: 0.9rem;
   font-weight: 500;

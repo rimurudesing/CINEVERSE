@@ -1,3 +1,15 @@
+
+// ── Iconly Precision Icons ──────────────────────────────────────────────────
+const ICONLY = {
+  home: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-5h-4v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/></svg>`,
+  movie: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M7 4v16M17 4v16M2 12h20M2 8h5M2 16h5M17 8h5M17 16h5"/></svg>`,
+  tv: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M17 3l-5 4-5-4"/></svg>`,
+  upcoming: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>`,
+  download: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>`,
+  profile: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  search: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>`
+};
+
 import { api } from '../api.js';
 import { navigateTo, buildTMDBImageURL, formatYear, debounce, applyUserTheme, protectWebCode } from '../utils.js';
 
@@ -52,10 +64,10 @@ export function renderNavbar() {
 
   // El link de "Descargar App" no tiene sentido dentro de la APK
   const downloadLink = isNativeApp ? '' : `
-    <a href="descargar.html" class="navbar__link" data-link="download">Descargar App</a>
+    <a href="descargar.html" class="navbar__link active-press" data-link="download">${ICONLY.download} <span>Descargar App</span></a>
   `;
   const downloadLinkMobile = isNativeApp ? '' : `
-    <a href="descargar.html" class="navbar__mobile-link" data-link="download">Descargar App</a>
+    <a href="descargar.html" class="navbar__mobile-link active-press" data-link="download">${ICONLY.download} <span>Descargar App</span></a>
   `;
 
   // Estructura de la navbar sin el menú móvil dentro
@@ -64,16 +76,16 @@ export function renderNavbar() {
       <a href="index.html" class="navbar__logo">CINE<span>VERSE</span></a>
 
       <nav class="navbar__menu">
-        <a href="index.html"      class="navbar__link" data-link="home">Inicio</a>
-        <a href="peliculas.html"  class="navbar__link" data-link="movie">Películas</a>
-        <a href="series.html"     class="navbar__link" data-link="tv">Series</a>
-        <a href="estrenos.html"   class="navbar__link" data-link="upcoming">Estrenos</a>
+        <a href="index.html"      class="navbar__link active-press" data-link="home">${ICONLY.home} <span>Inicio</span></a>
+        <a href="peliculas.html"  class="navbar__link active-press" data-link="movie">${ICONLY.movie} <span>Películas</span></a>
+        <a href="series.html"     class="navbar__link active-press" data-link="tv">${ICONLY.tv} <span>Series</span></a>
+        <a href="estrenos.html"   class="navbar__link active-press" data-link="upcoming">${ICONLY.upcoming} <span>Estrenos</span></a>
         ${downloadLink}
-        <a href="perfil.html"     class="navbar__link" data-link="profile">Perfil</a>
+        <a href="perfil.html"     class="navbar__link active-press" data-link="profile">${ICONLY.profile} <span>Perfil</span></a>
       </nav>
 
       <div class="navbar__actions">
-        <a href="buscar.html" class="navbar__search-btn" aria-label="Buscar" id="navbar-search-btn">🔍</a>
+        <a href="buscar.html" class="navbar__search-btn active-press" aria-label="Buscar" id="navbar-search-btn">${ICONLY.search}</a>
         <button class="navbar__hamburger" aria-label="Abrir menú">
           <span></span>
           <span></span>
@@ -91,12 +103,12 @@ export function renderNavbar() {
   mobileMenu.id = 'navbar-mobile-menu';
   mobileMenu.className = 'navbar__mobile-menu';
   mobileMenu.innerHTML = `
-    <a href="index.html"     class="navbar__mobile-link" data-link="home">Inicio</a>
-    <a href="peliculas.html" class="navbar__mobile-link" data-link="movie">Películas</a>
-    <a href="series.html"    class="navbar__mobile-link" data-link="tv">Series</a>
-    <a href="estrenos.html"  class="navbar__mobile-link" data-link="upcoming">Estrenos</a>
+    <a href="index.html"     class="navbar__mobile-link active-press" data-link="home">${ICONLY.home} <span>Inicio</span></a>
+    <a href="peliculas.html" class="navbar__mobile-link active-press" data-link="movie">${ICONLY.movie} <span>Películas</span></a>
+    <a href="series.html"    class="navbar__mobile-link active-press" data-link="tv">${ICONLY.tv} <span>Series</span></a>
+    <a href="estrenos.html"  class="navbar__mobile-link active-press" data-link="upcoming">${ICONLY.upcoming} <span>Estrenos</span></a>
     ${downloadLinkMobile}
-    <a href="perfil.html"    class="navbar__mobile-link" data-link="profile">Perfil</a>
+    <a href="perfil.html"    class="navbar__mobile-link active-press" data-link="profile">${ICONLY.profile} <span>Perfil</span></a>
   `;
 
   // Agregar la navbar y el menú móvil al body

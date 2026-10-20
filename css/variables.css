@@ -50,6 +50,23 @@
   --radius-full:      9999px;
 
   /* ── Transiciones con curvas fluidas ── */
+
+  /* ═══ Emil Kowalski (animations.dev) Physics Easing & Curves ═══ */
+  --ease-out-quad:     cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-out-cubic:    cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-out-quart:    cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-out-quint:    cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out-expo:     cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
+  --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* ═══ Taste Skill v2: Spatial & Anti-Slop Palette ═══ */
+  --spatial-bg:        #08090d;
+  --spatial-glass-bg:  rgba(14, 16, 22, 0.65);
+  --spatial-glass-border: rgba(255, 255, 255, 0.08);
+  --spatial-glass-border-hover: rgba(255, 255, 255, 0.18);
+  --spatial-pill-bg:   rgba(255, 255, 255, 0.05);
+
   --transition-fast:  150ms cubic-bezier(0.16, 1, 0.3, 1);
   --transition-med:   300ms cubic-bezier(0.16, 1, 0.3, 1);
   --transition-slow:  500ms cubic-bezier(0.16, 1, 0.3, 1);
