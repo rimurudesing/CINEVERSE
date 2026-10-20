@@ -48,7 +48,6 @@ class WatchPageController {
     this.mediaDetails = null;
     this.currentUser  = null;
     this.season  = null;
-    this.currentServer = localStorage.getItem('cineverse_player_server') || 'voe';
     this.episode = null;
     this.isAnimeMode = false;
     this.smartlinkUrl = 'https://www.effectivecpmnetwork.com/n8bfacm3rn?key=dae2ae5c2f289ded4d55b6217baeed0c';
@@ -162,104 +161,6 @@ class WatchPageController {
     this.renderAd(playerRoot, vimeusURL);
   }
 
-  
-  // ── Gestión Multi-Servidores y Reproductor VOE ────────────────────────────
-  getServerURL(serverKey) {
-    const key = `${this.mediaType}_${this.mediaId}${this.mediaType === 'tv' ? `_${this.season}_${this.episode}` : ''}`;
-    
-    // 1. VOE (con enlace personalizado o proveedor integrado)
-    if (serverKey === 'voe') {
-      const customVOE = localStorage.getItem(`cv_voe_${key}`);
-      if (customVOE) return customVOE;
-
-      // Proveedor embed compatible y de alta disponibilidad para VOE
-      if (this.mediaType === 'movie') {
-        return `https://vidsrc.cc/v2/embed/movie/${this.mediaId}`;
-      } else {
-        return `https://vidsrc.cc/v2/embed/tv/${this.mediaId}/${this.season || 1}/${this.episode || 1}`;
-      }
-    }
-
-    // 2. Vimeus original
-    return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
-  }
-
-  buildServersBar() {
-    const s = this.currentServer;
-    return `
-      <div class="player-servers-header" id="player-servers-header">
-        <div class="player-servers-list">
-          <button class="server-tab ${s === 'voe' ? 'active' : ''}" data-server="voe">
-            <span class="server-flag">▶</span> VOE
-          </button>
-          <button class="server-tab ${s === 'vimeus' ? 'active' : ''}" data-server="vimeus">
-            <span class="server-flag">🎬</span> VIMEUS
-          </button>
-        </div>
-        <button id="btn-custom-voe" class="btn-custom-voe" title="Pegar enlace directo de VOE">
-          ⚙️ Enlace VOE
-        </button>
-      </div>
-    `;
-  }
-
-  bindServerTabs() {
-    const tabs = document.querySelectorAll('.server-tab');
-    const iframe = document.getElementById('vimeus-iframe');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const serverKey = tab.dataset.server;
-        if (!serverKey || serverKey === this.currentServer) return;
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        this.currentServer = serverKey;
-        localStorage.setItem('cineverse_player_server', serverKey);
-        
-        const newUrl = this.getServerURL(serverKey);
-        if (iframe) {
-          iframe.src = newUrl;
-          showToast(`Cambiando a servidor ${serverKey.toUpperCase()}...🟡`, 'info');
-        }
-      });
-    });
-
-    const customVoeBtn = document.getElementById('btn-custom-voe');
-    if (customVoeBtn) {
-      customVoeBtn.addEventListener('click', () => {
-        const key = `${this.mediaType}_${this.mediaId}${this.mediaType === 'tv' ? `_${this.season}_${this.episode}` : ''}`;
-        const existing = localStorage.getItem(`cv_voe_${key}`) || '';
-        const input = prompt('Introduce el enlace directo de VOE (ej: https://voe.sx/e/abcdef123):', existing);
-        if (input !== null) {
-          let val = input.trim();
-          if (val) {
-            if (val.includes('voe.sx/') && !val.includes('voe.sx/e/')) {
-              val = val.replace('voe.sx/', 'voe.sx/e/');
-            }
-            localStorage.setItem(`cv_voe_${key}`, val);
-            showToast('Enlace VOE personalizado guardado ✅', 'success');
-          } else {
-            localStorage.removeItem(`cv_voe_${key}`);
-            showToast('Enlace VOE restablecido al predeterminado', 'info');
-          }
-          this.switchServer('voe');
-        }
-      });
-    }
-  }
-
-  switchServer(serverKey) {
-    this.currentServer = serverKey;
-    localStorage.setItem('cineverse_player_server', serverKey);
-    const tabs = document.querySelectorAll('.server-tab');
-    tabs.forEach(t => {
-      t.classList.toggle('active', t.dataset.server === serverKey);
-    });
-    const iframe = document.getElementById('vimeus-iframe');
-    if (iframe) {
-      iframe.src = this.getServerURL(serverKey);
-    }
-  }
-
   renderActualPlayer(playerRoot, vimeusURL) {
     // Sumar 15 XP por iniciar reproducción (gamificación)
     addXP(15).then(res => {
@@ -268,10 +169,7 @@ class WatchPageController {
       }
     });
 
-    const initialSrc = this.currentServer === 'vimeus' ? vimeusURL : this.getServerURL(this.currentServer);
-
     playerRoot.innerHTML = `
-      ${this.buildServersBar()}
       <div class="vimeus-player-wrap" id="vimeus-player-wrapper" style="
         position: relative;
         width: 100%;
@@ -295,7 +193,7 @@ class WatchPageController {
 
         <iframe
           id="vimeus-iframe"
-          src="${initialSrc}"
+          src="${vimeusURL}"
           style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; display: block;"
           allowfullscreen
           allow="autoplay; fullscreen; picture-in-picture"
@@ -351,7 +249,6 @@ class WatchPageController {
     `;
 
     // Vincular eventos del botón de Cast y PiP
-    this.bindServerTabs();
     this.bindCastButton();
     this.bindPiPAndGestures();
 
@@ -898,7 +795,7 @@ class WatchPageController {
 
       const iframe  = document.getElementById('vimeus-iframe');
       if (iframe) {
-        iframe.src = this.getServerURL(this.currentServer);
+        iframe.src = getVimeusURL(this.mediaType, this.mediaId, season, episode);
         showToast(`T${season} E${episode} cargando...`, 'info');
         
         // Guardar reproducción en el historial
