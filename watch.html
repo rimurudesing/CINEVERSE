@@ -338,29 +338,31 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.5rem;
+      gap: 0.6rem;
       width: 100%;
-      background: #12141a;
+      background: rgba(255, 255, 255, 0.05);
       color: #f3f4f6;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: var(--radius-md);
-      padding: 0.65rem 1rem;
+      border: none !important;
+      outline: none !important;
+      border-radius: var(--radius-full);
+      padding: 0.65rem 1.15rem;
       font-family: var(--font-ui);
       font-size: 0.88rem;
       font-weight: 600;
       min-height: 44px;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
       transition: all 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
     .cine-select-trigger:hover {
-      background: #181b24;
-      border-color: rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.09);
+      border: none !important;
       transform: translateY(-1px);
     }
     .cine-select-container.open .cine-select-trigger {
-      border-color: var(--accent-red);
-      background: #0d0f14;
+      background: rgba(255, 255, 255, 0.12);
+      border: none !important;
+      outline: none !important;
     }
     .cine-select-arrow {
       width: 8px;
@@ -376,20 +378,23 @@
     }
     .cine-select-menu {
       position: absolute;
-      bottom: calc(100% + 6px);
+      bottom: calc(100% + 8px);
       left: 0;
       right: 0;
-      background: #11131a;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: var(--radius-md);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
-      max-height: 220px;
+      background: rgba(14, 16, 22, 0.96);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: none !important;
+      outline: none !important;
+      border-radius: var(--radius-lg);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+      max-height: 240px;
       overflow-y: auto;
       z-index: 100;
       display: none;
-      padding: 0.35rem;
+      padding: 0.4rem;
       scrollbar-width: thin;
-      scrollbar-color: rgba(255,255,255,0.2) transparent;
+      scrollbar-color: rgba(255,255,255,0.15) transparent;
       animation: dropdownIn 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
     }
     .cine-select-container.open .cine-select-menu {
@@ -423,11 +428,164 @@
       font-weight: 700;
     }
     .cine-select-option.selected::after {
-      content: '✓';
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-red);
+      box-shadow: 0 0 8px var(--accent-red);
+    }
+  
+    /* ── Luxury Spatial Episode Drawer ── */
+    .ep-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 5, 8, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 9999;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .ep-modal-backdrop.open {
+      display: flex;
+      opacity: 1;
+    }
+    .ep-modal-sheet {
+      width: 100%;
+      max-width: 960px;
+      max-height: 85vh;
+      background: #0d0f15;
+      border: none !important;
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 260ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .ep-modal-backdrop.open .ep-modal-sheet {
+      transform: translateY(0);
+    }
+    .ep-modal-header {
+      padding: 1.5rem 2rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .ep-modal-title {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+    .ep-modal-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 180ms ease;
+    }
+    .ep-modal-close:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: scale(1.05);
+    }
+    .ep-season-tabs {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem 2rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .ep-season-tabs::-webkit-scrollbar { display: none; }
+    .ep-season-pill {
+      padding: 0.55rem 1.25rem;
+      border-radius: var(--radius-full);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-secondary);
+      font-family: var(--font-ui);
+      font-size: 0.88rem;
+      font-weight: 600;
+      border: none !important;
+      outline: none !important;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .ep-season-pill:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+    .ep-season-pill.active {
+      background: var(--accent-red);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(229, 9, 20, 0.4);
+    }
+    .ep-grid-container {
+      padding: 1rem 2rem 2.5rem;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.75rem;
+      max-height: 55vh;
+    }
+    .ep-card {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      cursor: pointer;
+      border: none !important;
+      outline: none !important;
+      transition: all 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.35rem;
+    }
+    .ep-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+    .ep-card.active {
+      background: rgba(229, 9, 20, 0.18);
+      color: #fff;
+    }
+    .ep-card-num {
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .ep-card.active .ep-card-num {
       color: var(--accent-red);
-      font-size: 0.85rem;
+    }
+    .ep-card-label {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .ep-card.active .ep-card-label {
+      color: #fff;
+      font-weight: 700;
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 </head>
 <body>
 
@@ -475,7 +633,7 @@
               color: var(--gold);
               white-space: nowrap;
               flex-shrink: 0;
-            ">★ —</span>
+            "><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> —</span>
           </div>
           <p id="watch-meta-overview" style="
             font-family: var(--font-body);
@@ -486,7 +644,7 @@
           <a id="watch-more-info-link" href="#" class="btn btn--outline-red"
              tabindex="0" role="button" aria-label="Más información"
              style="margin-top:1.25rem;display:inline-flex;width:fit-content;text-decoration:none;">
-            ℹ️ Más información
+            <svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.4rem;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Más información
           </a>
         </div>
       </section>
@@ -526,5 +684,23 @@
   <script type="module" src="js/pages/watch.js?v=3.0.2"></script>
   <script type="module" src="js/ads-helper.js?v=3.0.2"></script>
   <script src="js/pwa-extras.js"></script>
+
+  <!-- Modal / Drawer Selector de Episodios Cinemático -->
+  <div id="episode-picker-modal" class="ep-modal-backdrop" aria-hidden="true">
+    <div class="ep-modal-sheet">
+      <div class="ep-modal-header">
+        <div>
+          <span style="font-size:0.75rem;font-weight:700;color:var(--accent-red);text-transform:uppercase;letter-spacing:1.5px;">Selección de Episodio</span>
+          <div class="ep-modal-title" id="ep-modal-series-title">Episodios</div>
+        </div>
+        <button class="ep-modal-close active-press" id="ep-modal-close-btn" aria-label="Cerrar">
+          <svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="ep-season-tabs" id="ep-modal-season-tabs"></div>
+      <div class="ep-grid-container" id="ep-modal-grid"></div>
+    </div>
+  </div>
+
 </body>
 </html>

@@ -94,7 +94,7 @@
       <aside 
         class="search-sidebar" 
         id="search-sidebar"
-        style="width: 300px; flex-shrink: 0; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: var(--radius-lg); position: sticky; top: 100px;"
+        style="width: 300px; flex-shrink: 0; background-color: var(--bg-secondary); border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4); padding: 1.5rem; border-radius: var(--radius-lg); position: sticky; top: 100px;"
       >
         <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; color: var(--text-primary);">Filtros</h3>
 
@@ -153,12 +153,12 @@
       <section style="flex: 1; min-width: 0;">
         
         <!-- Header de Resultados -->
-        <div class="flex flex--align-center flex--justify-between" style="margin-bottom: 1.5rem; background-color: var(--bg-secondary); border: 1px solid var(--border-subtle); padding: 0.75rem 1.25rem; border-radius: var(--radius-md);">
+        <div class="flex flex--align-center flex--justify-between" style="margin-bottom: 1.5rem; background-color: var(--bg-secondary); border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4); padding: 0.75rem 1.25rem; border-radius: var(--radius-md);">
           <span id="results-counter" style="font-weight: 600; color: var(--text-secondary);">Cargando series...</span>
           
           <div class="flex flex--gap-sm">
-            <button class="btn btn--primary btn--icon" id="view-grid-btn" data-tooltip="Vista Cuadrícula" style="width: 32px; height: 32px; font-size: 0.8rem;">田</button>
-            <button class="btn btn--secondary btn--icon" id="view-list-btn" data-tooltip="Vista Lista" style="width: 32px; height: 32px; font-size: 0.8rem;">☰</button>
+            <button class="btn btn--primary btn--icon active-press" id="view-grid-btn" data-tooltip="Vista Cuadrícula" style="width: 34px; height: 34px; display:inline-flex; align-items:center; justify-content:center; border:none !important;"><svg class="iconly-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></button>
+            <button class="btn btn--secondary btn--icon active-press" id="view-list-btn" data-tooltip="Vista Lista" style="width: 34px; height: 34px; display:inline-flex; align-items:center; justify-content:center; border:none !important;"><svg class="iconly-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
           </div>
         </div>
 

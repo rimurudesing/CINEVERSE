@@ -5,7 +5,7 @@
  */
 
 export function initCustomSelects() {
-  const selects = document.querySelectorAll('select.form-select:not([data-customized])');
+  const selects = document.querySelectorAll('select:not([data-customized]):not(.hidden-select):not([style*="display: none"])');
 
   selects.forEach(select => {
     select.setAttribute('data-customized', 'true');
@@ -50,7 +50,7 @@ export function initCustomSelects() {
       optionItem.setAttribute('tabindex', '-1');
       optionItem.innerHTML = `
         <span>${opt.text}</span>
-        <span class="cv-option-check">✓</span>
+        <span class="cv-option-check"><svg class="iconly-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
       `;
 
       optionItem.addEventListener('click', (e) => {

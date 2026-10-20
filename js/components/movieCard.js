@@ -121,11 +121,11 @@ export function createMovieCard(item, options = {}) {
   const glowHex = GENRES_COLORS[primaryGenreId] || '#e50914';
   const glowColorBorder = hexToRgba(glowHex, 0.35);
   const glowColorDim = hexToRgba(glowHex, 0.15);
-  card.style.setProperty('--genre-glow', glowColorBorder);
-  card.style.setProperty('--genre-glow-dim', glowColorDim);
+  // no border glow
+  // no border glow dim
 
   card.innerHTML = `
-    <span class="movie-card__rating">★ ${rating}</span>
+    <span class="movie-card__rating"><svg class="iconly-icon" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${rating}</span>
     <img class="movie-card__img" src="${poster}" alt="${title}" ${lazyLoad ? 'loading="lazy"' : ''}>
     
     <div class="movie-card__overlay">

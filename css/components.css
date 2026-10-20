@@ -177,7 +177,7 @@
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--bg-secondary);
-  border: 1px solid rgba(255,255,255,0.06);
+  border: none; outline: none;
   cursor: pointer;
   transition:
     transform var(--transition-spring),
@@ -217,7 +217,7 @@
   right: 0.65rem;
   z-index: 10;
   background: rgba(245,197,24,0.15);
-  border: 1px solid rgba(245,197,24,0.25);
+  border: none;
   color: var(--gold);
   font-family: var(--font-mono);
   font-size: 0.75rem;
@@ -268,11 +268,7 @@
 
 .movie-card:hover {
   transform: translateY(-6px) scale(1.02);
-  box-shadow:
-    0 20px 60px rgba(0,0,0,0.8),
-    0 0 0 1px var(--genre-glow, rgba(229,9,20,0.3)),
-    0 0 30px var(--genre-glow-dim, rgba(229,9,20,0.1));
-  border-color: var(--genre-glow, rgba(229,9,20,0.4));
+  box-shadow: 0 24px 60px rgba(0,0,0,0.9); border: none; outline: none;
 }
 
 .movie-card:hover .movie-card__img {
@@ -457,7 +453,7 @@
 /* ════════════════ GLASS CARD ════════════════ */
 .glass-card {
   background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
+  border: none; outline: none;
   border-radius: var(--radius-lg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);

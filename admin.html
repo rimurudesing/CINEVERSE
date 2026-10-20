@@ -43,7 +43,7 @@
 
     .kpi-card {
       background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(255,255,255,0.02) 100%);
-      border: 1px solid var(--border-subtle);
+      border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
       border-radius: var(--radius-lg);
       padding: 1.5rem;
       position: relative;
@@ -97,7 +97,7 @@
     /* ─── Admin Cards ─── */
     .admin-card {
       background-color: var(--bg-secondary);
-      border: 1px solid var(--border-subtle);
+      border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
       border-radius: var(--radius-lg);
       padding: 2rem;
       margin-bottom: 2rem;
@@ -127,7 +127,7 @@
     .admin-table-container {
       overflow-x: auto;
       margin-top: 1rem;
-      border: 1px solid var(--border-subtle);
+      border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
       border-radius: var(--radius-md);
     }
 
@@ -167,7 +167,7 @@
       font-family: var(--font-mono);
       font-weight: 700;
       background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border-subtle);
+      border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
       padding: 0.25rem 0.5rem;
       border-radius: var(--radius-sm);
       color: var(--text-primary);
@@ -176,7 +176,7 @@
 
     .btn-copy-code {
       background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border-subtle);
+      border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
       border-radius: var(--radius-sm);
       color: var(--text-secondary);
       cursor: pointer;
@@ -202,7 +202,7 @@
 
     .filter-tab {
       background: none;
-      border: 1px solid var(--border-subtle);
+      border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
       border-radius: var(--radius-sm);
       color: var(--text-secondary);
       cursor: pointer;
@@ -287,7 +287,7 @@
       position: absolute;
       inset: 0;
       background-color: rgba(255,255,255,0.1);
-      border: 1px solid var(--border-subtle);
+      border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
       border-radius: 30px;
       transition: background 0.3s ease;
     }
@@ -330,7 +330,7 @@
     /* ─── Duration Select ─── */
     .duration-select {
       background: var(--bg-primary);
-      border: 1px solid var(--border-subtle);
+      border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
       border-radius: var(--radius-sm);
       color: var(--text-primary);
       padding: 0.55rem 0.75rem;
@@ -369,7 +369,7 @@
 
     .dashboard-tab-btn {
       background: rgba(255,255,255,0.02);
-      border: 1px solid var(--border-subtle);
+      border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
       border-radius: var(--radius-sm);
       color: var(--text-secondary);
       padding: 0.65rem 1.25rem;
@@ -402,7 +402,7 @@
 
     .user-profile-mod-card {
       background: rgba(255,255,255,0.02);
-      border: 1px solid var(--border-subtle);
+      border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
       border-radius: var(--radius-md);
       padding: 1.5rem;
       margin-top: 1.5rem;
@@ -428,7 +428,7 @@
 
     <div style="margin-bottom: 2rem;">
       <h1 style="font-family: var(--font-display); font-size: 3.5rem; color: var(--text-primary); margin-bottom: 0.25rem;">
-        🛡️ Panel de <span style="color: var(--accent-red)">Administración</span>
+        <svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Panel de <span style="color: var(--accent-red)">Administración</span>
       </h1>
       <p style="color: var(--text-secondary); font-size: 0.95rem;">Generación de licencias, control de usuarios y configuración global de CineVerse.</p>
     </div>
@@ -477,7 +477,7 @@
       <button class="dashboard-tab-btn" data-target="section-online-users">🟢 Usuarios Online</button>
       <button class="dashboard-tab-btn" data-target="section-requests">🍿 Pedidos de Películas</button>
       <button class="dashboard-tab-btn" data-target="section-ads">🔗 Publicidad Dinámica</button>
-      <button class="dashboard-tab-btn" data-target="section-system">⚙️ Configuración Sistema</button>
+      <button class="dashboard-tab-btn" data-target="section-system"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> <span>Configuración Sistema</span></button>
     </nav>
 
     <!-- ══════════════════════════════════════════════════ -->
@@ -666,7 +666,7 @@
         </div>
 
         <!-- Filtros y Búsqueda -->
-        <div class="flex flex--justify-between flex--align-center flex--wrap" style="gap: 0.75rem; margin-bottom: 1.25rem; background: rgba(255,255,255,0.02); padding: 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div class="flex flex--justify-between flex--align-center flex--wrap" style="gap: 0.75rem; margin-bottom: 1.25rem; background: rgba(255,255,255,0.02); padding: 0.85rem; border-radius: var(--radius-md); border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
           <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 220px;">
             <input type="text" id="search-online-users-input" class="form-input" placeholder="🔍 Buscar por usuario o nombre..." style="padding: 0.45rem 0.85rem; font-size: 0.85rem;">
           </div>

@@ -48,6 +48,7 @@ export function isValidInt(val, min = 0, max = Number.MAX_SAFE_INTEGER) {
 import { TMDB_IMG_BASE } from './config.js';
 import { getGlobalSettings } from './settings.js';
 import './tv.js';
+import './components/customSelect.js';
 
 /**
  * Formatea una fecha de formato YYYY-MM-DD a "DD Mes YYYY" en español.

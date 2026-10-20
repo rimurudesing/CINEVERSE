@@ -759,6 +759,7 @@ class WatchPageController {
   }
 
   // Barra de selección de temporada/episodio para series
+    // Barra de selección de temporada/episodio para series
   buildEpisodeBar() {
     const seasons = this.mediaDetails.seasons
       ? this.mediaDetails.seasons.filter(s => s.season_number > 0)
@@ -772,26 +773,29 @@ class WatchPageController {
     const episodeCount = currentSeasonData ? currentSeasonData.episode_count : 24;
 
     const playIconSvg = '<svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+    const gridIconSvg = '<svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>';
 
     return [
       '<div class="episode-bar" style="',
-        'margin-top:1rem;',
-        'background:var(--bg-secondary);',
-        'border:1px solid var(--border-subtle);',
-        'border-radius:var(--radius-md);',
+        'margin-top:1.25rem;',
+        'background:rgba(255,255,255,0.035);',
+        'border:none !important;',
+        'outline:none !important;',
+        'border-radius:var(--radius-lg);',
         'padding:clamp(0.75rem,2vw,1.25rem) clamp(1rem,3vw,1.5rem);',
+        'box-shadow:0 12px 35px rgba(0,0,0,0.5);',
         'display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;">',
 
         '<span style="',
           'color:var(--accent-red);font-weight:800;',
-          'font-size:clamp(0.75rem,1.5vw,0.9rem);',
-          'text-transform:uppercase;letter-spacing:0.08em;',
+          'font-size:clamp(0.75rem,1.5vw,0.88rem);',
+          'text-transform:uppercase;letter-spacing:0.1em;',
           'white-space:nowrap;">EPISODIO</span>',
 
         /* Custom Dropdown Temporada */
         '<div class="cine-select-container" id="season-dropdown">',
           '<input type="hidden" id="season-select" value="' + currentSeason + '">',
-          '<div class="cine-select-trigger" id="season-trigger">',
+          '<div class="cine-select-trigger active-press" id="season-trigger">',
             '<span id="season-display">Temporada ' + currentSeason + '</span>',
             '<span class="cine-select-arrow"></span>',
           '</div>',
@@ -805,7 +809,7 @@ class WatchPageController {
         /* Custom Dropdown Episodio */
         '<div class="cine-select-container" id="episode-dropdown">',
           '<input type="hidden" id="episode-select" value="' + currentEpisode + '">',
-          '<div class="cine-select-trigger" id="episode-trigger">',
+          '<div class="cine-select-trigger active-press" id="episode-trigger">',
             '<span id="episode-display">Episodio ' + currentEpisode + '</span>',
             '<span class="cine-select-arrow"></span>',
           '</div>',
@@ -816,10 +820,21 @@ class WatchPageController {
           '</div>',
         '</div>',
 
+        /* Botón Abrir Selector Completo (Drawer) */
+        '<button id="open-ep-drawer-btn" class="btn active-press" tabindex="0" aria-label="Ver todos los capítulos" style="',
+          'background:rgba(255,255,255,0.06);color:#fff;border:none !important;',
+          'border-radius:var(--radius-full);padding:0.65rem 1.15rem;',
+          'font-family:var(--font-ui);font-size:0.85rem;font-weight:600;',
+          'min-height:44px;display:inline-flex;align-items:center;gap:0.45rem;',
+          'cursor:pointer;">',
+          gridIconSvg + ' <span>Explorar Capítulos</span>',
+        '</button>',
+
         /* Botón reproducir con microinteracción */
         '<button id="play-episode-btn" class="btn btn--primary active-press" tabindex="0" aria-label="Reproducir episodio" style="',
           'padding:clamp(0.55rem,1.5vw,0.75rem) clamp(1rem,3vw,1.75rem);',
           'font-size:clamp(0.85rem,1.5vw,0.95rem);',
+          'border:none !important;border-radius:var(--radius-full);',
           'min-height:44px;',
           'display:inline-flex;align-items:center;gap:0.5rem;',
           'flex-shrink:0;">',
@@ -844,8 +859,128 @@ class WatchPageController {
     const epDisp       = document.getElementById('episode-display');
 
     const playBtn      = document.getElementById('play-episode-btn');
+    const openDrawerBtn= document.getElementById('open-ep-drawer-btn');
+    const modal        = document.getElementById('episode-picker-modal');
+    const modalClose   = document.getElementById('ep-modal-close-btn');
+    const modalTabs    = document.getElementById('ep-modal-season-tabs');
+    const modalGrid    = document.getElementById('ep-modal-grid');
+    const modalTitle   = document.getElementById('ep-modal-series-title');
 
     if (!seasonDrop || !epDrop || !playBtn) return;
+
+    const seasons = this.mediaDetails.seasons
+      ? this.mediaDetails.seasons.filter(s => s.season_number > 0)
+      : [];
+
+    // Helper: switch to season & episode and play immediately
+    const selectAndPlay = (seasonNum, epNum) => {
+      this.season = seasonNum;
+      this.episode = epNum;
+      seasonInput.value = seasonNum;
+      epInput.value = epNum;
+      seasonDisp.textContent = 'Temporada ' + seasonNum;
+      epDisp.textContent = 'Episodio ' + epNum;
+
+      // Update active highlight in inline menus
+      seasonMenu.querySelectorAll('.cine-select-option').forEach(o => {
+        o.classList.toggle('selected', parseInt(o.dataset.value) === seasonNum);
+      });
+      epMenu.querySelectorAll('.cine-select-option').forEach(o => {
+        o.classList.toggle('selected', parseInt(o.dataset.value) === epNum);
+      });
+
+      const iframe = document.getElementById('vimeus-iframe');
+      if (iframe) {
+        iframe.src = this.getServerURL(this.currentServer);
+        showToast(`T${seasonNum} E${epNum} cargando...`, 'info');
+        this.saveToWatchHistory();
+      }
+    };
+
+    // Render Drawer content
+    const renderDrawer = (activeSeasonNum) => {
+      if (!modalTabs || !modalGrid) return;
+      if (modalTitle) modalTitle.textContent = this.mediaDetails.name || 'Episodios';
+
+      // Render Season Tabs
+      modalTabs.innerHTML = seasons.map(s => `
+        <button class="ep-season-pill active-press ${s.season_number === activeSeasonNum ? 'active' : ''}" data-season="${s.season_number}">
+          Temporada ${s.season_number}
+        </button>
+      `).join('');
+
+      // Render Episodes Grid for activeSeasonNum
+      const sData = seasons.find(s => s.season_number === activeSeasonNum) || seasons[0];
+      const count = sData ? sData.episode_count : 24;
+
+      modalGrid.innerHTML = Array.from({ length: count }, (_, i) => i + 1).map(ep => {
+        const isCurrent = (activeSeasonNum === this.season && ep === this.episode);
+        return `
+          <div class="ep-card active-press ${isCurrent ? 'active' : ''}" data-season="${activeSeasonNum}" data-episode="${ep}">
+            <div class="ep-card-num">${ep < 10 ? '0' + ep : ep}</div>
+            <div class="ep-card-label">${isCurrent ? 'Reproduciendo' : 'Episodio ' + ep}</div>
+          </div>
+        `;
+      }).join('');
+
+      // Animate cards with anime.js
+      if (window.anime) {
+        window.anime({
+          targets: '.ep-card',
+          opacity: [0, 1],
+          translateY: [16, 0],
+          scale: [0.94, 1],
+          delay: window.anime.stagger(20),
+          easing: 'cubicBezier(0.25, 0.46, 0.45, 0.94)',
+          duration: 300
+        });
+      }
+    };
+
+    // Drawer Event Listeners
+    if (openDrawerBtn && modal) {
+      openDrawerBtn.addEventListener('click', () => {
+        renderDrawer(this.season || 1);
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+      });
+    }
+
+    if (modalClose && modal) {
+      modalClose.addEventListener('click', () => {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+      });
+    }
+
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('open');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+      });
+    }
+
+    if (modalTabs) {
+      modalTabs.addEventListener('click', (e) => {
+        const pill = e.target.closest('.ep-season-pill');
+        if (!pill) return;
+        const sNum = parseInt(pill.dataset.season);
+        renderDrawer(sNum);
+      });
+    }
+
+    if (modalGrid) {
+      modalGrid.addEventListener('click', (e) => {
+        const card = e.target.closest('.ep-card');
+        if (!card) return;
+        const sNum = parseInt(card.dataset.season);
+        const epNum = parseInt(card.dataset.episode);
+        selectAndPlay(sNum, epNum);
+        if (modal) modal.classList.remove('open');
+      });
+    }
 
     // Toggle season dropdown
     seasonTrig.addEventListener('click', (e) => {
@@ -879,7 +1014,6 @@ class WatchPageController {
       seasonDrop.classList.remove('open');
 
       // Update episodes menu
-      const seasons = this.mediaDetails.seasons.filter(s => s.season_number > 0);
       const seasonData = seasons.find(s => s.season_number === val);
       const episodeCount = seasonData ? seasonData.episode_count : 24;
 
@@ -906,16 +1040,7 @@ class WatchPageController {
     playBtn.addEventListener('click', () => {
       const season  = parseInt(seasonInput.value);
       const episode = parseInt(epInput.value);
-      
-      this.season = season;
-      this.episode = episode;
-
-      const iframe  = document.getElementById('vimeus-iframe');
-      if (iframe) {
-        iframe.src = this.getServerURL(this.currentServer);
-        showToast(`T${season} E${episode} cargando...`, 'info');
-        this.saveToWatchHistory();
-      }
+      selectAndPlay(season, episode);
     });
   }
 
