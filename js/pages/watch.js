@@ -786,35 +786,23 @@ class WatchPageController {
           'text-transform:uppercase;letter-spacing:0.08em;',
           'white-space:nowrap;">EPISODIO</span>',
 
-        /* Selector temporada */
-        '<select id="season-select" tabindex="0" aria-label="Seleccionar temporada" style="',
-          'background:var(--bg-void);color:var(--text-primary);',
-          'border:1.5px solid var(--border-subtle);border-radius:var(--radius-sm);',
-          'padding:clamp(0.5rem,1vw,0.65rem) clamp(0.6rem,2vw,1rem);',
-          'font-family:var(--font-ui);',
-          'font-size:clamp(0.85rem,1.5vw,0.95rem);',
-          'min-height:44px;',
-          'cursor:pointer;',
-          'flex:1;min-width:120px;max-width:200px;">',
-          seasons.map(function(s) {
-            return '<option value="' + s.season_number + '"' + (s.season_number === currentSeason ? ' selected' : '') + '>Temporada ' + s.season_number + '</option>';
-          }).join(''),
-        '</select>',
+        /* Selector temporada estilizado */
+        '<div class="custom-select-wrapper">',
+          '<select id="season-select" class="custom-dropdown-select" tabindex="0" aria-label="Seleccionar temporada">',
+            seasons.map(function(s) {
+              return '<option value="' + s.season_number + '"' + (s.season_number === currentSeason ? ' selected' : '') + '>Temporada ' + s.season_number + '</option>';
+            }).join(''),
+          '</select>',
+        '</div>',
 
-        /* Selector episodio */
-        '<select id="episode-select" tabindex="0" aria-label="Seleccionar episodio" style="',
-          'background:var(--bg-void);color:var(--text-primary);',
-          'border:1.5px solid var(--border-subtle);border-radius:var(--radius-sm);',
-          'padding:clamp(0.5rem,1vw,0.65rem) clamp(0.6rem,2vw,1rem);',
-          'font-family:var(--font-ui);',
-          'font-size:clamp(0.85rem,1.5vw,0.95rem);',
-          'min-height:44px;',
-          'cursor:pointer;',
-          'flex:1;min-width:120px;max-width:200px;">',
-          Array.from({ length: episodeCount }, function(_, i) { return i + 1; }).map(function(ep) {
-            return '<option value="' + ep + '"' + (ep === currentEpisode ? ' selected' : '') + '>Episodio ' + ep + '</option>';
-          }).join(''),
-        '</select>',
+        /* Selector episodio estilizado */
+        '<div class="custom-select-wrapper">',
+          '<select id="episode-select" class="custom-dropdown-select" tabindex="0" aria-label="Seleccionar episodio">',
+            Array.from({ length: episodeCount }, function(_, i) { return i + 1; }).map(function(ep) {
+              return '<option value="' + ep + '"' + (ep === currentEpisode ? ' selected' : '') + '>Episodio ' + ep + '</option>';
+            }).join(''),
+          '</select>',
+        '</div>',
 
         /* Botón reproducir — grande para TV y móvil */
         '<button id="play-episode-btn" class="btn btn--primary" tabindex="0" aria-label="Reproducir episodio" style="',
