@@ -771,6 +771,8 @@ class WatchPageController {
     const currentSeasonData = seasons.find(s => s.season_number === currentSeason) || seasons[0];
     const episodeCount = currentSeasonData ? currentSeasonData.episode_count : 24;
 
+    const playIconSvg = '<svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+
     return [
       '<div class="episode-bar" style="',
         'margin-top:1rem;',
@@ -786,31 +788,42 @@ class WatchPageController {
           'text-transform:uppercase;letter-spacing:0.08em;',
           'white-space:nowrap;">EPISODIO</span>',
 
-        /* Selector temporada estilizado */
-        '<div class="custom-select-wrapper">',
-          '<select id="season-select" class="custom-dropdown-select" tabindex="0" aria-label="Seleccionar temporada">',
+        /* Custom Dropdown Temporada */
+        '<div class="cine-select-container" id="season-dropdown">',
+          '<input type="hidden" id="season-select" value="' + currentSeason + '">',
+          '<div class="cine-select-trigger" id="season-trigger">',
+            '<span id="season-display">Temporada ' + currentSeason + '</span>',
+            '<span class="cine-select-arrow"></span>',
+          '</div>',
+          '<div class="cine-select-menu" id="season-menu">',
             seasons.map(function(s) {
-              return '<option value="' + s.season_number + '"' + (s.season_number === currentSeason ? ' selected' : '') + '>Temporada ' + s.season_number + '</option>';
+              return '<div class="cine-select-option ' + (s.season_number === currentSeason ? 'selected' : '') + '" data-value="' + s.season_number + '">Temporada ' + s.season_number + '</div>';
             }).join(''),
-          '</select>',
+          '</div>',
         '</div>',
 
-        /* Selector episodio estilizado */
-        '<div class="custom-select-wrapper">',
-          '<select id="episode-select" class="custom-dropdown-select" tabindex="0" aria-label="Seleccionar episodio">',
+        /* Custom Dropdown Episodio */
+        '<div class="cine-select-container" id="episode-dropdown">',
+          '<input type="hidden" id="episode-select" value="' + currentEpisode + '">',
+          '<div class="cine-select-trigger" id="episode-trigger">',
+            '<span id="episode-display">Episodio ' + currentEpisode + '</span>',
+            '<span class="cine-select-arrow"></span>',
+          '</div>',
+          '<div class="cine-select-menu" id="episode-menu">',
             Array.from({ length: episodeCount }, function(_, i) { return i + 1; }).map(function(ep) {
-              return '<option value="' + ep + '"' + (ep === currentEpisode ? ' selected' : '') + '>Episodio ' + ep + '</option>';
+              return '<div class="cine-select-option ' + (ep === currentEpisode ? 'selected' : '') + '" data-value="' + ep + '">Episodio ' + ep + '</div>';
             }).join(''),
-          '</select>',
+          '</div>',
         '</div>',
 
-        /* Botón reproducir — grande para TV y móvil */
-        '<button id="play-episode-btn" class="btn btn--primary" tabindex="0" aria-label="Reproducir episodio" style="',
+        /* Botón reproducir con microinteracción */
+        '<button id="play-episode-btn" class="btn btn--primary active-press" tabindex="0" aria-label="Reproducir episodio" style="',
           'padding:clamp(0.55rem,1.5vw,0.75rem) clamp(1rem,3vw,1.75rem);',
           'font-size:clamp(0.85rem,1.5vw,0.95rem);',
           'min-height:44px;',
+          'display:inline-flex;align-items:center;gap:0.5rem;',
           'flex-shrink:0;">',
-          '▶ Reproducir',
+          playIconSvg + ' <span>Reproducir</span>',
         '</button>',
 
       '</div>'
@@ -818,28 +831,81 @@ class WatchPageController {
   }
 
   bindEpisodeBarEvents() {
-    const seasonSelect  = document.getElementById('season-select');
-    const episodeSelect = document.getElementById('episode-select');
-    const playBtn       = document.getElementById('play-episode-btn');
+    const seasonDrop   = document.getElementById('season-dropdown');
+    const seasonTrig   = document.getElementById('season-trigger');
+    const seasonMenu   = document.getElementById('season-menu');
+    const seasonInput  = document.getElementById('season-select');
+    const seasonDisp   = document.getElementById('season-display');
 
-    if (!seasonSelect || !episodeSelect || !playBtn) return;
+    const epDrop       = document.getElementById('episode-dropdown');
+    const epTrig       = document.getElementById('episode-trigger');
+    const epMenu       = document.getElementById('episode-menu');
+    const epInput      = document.getElementById('episode-select');
+    const epDisp       = document.getElementById('episode-display');
 
-    // Al cambiar temporada, actualizar lista de episodios
-    seasonSelect.addEventListener('change', () => {
-      const selectedSeason = parseInt(seasonSelect.value);
+    const playBtn      = document.getElementById('play-episode-btn');
+
+    if (!seasonDrop || !epDrop || !playBtn) return;
+
+    // Toggle season dropdown
+    seasonTrig.addEventListener('click', (e) => {
+      e.stopPropagation();
+      epDrop.classList.remove('open');
+      seasonDrop.classList.toggle('open');
+    });
+
+    // Toggle episode dropdown
+    epTrig.addEventListener('click', (e) => {
+      e.stopPropagation();
+      seasonDrop.classList.remove('open');
+      epDrop.classList.toggle('open');
+    });
+
+    // Close on outside click
+    document.addEventListener('click', () => {
+      seasonDrop.classList.remove('open');
+      epDrop.classList.remove('open');
+    });
+
+    // Handle Season selection
+    seasonMenu.addEventListener('click', (e) => {
+      const option = e.target.closest('.cine-select-option');
+      if (!option) return;
+      const val = parseInt(option.dataset.value);
+      seasonInput.value = val;
+      seasonDisp.textContent = option.textContent.replace('✓', '').trim();
+      seasonMenu.querySelectorAll('.cine-select-option').forEach(o => o.classList.remove('selected'));
+      option.classList.add('selected');
+      seasonDrop.classList.remove('open');
+
+      // Update episodes menu
       const seasons = this.mediaDetails.seasons.filter(s => s.season_number > 0);
-      const seasonData = seasons.find(s => s.season_number === selectedSeason);
+      const seasonData = seasons.find(s => s.season_number === val);
       const episodeCount = seasonData ? seasonData.episode_count : 24;
 
-      episodeSelect.innerHTML = Array.from({ length: episodeCount }, (_, i) => i + 1)
-        .map(ep => `<option value="${ep}">Episodio ${ep}</option>`)
+      epInput.value = 1;
+      epDisp.textContent = 'Episodio 1';
+      epMenu.innerHTML = Array.from({ length: episodeCount }, (_, i) => i + 1)
+        .map(ep => `<div class="cine-select-option ${ep === 1 ? 'selected' : ''}" data-value="${ep}">Episodio ${ep}</div>`)
         .join('');
     });
 
-    // Al pulsar Reproducir, actualizar el iframe
+    // Handle Episode selection
+    epMenu.addEventListener('click', (e) => {
+      const option = e.target.closest('.cine-select-option');
+      if (!option) return;
+      const val = parseInt(option.dataset.value);
+      epInput.value = val;
+      epDisp.textContent = option.textContent.replace('✓', '').trim();
+      epMenu.querySelectorAll('.cine-select-option').forEach(o => o.classList.remove('selected'));
+      option.classList.add('selected');
+      epDrop.classList.remove('open');
+    });
+
+    // Play action
     playBtn.addEventListener('click', () => {
-      const season  = parseInt(seasonSelect.value);
-      const episode = parseInt(episodeSelect.value);
+      const season  = parseInt(seasonInput.value);
+      const episode = parseInt(epInput.value);
       
       this.season = season;
       this.episode = episode;
@@ -848,14 +914,11 @@ class WatchPageController {
       if (iframe) {
         iframe.src = this.getServerURL(this.currentServer);
         showToast(`T${season} E${episode} cargando...`, 'info');
-        
-        // Guardar reproducción en el historial
         this.saveToWatchHistory();
       }
     });
   }
 
-  // ── Meta debajo del player ─────────────────────────────────────────────────
   renderMeta() {
     const title    = this.mediaDetails.title || this.mediaDetails.name;
     const year     = formatYear(this.mediaDetails.release_date || this.mediaDetails.first_air_date);
