@@ -68,6 +68,7 @@ class AdminDashboardController {
     this.setupAdsToggle();
     this.setupUpdatePublisher();
     this.setupOnlineUsersEvents();
+    this.setupPresenceSubscription();
 
     // Auto-actualizar lista de usuarios online cada 15s si la pestaña está activa
     setInterval(() => {
@@ -116,13 +117,14 @@ class AdminDashboardController {
   // ══════════════════════════════════════════════════════════════
   // CARGA DE MÉTRICAS / KPIs
   // ══════════════════════════════════════════════════════════════
-  async loadStats() {
+    async loadStats() {
     try {
+      const activeThreshold = new Date(Date.now() - 60 * 1000).toISOString();
       const [usersRes, premiumRes, codesRes, onlineRes, todayRes] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_premium', true),
         supabase.from('premium_codes').select('is_used'),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_online', true),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_online', true).gt('last_seen', activeThreshold),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).gt('created_at', new Date(new Date().setHours(0,0,0,0)).toISOString())
       ]);
 
@@ -131,15 +133,19 @@ class AdminDashboardController {
       const allCodes     = codesRes.data || [];
       const activeCodes  = allCodes.filter(c => !c.is_used).length;
       const usedCodes    = allCodes.filter(c => c.is_used).length;
-      const onlineUsers  = onlineRes.count ?? 0;
-      const newToday     = todayRes.count ?? 0;
+
+      // Exact count: merge DB online count with any live WebSocket presence users
+      const presenceCount = this.presenceUsers ? this.presenceUsers.size : 0;
+      const dbOnlineCount = onlineRes.count ?? 0;
+      const onlineUsers   = Math.max(presenceCount, dbOnlineCount);
+      const newToday      = todayRes.count ?? 0;
 
       this._animateNumber('kpi-users',        totalUsers);
       this._animateNumber('kpi-premium',      totalPremium);
       this._animateNumber('kpi-codes-active', activeCodes);
       this._animateNumber('kpi-codes-used',   usedCodes);
       this._animateNumber('kpi-users-online', onlineUsers);
-      this._animateNumber('kpi-users-today',   newToday);
+      this._animateNumber('kpi-users-today',  newToday);
 
     } catch (err) {
       console.error('Error al cargar stats:', err);
@@ -343,7 +349,7 @@ class AdminDashboardController {
         <tr data-code="${c.code}">
           <td>
             <span class="code-badge">${c.code}</span>
-            <button class="btn-copy-code" data-copy="${c.code}" title="Copiar código">📋</button>
+            <button class="btn-copy-code active-press" data-copy="${c.code}" title="Copiar código" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:2px 4px;"><svg class="iconly-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
           </td>
           <td>${statusBadge}</td>
           <td>${userClaimed}</td>
@@ -363,8 +369,8 @@ class AdminDashboardController {
         const code = btn.getAttribute('data-copy');
         try {
           await navigator.clipboard.writeText(code);
-          btn.textContent = '✔️';
-          setTimeout(() => { btn.textContent = '📋'; }, 1500);
+          btn.innerHTML = '<svg class="iconly-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+          setTimeout(() => { btn.innerHTML = '<svg class="iconly-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'; }, 1500);
           showToast(`Código ${code} copiado`, 'success');
         } catch {
           showToast('No se pudo copiar de forma nativa.', 'error');
@@ -472,30 +478,105 @@ class AdminDashboardController {
     }
   }
 
+    // ══════════════════════════════════════════════════════════════
+  // SECCIÓN: USUARIOS EN LÍNEA EN TIEMPO REAL (100% EXACTO)
   // ══════════════════════════════════════════════════════════════
-  // SECCIÓN: USUARIOS EN LÍNEA
-  // ══════════════════════════════════════════════════════════════
+  setupPresenceSubscription() {
+    if (!supabase) return;
+
+    try {
+      this.presenceChannel = supabase.channel('cv-online-presence');
+
+      const syncPresence = () => {
+        const state = this.presenceChannel.presenceState();
+        this.presenceUsers.clear();
+
+        Object.values(state).forEach(presences => {
+          presences.forEach(p => {
+            if (p.id) {
+              this.presenceUsers.set(p.id, {
+                id: p.id,
+                username: p.username || '',
+                display_name: p.display_name || p.username || 'Usuario',
+                avatar_url: p.avatar_url || '',
+                is_online: true,
+                last_seen: p.last_seen || new Date().toISOString(),
+                is_premium: !!p.is_premium,
+                is_admin: !!p.is_admin,
+                page: p.page || 'inicio'
+              });
+            }
+          });
+        });
+
+        // Actualizar tabla y contador en tiempo real
+        this.loadOnlineUsers();
+      };
+
+      this.presenceChannel
+        .on('presence', { event: 'sync' }, syncPresence)
+        .on('presence', { event: 'join' }, syncPresence)
+        .on('presence', { event: 'leave' }, syncPresence)
+        .subscribe();
+
+    } catch (err) {
+      console.warn('[Admin] Realtime presence no disponible, usando polling DB:', err);
+    }
+  }
+
   async loadOnlineUsers() {
     const tbody = document.getElementById('online-users-tbody');
     const badgeText = document.getElementById('online-count-badge-text');
     if (!tbody) return;
 
     try {
-      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const activeThreshold = new Date(Date.now() - 60 * 1000).toISOString();
+
+      // Limpieza silenciosa en segundo plano de usuarios zombies (is_online=true pero inactivos)
+      supabase
+        .from('profiles')
+        .update({ is_online: false })
+        .eq('is_online', true)
+        .lt('last_seen', activeThreshold)
+        .then(() => {})
+        .catch(() => {});
+
+      // Consulta exacta: Únicamente usuarios que tengan heartbeat en los últimos 60 segundos
       const { data, error } = await supabase
         .from('profiles')
         .select('id, username, display_name, avatar_url, is_online, last_seen, is_premium, is_admin, created_at')
-        .or(`is_online.eq.true,last_seen.gt.${fiveMinAgo}`)
+        .eq('is_online', true)
+        .gt('last_seen', activeThreshold)
         .order('last_seen', { ascending: false });
 
       if (error) throw error;
 
-      this.rawOnlineUsers = data || [];
+      // Combinar usuarios de la Base de Datos con los del canal WebSocket Realtime
+      const userMap = new Map();
+
+      // 1. Agregar usuarios verificados de BD
+      (data || []).forEach(u => {
+        userMap.set(u.id, u);
+      });
+
+      // 2. Agregar o refrescar usuarios desde el WebSocket Presence
+      if (this.presenceUsers) {
+        this.presenceUsers.forEach((pu, id) => {
+          if (!userMap.has(id)) {
+            userMap.set(id, pu);
+          } else {
+            const existing = userMap.get(id);
+            userMap.set(id, { ...existing, ...pu });
+          }
+        });
+      }
+
+      this.rawOnlineUsers = Array.from(userMap.values());
       this.renderOnlineUsers(this.rawOnlineUsers);
 
       const totalCount = this.rawOnlineUsers.length;
       if (badgeText) {
-        badgeText.textContent = `${totalCount} usuario${totalCount === 1 ? '' : 's'} online`;
+        badgeText.textContent = `${totalCount} usuario${totalCount === 1 ? '' : 's'} online ahora`;
       }
       this._animateNumber('kpi-users-online', totalCount);
 
@@ -523,7 +604,7 @@ class AdminDashboardController {
 
     if (filtered.length === 0) {
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2.5rem;color:var(--text-muted)">
-        ${usersList.length === 0 ? '🟢 No hay usuarios en línea actualmente.' : '🔍 No se encontraron usuarios que coincidan con la búsqueda.'}
+        ${usersList.length === 0 ? 'No hay usuarios conectados en este momento.' : 'No se encontraron usuarios que coincidan con la búsqueda.'}
       </td></tr>`;
       return;
     }
@@ -536,21 +617,22 @@ class AdminDashboardController {
       const username = u.username ? `@${u.username}` : 'Sin usuario';
 
       const isRoleAdmin = u.is_admin || u.role === 'admin';
-      let roleBadge = `<span style="font-size:0.7rem; font-weight:700; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:var(--text-secondary); padding:2px 8px; border-radius:12px;">Standard</span>`;
+      let roleBadge = `<span style="font-size:0.7rem; font-weight:700; background:rgba(255,255,255,0.06); border:none; color:var(--text-secondary); padding:2px 8px; border-radius:12px;">Standard</span>`;
       if (isRoleAdmin) {
-        roleBadge = `<span style="font-size:0.7rem; font-weight:700; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#EF4444; padding:2px 8px; border-radius:12px;">🛡️ Admin</span>`;
+        roleBadge = `<span style="font-size:0.7rem; font-weight:700; background:rgba(239,68,68,0.15); color:#EF4444; padding:2px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:0.25rem;"><svg class="iconly-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Admin</span>`;
       } else if (u.is_premium) {
-        roleBadge = `<span style="font-size:0.7rem; font-weight:700; background:rgba(245,197,24,0.15); border:1px solid rgba(245,197,24,0.3); color:#F5C518; padding:2px 8px; border-radius:12px;">👑 Premium</span>`;
+        roleBadge = `<span style="font-size:0.7rem; font-weight:700; background:rgba(245,197,24,0.15); color:#F5C518; padding:2px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:0.25rem;"><svg class="iconly-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5v-2z"/></svg> Premium</span>`;
       }
 
       let lastSeenText = 'En línea ahora';
       if (u.last_seen) {
         const diffSec = Math.floor((Date.now() - new Date(u.last_seen).getTime()) / 1000);
-        if (diffSec > 120) {
-          const mins = Math.floor(diffSec / 60);
-          lastSeenText = `Hace ${mins} min`;
-        } else if (diffSec > 30) {
-          lastSeenText = `Hace unos segundos`;
+        if (diffSec <= 25) {
+          lastSeenText = 'En línea ahora';
+        } else if (diffSec <= 60) {
+          lastSeenText = `Activo hace ${diffSec}s`;
+        } else {
+          lastSeenText = `Hace ${Math.floor(diffSec / 60)} min`;
         }
       }
 
@@ -559,8 +641,8 @@ class AdminDashboardController {
           <td>
             <div style="display:flex; align-items:center; gap:0.75rem;">
               <div style="position:relative; width:38px; height:38px; flex-shrink:0;">
-                <img src="${avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:1px solid var(--border-subtle);" onError="this.src='${defaultAvatar}'">
-                <span style="position:absolute; bottom:0; right:0; width:10px; height:10px; background:#10B981; border:2px solid var(--bg-secondary); border-radius:50%;"></span>
+                <img src="${avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:none;" onError="this.src='${defaultAvatar}'">
+                <span style="position:absolute; bottom:0; right:0; width:10px; height:10px; background:#10B981; border:2px solid var(--bg-secondary); border-radius:50%; box-shadow:0 0 6px #10B981;"></span>
               </div>
               <div>
                 <strong style="color:#fff; font-size:0.88rem; display:block;">${username}</strong>
@@ -571,16 +653,16 @@ class AdminDashboardController {
           <td style="font-weight:600; color:var(--text-primary);">${displayName}</td>
           <td>${roleBadge}</td>
           <td>
-            <span style="display:inline-flex; align-items:center; gap:0.35rem; color:#10B981; font-weight:600; font-size:0.8rem;">
-              <span style="width:6px; height:6px; background:#10B981; border-radius:50%;"></span>
+            <span style="display:inline-flex; align-items:center; gap:0.4rem; color:#10B981; font-weight:600; font-size:0.8rem;">
+              <span style="width:6px; height:6px; background:#10B981; border-radius:50%; box-shadow:0 0 6px #10B981;"></span>
               ${lastSeenText}
             </span>
           </td>
           <td style="text-align:right;">
             <div style="display:inline-flex; gap:0.35rem; justify-content:flex-end;">
               ${u.username ? `
-                <a href="publico.html?user=${encodeURIComponent(u.username)}" target="_blank" class="btn btn--secondary" style="padding:0.3rem 0.6rem; font-size:0.75rem;" title="Ver perfil público">
-                  👁️ Perfil
+                <a href="publico.html?u=${encodeURIComponent(u.username)}" target="_blank" class="btn btn--secondary active-press" style="padding:0.35rem 0.75rem; font-size:0.75rem; border:none; border-radius:var(--radius-full); display:inline-flex; align-items:center; gap:0.35rem;" title="Ver perfil público">
+                  <svg class="iconly-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <span>Perfil</span>
                 </a>
               ` : ''}
             </div>
@@ -666,8 +748,8 @@ class AdminDashboardController {
             <td>${statusBadge}</td>
             <td style="text-align:right">
               <div class="flex flex--gap-xs" style="justify-content:flex-end;">
-                <button class="btn btn-req-action" data-action="added" data-id="${r.id}" style="padding:0.25rem 0.5rem;font-size:0.72rem;background:#10B981;border-color:#10B981;color:#fff;">✔️ Subido</button>
-                <button class="btn btn-req-action" data-action="rejected" data-id="${r.id}" style="padding:0.25rem 0.5rem;font-size:0.72rem;background:var(--accent-red);border-color:var(--accent-red);color:#fff;">❌ Rechazar</button>
+                <button class="btn btn-req-action active-press" data-action="added" data-id="${r.id}" style="padding:0.35rem 0.65rem;font-size:0.75rem;background:#10B981;border:none;border-radius:var(--radius-full);color:#fff;display:inline-flex;align-items:center;gap:0.3rem;"><svg class="iconly-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Subido</span></button>
+                <button class="btn btn-req-action active-press" data-action="rejected" data-id="${r.id}" style="padding:0.35rem 0.65rem;font-size:0.75rem;background:var(--accent-red);border:none;border-radius:var(--radius-full);color:#fff;display:inline-flex;align-items:center;gap:0.3rem;"><svg class="iconly-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <span>Rechazar</span></button>
                 <button class="btn btn--outline-red btn-req-delete" data-id="${r.id}" style="padding:0.25rem 0.5rem;font-size:0.72rem;">Eliminar</button>
               </div>
             </td>

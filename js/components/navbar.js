@@ -876,44 +876,118 @@ async function _initNotificationsAndOnline() {
     if (!userObj) return;
 
     const userId = userObj.id;
+    const profile = userObj.profile || {};
 
     // Iniciar centro de notificaciones
     const notifCenter = new NotificationCenter(userId);
     await notifCenter.init();
 
-    // #84 Marcar usuario como online
+    // 1. Marcar usuario como online inmediatamente en BD
     await SocialManager.updateOnlineStatus(userId, true);
 
-    // Heartbeat cada 30s para mantener estado online activo
-    const heartbeatInterval = setInterval(() => {
-      SocialManager.updateOnlineStatus(userId, true);
-    }, 30000);
+    // 2. Conectar al canal Realtime de Presencia para exactitud instantánea en admin
+    let presenceChannel = null;
+    try {
+      presenceChannel = supabase.channel('cv-online-presence', {
+        config: { presence: { key: userId } }
+      });
 
-    // Marcar offline al cerrar/ocultar la página
+      presenceChannel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannel.track({
+            id: userId,
+            username: profile.username || userObj.email.split('@')[0],
+            display_name: profile.display_name || profile.username || 'Usuario',
+            avatar_url: profile.avatar_url || '',
+            is_premium: !!profile.is_premium,
+            is_admin: !!profile.is_admin,
+            page: window.location.pathname.split('/').pop() || 'inicio',
+            last_seen: new Date().toISOString()
+          });
+        }
+      });
+    } catch (e) {
+      console.warn('[Presence] Fallback a DB heartbeat:', e);
+    }
+
+    // 3. Heartbeat regular cada 20s (mantiene frescura de last_seen)
+    const heartbeatInterval = setInterval(() => {
+      if (!document.hidden) {
+        SocialManager.updateOnlineStatus(userId, true);
+        if (presenceChannel) {
+          presenceChannel.track({
+            id: userId,
+            username: profile.username || userObj.email.split('@')[0],
+            display_name: profile.display_name || profile.username || 'Usuario',
+            avatar_url: profile.avatar_url || '',
+            is_premium: !!profile.is_premium,
+            is_admin: !!profile.is_admin,
+            page: window.location.pathname.split('/').pop() || 'inicio',
+            last_seen: new Date().toISOString()
+          }).catch(() => {});
+        }
+      }
+    }, 20000);
+
+    // 4. Salida limpia al cerrar o cambiar visibilidad
     const goOffline = () => {
       clearInterval(heartbeatInterval);
-      // Usar sendBeacon para asegurar que llega incluso al cerrar la pestaña
+      if (presenceChannel) {
+        try { presenceChannel.untrack(); } catch (_) {}
+      }
+
+      // Enviar PATCH con keepalive para garantizar actualización atómica al cerrar pestaña
       const supabaseUrl = supabase.supabaseUrl;
       const supabaseKey = supabase.supabaseKey;
       if (supabaseUrl && supabaseKey) {
-        const body = JSON.stringify({ is_online: false, last_seen: new Date().toISOString() });
-        navigator.sendBeacon(
-          `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`,
-          new Blob([body], { type: 'application/json' })
-        );
+        try {
+          const body = JSON.stringify({ is_online: false, last_seen: new Date().toISOString() });
+          fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
+            method: 'PATCH',
+            keepalive: true,
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Prefer': 'return=minimal'
+            },
+            body: body
+          }).catch(() => {});
+        } catch (_) {}
       }
     };
 
     window.addEventListener('beforeunload', goOffline);
+
+    let hiddenTimeout = null;
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        SocialManager.updateOnlineStatus(userId, false);
+        // Si pasa más de 45 segundos oculta, marcar offline
+        hiddenTimeout = setTimeout(() => {
+          SocialManager.updateOnlineStatus(userId, false);
+          if (presenceChannel) {
+            try { presenceChannel.untrack(); } catch (_) {}
+          }
+        }, 45000);
       } else {
+        if (hiddenTimeout) clearTimeout(hiddenTimeout);
         SocialManager.updateOnlineStatus(userId, true);
+        if (presenceChannel) {
+          presenceChannel.track({
+            id: userId,
+            username: profile.username || userObj.email.split('@')[0],
+            display_name: profile.display_name || profile.username || 'Usuario',
+            avatar_url: profile.avatar_url || '',
+            is_premium: !!profile.is_premium,
+            is_admin: !!profile.is_admin,
+            page: window.location.pathname.split('/').pop() || 'inicio',
+            last_seen: new Date().toISOString()
+          }).catch(() => {});
+        }
       }
     });
+
   } catch (e) {
-    // No es crítico, fallo silencioso
-    console.warn('[Navbar] Error inicializando notificaciones:', e);
+    console.warn('[Navbar] Error inicializando notificaciones y presencia:', e);
   }
 }

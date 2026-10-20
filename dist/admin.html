@@ -53,7 +53,7 @@
 
     .kpi-card:hover {
       transform: translateY(-3px);
-      border-color: rgba(229,9,20,0.35);
+      border: none !important;
     }
 
     .kpi-card::before {
@@ -189,7 +189,7 @@
 
     .btn-copy-code:hover {
       background: rgba(229,9,20,0.15);
-      border-color: rgba(229,9,20,0.4);
+      border: none !important;
       color: var(--accent-red);
     }
 
@@ -227,7 +227,7 @@
     /* ─── Ads Toggle Switch ─── */
     .ads-control-card {
       background: linear-gradient(135deg, rgba(229,9,20,0.06) 0%, rgba(10,10,10,0.4) 100%);
-      border: 1px solid rgba(229,9,20,0.25);
+      border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
       border-radius: var(--radius-lg);
       padding: 1.75rem 2rem;
       margin-bottom: 2rem;
@@ -324,8 +324,8 @@
       border: 1px solid;
     }
 
-    #ads-status-badge.on  { color: #10B981; border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); }
-    #ads-status-badge.off { color: #6b7280; border-color: rgba(107,114,128,0.4); background: rgba(107,114,128,0.08); }
+    #ads-status-badge.on  { color: #10B981; border: none !important; background: rgba(16,185,129,0.08); }
+    #ads-status-badge.off { color: #6b7280; border: none !important; background: rgba(107,114,128,0.08); }
 
     /* ─── Duration Select ─── */
     .duration-select {
@@ -438,32 +438,32 @@
     <!-- ══════════════════════════════════════════════════ -->
     <div class="kpi-grid">
       <div class="kpi-card">
-        <span class="kpi-icon">👥</span>
+        <span class="kpi-icon"><svg class="iconly-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
         <div class="kpi-number" id="kpi-users">–</div>
         <div class="kpi-label">Usuarios Registrados</div>
       </div>
       <div class="kpi-card kpi-card--premium">
-        <span class="kpi-icon">👑</span>
+        <span class="kpi-icon"><svg class="iconly-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5v-2z"/></svg></span>
         <div class="kpi-number" id="kpi-premium">–</div>
         <div class="kpi-label">Suscriptores Premium</div>
       </div>
       <div class="kpi-card kpi-card--active">
-        <span class="kpi-icon">🎟️</span>
+        <span class="kpi-icon"><svg class="iconly-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg></span>
         <div class="kpi-number" id="kpi-codes-active">–</div>
         <div class="kpi-label">Códigos Disponibles</div>
       </div>
       <div class="kpi-card kpi-card--used">
-        <span class="kpi-icon">✅</span>
+        <span class="kpi-icon"><svg class="iconly-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
         <div class="kpi-number" id="kpi-codes-used">–</div>
         <div class="kpi-label">Códigos Canjeados</div>
       </div>
-      <div class="kpi-card" id="kpi-card-online" style="border-color: rgba(16,185,129,0.3); cursor: pointer;" data-target="section-online-users" title="Ver lista de usuarios en línea">
-        <span class="kpi-icon">🟢</span>
+      <div class="kpi-card" id="kpi-card-online" style="border: none !important; cursor: pointer;" data-target="section-online-users" title="Ver lista de usuarios en línea">
+        <span class="kpi-icon"><span style="width:14px;height:14px;background:#10B981;border-radius:50%;display:inline-block;box-shadow:0 0 12px #10B981;"></span></span>
         <div class="kpi-number" id="kpi-users-online" style="color: #10B981;">–</div>
         <div class="kpi-label">Usuarios Online ahora</div>
       </div>
-      <div class="kpi-card" style="border-color: rgba(245,158,11,0.3);">
-        <span class="kpi-icon">📈</span>
+      <div class="kpi-card" style="border: none !important;">
+        <span class="kpi-icon"><svg class="iconly-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>
         <div class="kpi-number" id="kpi-users-today" style="color: #F59E0B;">–</div>
         <div class="kpi-label">Nuevos hoy</div>
       </div>
@@ -473,10 +473,10 @@
     <!-- BARRA DE PESTAÑAS DEL DASHBOARD                   -->
     <!-- ══════════════════════════════════════════════════ -->
     <nav class="dashboard-tabs">
-      <button class="dashboard-tab-btn active" data-target="section-licenses">🎫 Licencias y APK</button>
-      <button class="dashboard-tab-btn" data-target="section-online-users">🟢 Usuarios Online</button>
-      <button class="dashboard-tab-btn" data-target="section-requests">🍿 Pedidos de Películas</button>
-      <button class="dashboard-tab-btn" data-target="section-ads">🔗 Publicidad Dinámica</button>
+      <button class="dashboard-tab-btn active" data-target="section-licenses"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-1.5 1.5L16 7l-1.5-1.5M16 7l-4 4m0 0l-1.5-1.5L9 11l-1.5-1.5M12 11a5 5 0 1 1-7-7 5 5 0 0 1 7 7z"/></svg> <span>Licencias y APK</span></button>
+      <button class="dashboard-tab-btn" data-target="section-online-users"><span style="width:8px;height:8px;background:#10B981;border-radius:50%;display:inline-block;box-shadow:0 0 8px #10B981;"></span> <span>Usuarios Online</span></button>
+      <button class="dashboard-tab-btn" data-target="section-requests"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg> <span>Pedidos</span></button>
+      <button class="dashboard-tab-btn" data-target="section-ads"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> <span>Publicidad Dinámica</span></button>
       <button class="dashboard-tab-btn" data-target="section-system"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> <span>Configuración Sistema</span></button>
     </nav>
 
@@ -486,8 +486,8 @@
     <div class="admin-panel-section active" id="section-licenses">
       
       <!-- Gestión de Actualizaciones APK -->
-      <div class="admin-card" style="border-color: rgba(16,185,129,0.25); background: linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(10,10,10,0.4) 100%); margin-bottom: 2rem;">
-        <h2 class="admin-subtitle" style="color: #10B981;">📱 Gestión de Actualizaciones APK</h2>
+      <div class="admin-card" style="border: none !important; background: linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(10,10,10,0.4) 100%); margin-bottom: 2rem;">
+        <h2 class="admin-subtitle" style="color: #10B981;">Gestión de Actualizaciones APK</h2>
         <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
           Publica una nueva versión del APK. Los usuarios con una versión anterior instalada verán un modal de actualización al abrir la app.
         </p>
@@ -510,7 +510,7 @@
           </div>
           <div class="flex flex--align-center flex--gap-md flex--wrap" style="margin-top: 0.5rem;">
             <button id="update-publish-btn" class="btn btn--primary" style="background: linear-gradient(135deg,#059669,#10B981); border-color: #059669; display: flex; align-items: center; gap: 0.5rem;">
-              🚀 Publicar actualización
+              <span>Publicar actualización</span>
             </button>
             <div id="update-current-info" style="font-size: 0.82rem; color: var(--text-muted); font-family: var(--font-mono);">
               Cargando versión actual...
@@ -547,14 +547,14 @@
                 </div>
               </div>
               <button type="submit" class="btn btn--primary" id="generator-submit-btn" style="margin-top: 0.5rem; align-self: flex-start;">
-                ⚡ Generar y Subir
+                <span>Generar y Subir</span>
               </button>
             </form>
           </div>
 
           <!-- Asignación Manual -->
           <div class="admin-card">
-            <h2 class="admin-subtitle">👑 Otorgar Premium Directo</h2>
+            <h2 class="admin-subtitle">Otorgar Premium Directo</h2>
             <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
               Asigna estatus Premium directamente a un usuario buscando por su Nombre de Usuario.
             </p>
@@ -649,18 +649,18 @@
       <div class="admin-card">
         <div class="flex flex--justify-between flex--align-center flex--wrap" style="gap: 1rem; margin-bottom: 1.25rem;">
           <div>
-            <h2 class="admin-subtitle" style="margin-bottom: 0.35rem; color: #10B981;">🟢 Usuarios Conectados en Tiempo Real</h2>
+            <h2 class="admin-subtitle" style="margin-bottom: 0.35rem; color: #10B981;"><span style="width:10px;height:10px;background:#10B981;border-radius:50%;display:inline-block;box-shadow:0 0 8px #10B981;"></span> Usuarios Conectados en Tiempo Real</h2>
             <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 0;">
               Lista detallada de usuarios interactuando o activos en CineVerse.
             </p>
           </div>
           <div class="flex flex--align-center flex--gap-sm">
-            <span id="online-users-live-badge" style="font-size: 0.75rem; font-weight: 700; color: #10B981; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); padding: 0.35rem 0.75rem; border-radius: 20px; display: flex; align-items: center; gap: 0.4rem;">
+            <span id="online-users-live-badge" style="font-size: 0.75rem; font-weight: 700; color: #10B981; background: rgba(16,185,129,0.12); border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4); padding: 0.35rem 0.75rem; border-radius: 20px; display: flex; align-items: center; gap: 0.4rem;">
               <span style="width: 8px; height: 8px; background: #10B981; border-radius: 50%; display: inline-block;"></span>
               <span id="online-count-badge-text">Cargando...</span>
             </span>
             <button id="refresh-online-users-btn" class="btn btn--secondary" style="padding: 0.45rem 0.85rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-              🔄 Actualizar
+              <svg class="iconly-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> <span>Actualizar</span>
             </button>
           </div>
         </div>
@@ -672,7 +672,7 @@
           </div>
           <div class="filter-tabs" style="margin-bottom: 0;" id="online-filter-tabs">
             <button class="filter-tab active" data-filter="all">Todos los activos</button>
-            <button class="filter-tab" data-filter="premium">👑 Solo Premium</button>
+            <button class="filter-tab" data-filter="premium">Solo Premium</button>
           </div>
         </div>
 
@@ -700,7 +700,7 @@
     <!-- ══════════════════════════════════════════════════ -->
     <div class="admin-panel-section" id="section-requests">
       <div class="admin-card">
-        <h2 class="admin-subtitle">🍿 Cola de Pedidos de Películas (Request Queue)</h2>
+        <h2 class="admin-subtitle">Cola de Pedidos de Películas</h2>
         <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
           Lista de películas y series que los usuarios han solicitado. Los **pedidos prioritarios (Premium)** se colocan arriba automáticamente con una estrella dorada y deben procesarse preferiblemente en menos de 24 horas.
         </p>
@@ -780,10 +780,10 @@
     <div class="admin-panel-section" id="section-system">
       <!-- Mantenimiento -->
       <div class="admin-card flex flex--col flex--gap-md" style="margin-bottom: 2rem;">
-        <h2 class="admin-subtitle" style="color: #F5C518;">⚙️ Configuración del Sistema</h2>
+        <h2 class="admin-subtitle" style="color: #F5C518;">Configuración del Sistema</h2>
         
         <div class="toggle-switch-wrap">
-          <span class="toggle-label">🛠️ Modo Mantenimiento:</span>
+          <span class="toggle-label">Modo Mantenimiento:</span>
           <span id="maintenance-status-badge" class="off" style="background: #4a4a4a; color: #fff; padding: 0.1rem 0.5rem; border-radius: var(--radius-xs); font-size: 0.72rem; font-weight: 700; margin-right: 0.5rem;">DESACTIVADO</span>
           <label class="toggle-switch">
             <input type="checkbox" id="system-maintenance-toggle">
@@ -795,18 +795,18 @@
       <!-- A/B Testing y SEO overrides -->
       <div class="grid grid--2-col grid--gap-md">
         <div class="admin-card">
-          <h2 class="admin-subtitle">🧪 Control de Tests A/B</h2>
+          <h2 class="admin-subtitle">Control de Tests A/B</h2>
           <div id="system-ab-tests-container" class="flex flex--col flex--gap-sm">
             <!-- Tests A/B cargados dinámicamente -->
           </div>
         </div>
 
         <div class="admin-card">
-          <h2 class="admin-subtitle">🔍 Optimización SEO Overrides</h2>
+          <h2 class="admin-subtitle">Optimización SEO Overrides</h2>
           <form id="system-seo-form" class="flex flex--col flex--gap-sm">
             <div class="form-group">
               <label class="form-label" for="system-seo-page">Página</label>
-              <select id="system-seo-page" class="form-input" style="background: #222; color:#fff; border: 1px solid #333;">
+              <select id="system-seo-page" class="form-input" style="background: #222; color:#fff; border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
                 <option value="index">Inicio (index.html)</option>
                 <option value="peliculas">Películas (peliculas.html)</option>
                 <option value="series">Series (series.html)</option>
@@ -821,8 +821,8 @@
               <label class="form-label" for="system-seo-desc">Meta Descripción</label>
               <textarea id="system-seo-desc" class="form-input" placeholder="Disfruta del mejor catálogo..." style="height: 60px; resize: none;"></textarea>
             </div>
-            <button type="submit" class="btn btn--primary" style="align-self: flex-start; background: #222; border: 1px solid #444;">
-              💾 Guardar SEO Override
+            <button type="submit" class="btn btn--primary" style="align-self: flex-start; background: #222; border: none !important; box-shadow: 0 8px 30px rgba(0,0,0,0.4);">
+              <span>Guardar SEO Override</span>
             </button>
           </form>
         </div>
@@ -830,7 +830,7 @@
 
       <!-- Log de Actividad del Admin -->
       <div class="admin-card" style="margin-top: 2rem;">
-        <h2 class="admin-subtitle" style="color: var(--text-secondary);">📜 Registro de Actividad Admin (Auditoría)</h2>
+        <h2 class="admin-subtitle" style="color: var(--text-secondary);">Registro de Actividad Admin (Auditoría)</h2>
         <div class="admin-table-container">
           <table class="admin-table">
             <thead>
