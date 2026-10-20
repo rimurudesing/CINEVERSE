@@ -171,10 +171,12 @@ class WatchPageController {
     if (serverKey === 'voe') {
       const customVOE = localStorage.getItem(`cv_voe_${key}`);
       if (customVOE) return customVOE;
+
+      // Proveedor embed compatible y de alta disponibilidad para VOE
       if (this.mediaType === 'movie') {
-        return `https://vidsrc.me/embed/movie?tmdb=${this.mediaId}`;
+        return `https://vidsrc.cc/v2/embed/movie/${this.mediaId}`;
       } else {
-        return `https://vidsrc.me/embed/tv?tmdb=${this.mediaId}&season=${this.season || 1}&episode=${this.episode || 1}`;
+        return `https://vidsrc.cc/v2/embed/tv/${this.mediaId}/${this.season || 1}/${this.episode || 1}`;
       }
     }
 
