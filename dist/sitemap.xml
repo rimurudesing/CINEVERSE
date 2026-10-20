@@ -41,14 +41,6 @@
     <priority>0.7</priority>
   </url>
 
-  <!-- Chat Global -->
-  <url>
-    <loc>https://cineverse-7u5.pages.dev/chat.html</loc>
-    <lastmod>2026-07-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
   <!-- Descargar APK -->
   <url>
     <loc>https://cineverse-7u5.pages.dev/descargar.html</loc>

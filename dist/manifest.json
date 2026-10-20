@@ -8,7 +8,10 @@
   "theme_color": "#e50914",
   "orientation": "portrait-primary",
   "lang": "es",
-  "categories": ["entertainment", "lifestyle"],
+  "categories": [
+    "entertainment",
+    "lifestyle"
+  ],
   "icons": [
     {
       "src": "assets/icon.png",
@@ -29,21 +32,24 @@
       "short_name": "Buscar",
       "description": "Busca películas y series",
       "url": "/buscar.html",
-      "icons": [{ "src": "assets/icon.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Chat",
-      "short_name": "Chat",
-      "description": "Abre el chat global de CineVerse",
-      "url": "/chat.html",
-      "icons": [{ "src": "assets/icon.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "assets/icon.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Mi Perfil",
       "short_name": "Perfil",
       "description": "Ve tu perfil y estadísticas",
       "url": "/perfil.html",
-      "icons": [{ "src": "assets/icon.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "assets/icon.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ],
   "related_applications": [],

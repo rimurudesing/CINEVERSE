@@ -59,7 +59,6 @@ class AdminDashboardController {
       this.loadRequests(),
       this.loadSystemSettings(),
       this.loadAdminLogs(),
-      this.loadBannedWords()
     ]);
 
     // 5. Configurar eventos de formularios
@@ -975,55 +974,6 @@ class AdminDashboardController {
       }).join('');
     } catch (err) {
       console.error(err);
-    }
-  }
-
-  // ─── PALABRAS PROHIBIDAS ────────────────────────────────────────────────────
-  async loadBannedWords() {
-    const container = document.getElementById('system-banned-words-container');
-    if (!container) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('banned_words')
-        .select('*')
-        .order('word', { ascending: true });
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        container.innerHTML = `<span style="font-size:0.8rem;color:var(--text-muted);">No hay palabras prohibidas agregadas</span>`;
-        return;
-      }
-
-      container.innerHTML = data.map(w => `
-        <span class="msg-reaction-pill" style="background:#222; border:1px solid #333; border-radius:12px; padding:0.2rem 0.6rem; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
-          <span>${w.word}</span>
-          <button class="btn-delete-word" data-id="${w.id}" style="background:none; border:none; color:var(--accent-red); cursor:pointer; font-weight:700;">✕</button>
-        </span>
-      `).join('');
-
-      container.querySelectorAll('.btn-delete-word').forEach(btn => {
-        btn.addEventListener('click', () => this.deleteBannedWord(btn.dataset.id));
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  async deleteBannedWord(wordId) {
-    try {
-      const { error } = await supabase
-        .from('banned_words')
-        .delete()
-        .eq('id', wordId);
-
-      if (error) throw error;
-      await this.logAdminAction('palabra_prohibida_delete', null, { wordId });
-      await this.loadBannedWords();
-      showToast('Palabra eliminada del filtro', 'success');
-    } catch (err) {
-      showToast('No se pudo eliminar la palabra', 'error');
     }
   }
 
