@@ -1,7 +1,7 @@
 import '../admob.js';
 import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { getCurrentUser, signOut, updateProfile } from '../auth.js';
-import { navigateTo, initPageTransition, buildTMDBImageURL, showToast, formatDate, THEME_COLORS, applyUserTheme } from '../utils.js';
+import { navigateTo, initPageTransition, buildTMDBImageURL, showToast, formatDate, THEME_COLORS, applyUserTheme, sanitizeHTML, isValidUsername} from '../utils.js';
 import { initCustomCursor } from '../cursor.js';
 import { api } from '../api.js';
 import '../components/navbar.js';
@@ -377,6 +377,11 @@ class ProfilePageController {
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
+      const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+        showToast('Formato no permitido. Solo JPG, PNG, GIF o WEBP', 'error');
+        return;
+      }
       if (file.size > 3 * 1024 * 1024) { showToast('La imagen no puede superar 3 MB', 'error'); return; }
 
       const reader = new FileReader();
@@ -472,6 +477,11 @@ class ProfilePageController {
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
+      const ALLOWED_BANNER_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!ALLOWED_BANNER_TYPES.includes(file.type)) {
+        showToast('Formato no permitido. Solo JPG, PNG o WEBP', 'error');
+        return;
+      }
       if (file.size > 5 * 1024 * 1024) { showToast('El banner no puede superar 5 MB', 'error'); return; }
 
       const reader = new FileReader();

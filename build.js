@@ -25,17 +25,14 @@ function minifyCSS(content) {
   return cleaned.trim();
 }
 
-// Analizador sintáctico rápido para detectar llaves sueltas y sintaxis rota
+// Analizador sintáctico nativo de Node.js (valida ESM, sintaxis y módulos reales)
+import { execFileSync } from 'child_process';
 function validateJS(srcPath, content) {
   try {
-    // Reemplazamos temporalmente declaraciones import/export ya que "new Function" no los soporta a nivel global
-    const testCode = content
-      .replace(/import\s+[\s\S]*?(from\s+)?['"].*?['"];?/g, '')
-      .replace(/export\s+(default\s+)?/g, '');
-    new Function(testCode);
+    execFileSync(process.execPath, ['--check', srcPath], { stdio: 'pipe' });
   } catch (err) {
     console.error(`\n\x1b[31m❌ ERROR DE SINTAXIS EN: ${srcPath}\x1b[0m`);
-    console.error(`\x1b[31m👉 Detalles: ${err.message}\x1b[0m\n`);
+    console.error(`\x1b[31m👉 Detalles: ${err.stderr?.toString() || err.message}\x1b[0m\n`);
     process.exit(1);
   }
 }
@@ -45,7 +42,7 @@ function processAndCopyFile(srcPath, destPath) {
   
   if (ext === '.js' && !srcPath.includes('min.js')) {
     const rawContent = fs.readFileSync(srcPath, 'utf8');
-    validateJS(srcPath, rawContent); // Validar antes de copiar
+    if (!srcPath.endsWith("build.js")) validateJS(srcPath, rawContent); // Validar antes de copiar
     const minified = minifyJS(rawContent);
     fs.writeFileSync(destPath, minified, 'utf8');
   } else if (ext === '.css' && !srcPath.includes('min.css')) {

@@ -12,8 +12,7 @@ import {
   formatDate,
   getYoutubeKey, 
   navigateTo, 
-  showToast 
-} from '../utils.js';
+  showToast, sanitizeHTML, isValidInt} from '../utils.js';
 import { initCustomCursor } from '../cursor.js';
 import '../components/navbar.js';
 import { RatingRing } from '../components/ratingRing.js';

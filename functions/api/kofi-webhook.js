@@ -34,8 +34,12 @@ export async function onRequestPost({ request, env }) {
 
     // ── 1. Verificar el token de seguridad de Ko-fi ──────────────────────────
     // Credenciales — configuradas como variables de entorno en Cloudflare Pages
-    const KOFI_TOKEN    = env.KOFI_VERIFICATION_TOKEN || 'b4e2bb97-3dc4-42fe-9948-354a454b9954';
-    const SUPABASE_URL  = env.SUPABASE_URL             || 'https://oeibxtnltxxcaiwvpldi.supabase.co';
+    const KOFI_TOKEN = env.KOFI_VERIFICATION_TOKEN;
+    if (!KOFI_TOKEN) {
+      return new Response('Webhook no configurado', { status: 503 });
+    }
+    const SUPABASE_URL = env.SUPABASE_URL;
+    if (!SUPABASE_URL) { return new Response('Config error', { status: 503 }); }
     const SUPABASE_KEY  = env.SUPABASE_SERVICE_KEY     || '';
 
     if (payload.verification_token !== KOFI_TOKEN) {

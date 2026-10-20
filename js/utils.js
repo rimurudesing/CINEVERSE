@@ -1,3 +1,48 @@
+
+// ─── Seguridad: Sanitización y validación de entradas ────────────────────────
+
+/**
+ * Escapa caracteres HTML peligrosos para prevenir XSS.
+ * Usar siempre antes de insertar contenido de usuario en el DOM via innerHTML.
+ */
+export function sanitizeHTML(str = '') {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;'
+  }[c]));
+}
+
+/**
+ * Valida un email con regex simple y longitud máxima.
+ */
+export function isValidEmail(email = '') {
+  return typeof email === 'string' &&
+    email.length <= 254 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+}
+
+/**
+ * Valida un nombre de usuario: alfanumérico, guiones, puntos, 3–32 chars.
+ */
+export function isValidUsername(username = '') {
+  return typeof username === 'string' &&
+    /^[a-zA-Z0-9_\-.]{3,32}$/.test(username.trim());
+}
+
+/**
+ * Trunca texto a longitud máxima segura.
+ */
+export function clampText(str = '', maxLen = 500) {
+  return String(str).slice(0, maxLen);
+}
+
+/**
+ * Valida que un valor sea un entero positivo dentro de un rango.
+ */
+export function isValidInt(val, min = 0, max = Number.MAX_SAFE_INTEGER) {
+  const n = parseInt(val, 10);
+  return Number.isInteger(n) && n >= min && n <= max;
+}
+
 /* ═══ cineverse/js/utils.js ═══ */
 
 import { TMDB_IMG_BASE } from './config.js';

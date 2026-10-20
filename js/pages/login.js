@@ -1,3 +1,49 @@
+
+// ─── Rate-limit de intentos de login (cliente) ───────────────────────────────
+const LOGIN_RATE_KEY = 'cv_login_attempts';
+const LOGIN_BLOCK_KEY = 'cv_login_blocked_until';
+const MAX_ATTEMPTS = 5;
+const BLOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutos
+
+function getLoginAttempts() {
+  try { return JSON.parse(localStorage.getItem(LOGIN_RATE_KEY)) || { count: 0, ts: Date.now() }; }
+  catch { return { count: 0, ts: Date.now() }; }
+}
+function isLoginBlocked() {
+  const blockedUntil = parseInt(localStorage.getItem(LOGIN_BLOCK_KEY) || '0', 10);
+  return Date.now() < blockedUntil;
+}
+function registerLoginAttempt() {
+  const data = getLoginAttempts();
+  const hourAgo = Date.now() - 3600000;
+  if (data.ts < hourAgo) { data.count = 0; data.ts = Date.now(); }
+  data.count++;
+  localStorage.setItem(LOGIN_RATE_KEY, JSON.stringify(data));
+  if (data.count >= MAX_ATTEMPTS) {
+    localStorage.setItem(LOGIN_BLOCK_KEY, String(Date.now() + BLOCK_DURATION_MS));
+  }
+  return data.count;
+}
+function clearLoginAttempts() {
+  localStorage.removeItem(LOGIN_RATE_KEY);
+  localStorage.removeItem(LOGIN_BLOCK_KEY);
+}
+function getBlockedMinutesLeft() {
+  const blockedUntil = parseInt(localStorage.getItem(LOGIN_BLOCK_KEY) || '0', 10);
+  return Math.ceil((blockedUntil - Date.now()) / 60000);
+}
+
+// ─── Sanitización de entradas ─────────────────────────────────────────────────
+function sanitizeInput(str = '') {
+  return str.replace(/[<>"'&]/g, c => ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' }[c]));
+}
+function isValidEmail(email = '') {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+function isValidUsername(username = '') {
+  return /^[a-zA-Z0-9_\-\.]{3,32}$/.test(username.trim());
+}
+
 /* ═══ cineverse/js/pages/login.js ═══ */
 
 import { api } from '../api.js';
@@ -184,14 +230,6 @@ async function diagnoseLoginError(email) {
 // ══════════════════════════════════════════════════════════════
 // VALIDACIONES EN TIEMPO REAL
 // ══════════════════════════════════════════════════════════════
-
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
-}
-
-function isValidUsername(username) {
-  return /^[a-zA-Z0-9_]{3,20}$/.test(username.trim());
-}
 
 function getPasswordStrength(password) {
   if (!password) return { score: 0, label: '', color: 'var(--text-muted)' };
@@ -488,6 +526,10 @@ class LoginPageController {
       const pass     = document.getElementById('login-password').value;
       const submitBtn = document.getElementById('login-submit-btn');
 
+
+      // ─── Anti-bot: campo honeypot ──────────────────────────────────────────
+      const honeypot = document.getElementById('cv-hp-field')?.value;
+      if (honeypot) return; // Bot detectado, ignorar silenciosamente
       // ── Validaciones locales previas al envío ──
       let hasError = false;
 
@@ -514,7 +556,15 @@ class LoginPageController {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Verificando...';
 
+        // Verificar bloqueo por intentos fallidos
+        if (isLoginBlocked()) {
+          const mins = getBlockedMinutesLeft();
+          showFormAlert('login-alert', 'error', '🛡️', `Demasiados intentos fallidos. Espera ${mins} minuto${mins !== 1 ? 's' : ''} antes de intentarlo de nuevo.`);
+          return;
+        }
+
         await signIn(email, pass);
+        clearLoginAttempts(); // Reset en login exitoso
         clearFormAlert('login-alert');
         showFormAlert('login-alert', 'success', '✅', '¡Sesión iniciada correctamente! Redirigiendo...');
         setTimeout(() => navigateTo('index.html'), 700);
@@ -522,6 +572,12 @@ class LoginPageController {
       } catch (err) {
         console.error('[Login]', err);
         this._loginAttempts++;
+        const totalAttempts = registerLoginAttempt();
+        if (isLoginBlocked()) {
+          const mins = getBlockedMinutesLeft();
+          showFormAlert('login-alert', 'error', '🛡️', `Demasiados intentos. Bloqueado por ${mins} minuto${mins !== 1 ? 's' : ''}.`);
+          return;
+        }
 
         const parsed = parseSupabaseAuthError(err);
 
