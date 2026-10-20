@@ -172,53 +172,13 @@ class WatchPageController {
       const customVOE = localStorage.getItem(`cv_voe_${key}`);
       if (customVOE) return customVOE;
       if (this.mediaType === 'movie') {
-        return `https://vidsrc.cc/v2/embed/movie/${this.mediaId}`;
+        return `https://vidsrc.me/embed/movie?tmdb=${this.mediaId}`;
       } else {
-        return `https://vidsrc.cc/v2/embed/tv/${this.mediaId}/${this.season || 1}/${this.episode || 1}`;
-      }
-    }
-    
-    if (serverKey === 'streamplay') {
-      if (this.mediaType === 'movie') {
-        return `https://multiembed.mov/?video_id=${this.mediaId}&tmdb=1`;
-      } else {
-        return `https://multiembed.mov/?video_id=${this.mediaId}&tmdb=1&s=${this.season || 1}&e=${this.episode || 1}`;
+        return `https://vidsrc.me/embed/tv?tmdb=${this.mediaId}&season=${this.season || 1}&episode=${this.episode || 1}`;
       }
     }
 
-    if (serverKey === 'bysekoze') {
-      if (this.mediaType === 'movie') {
-        return `https://autoembed.co/movie/tmdb/${this.mediaId}`;
-      } else {
-        return `https://autoembed.co/tv/tmdb/${this.mediaId}-${this.season || 1}-${this.episode || 1}`;
-      }
-    }
-
-    if (serverKey === 'luluvido') {
-      if (this.mediaType === 'movie') {
-        return `https://vidlink.pro/movie/${this.mediaId}`;
-      } else {
-        return `https://vidlink.pro/tv/${this.mediaId}/${this.season || 1}/${this.episode || 1}`;
-      }
-    }
-
-    if (serverKey === 'powvideo') {
-      if (this.mediaType === 'movie') {
-        return `https://player.smashy.stream/movie/${this.mediaId}`;
-      } else {
-        return `https://player.smashy.stream/tv/${this.mediaId}?s=${this.season || 1}&e=${this.episode || 1}`;
-      }
-    }
-
-    if (serverKey === 'dsvplay') {
-      if (this.mediaType === 'movie') {
-        return `https://2embed.cc/embed/${this.mediaId}`;
-      } else {
-        return `https://2embed.cc/embedtv/${this.mediaId}&s=${this.season || 1}&e=${this.episode || 1}`;
-      }
-    }
-
-    // Vimeus original
+    // 2. Vimeus original
     return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
   }
 
@@ -227,23 +187,8 @@ class WatchPageController {
     return `
       <div class="player-servers-header" id="player-servers-header">
         <div class="player-servers-list">
-          <button class="server-tab ${s === 'streamplay' ? 'active' : ''}" data-server="streamplay">
-            <span class="server-flag">🇪🇸</span> STREAMPLAY
-          </button>
-          <button class="server-tab ${s === 'bysekoze' ? 'active' : ''}" data-server="bysekoze">
-            <span class="server-flag">🇪🇸</span> BYSEKOZE
-          </button>
-          <button class="server-tab ${s === 'luluvido' ? 'active' : ''}" data-server="luluvido">
-            <span class="server-flag">🇪🇸</span> LULUVIDO
-          </button>
           <button class="server-tab ${s === 'voe' ? 'active' : ''}" data-server="voe">
-            <span class="server-flag">🇪🇸</span> VOE
-          </button>
-          <button class="server-tab ${s === 'powvideo' ? 'active' : ''}" data-server="powvideo">
-            <span class="server-flag">🇪🇸</span> POWVIDEO
-          </button>
-          <button class="server-tab ${s === 'dsvplay' ? 'active' : ''}" data-server="dsvplay">
-            <span class="server-flag">🇪🇸</span> DSVPLAY
+            <span class="server-flag">▶</span> VOE
           </button>
           <button class="server-tab ${s === 'vimeus' ? 'active' : ''}" data-server="vimeus">
             <span class="server-flag">🎬</span> VIMEUS
@@ -321,7 +266,10 @@ class WatchPageController {
       }
     });
 
+    const initialSrc = this.currentServer === 'vimeus' ? vimeusURL : this.getServerURL(this.currentServer);
+
     playerRoot.innerHTML = `
+      ${this.buildServersBar()}
       <div class="vimeus-player-wrap" id="vimeus-player-wrapper" style="
         position: relative;
         width: 100%;
@@ -345,7 +293,7 @@ class WatchPageController {
 
         <iframe
           id="vimeus-iframe"
-          src="${vimeusURL}"
+          src="${initialSrc}"
           style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; display: block;"
           allowfullscreen
           allow="autoplay; fullscreen; picture-in-picture"
