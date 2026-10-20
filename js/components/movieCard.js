@@ -149,8 +149,8 @@ export function createMovieCard(item, options = {}) {
       </div>
       <div class="movie-card__hover-actions">
         <button class="btn btn--primary movie-card__hover-btn card-info-btn">Ver</button>
-        <button class="btn btn--secondary btn--icon card-list-btn" data-tooltip="Quiero ver" aria-label="Añadir a lista">+</button>
-        <button class="btn btn--secondary btn--icon card-fav-btn" data-tooltip="Favorito" aria-label="Marcar favorito">❤️</button>
+        <button class="btn btn--secondary btn--icon card-list-btn active-press" data-tooltip="Quiero ver" aria-label="Añadir a lista"><svg class="iconly-icon" width="14" height="14" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+        <button class="btn btn--secondary btn--icon card-fav-btn active-press" data-tooltip="Favorito" aria-label="Marcar favorito"><svg class="iconly-icon card-fav-heart" width="14" height="14" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
       </div>
     </div>
   `;
@@ -175,11 +175,11 @@ export function createMovieCard(item, options = {}) {
     e.stopPropagation();
     const result = await toggleWatchlist(item);
     if (result === 'added') {
-      listBtn.textContent = '✓';
+      listBtn.innerHTML = '<svg class="iconly-icon" width="14" height="14" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
       listBtn.classList.add('btn--primary');
       listBtn.classList.remove('btn--secondary');
     } else if (result === 'removed') {
-      listBtn.textContent = '+';
+      listBtn.innerHTML = '<svg class="iconly-icon" width="14" height="14" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
       listBtn.classList.remove('btn--primary');
       listBtn.classList.add('btn--secondary');
     }
@@ -193,9 +193,11 @@ export function createMovieCard(item, options = {}) {
     if (result === 'added') {
       favBtn.classList.add('btn--primary');
       favBtn.classList.remove('btn--secondary');
+      const svg = favBtn.querySelector('svg'); if (svg) svg.style.fill = '#fff';
     } else if (result === 'removed') {
       favBtn.classList.remove('btn--primary');
       favBtn.classList.add('btn--secondary');
+      const svg = favBtn.querySelector('svg'); if (svg) svg.style.fill = 'none';
     }
   });
 

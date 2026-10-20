@@ -162,20 +162,19 @@
       position: relative;
       display: flex;
       align-items: center;
-      background: rgba(255,255,255,0.05);
-      border: 1.5px solid rgba(255,255,255,0.1);
-      border-radius: var(--radius-full);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+      background: #0f1117;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 9999px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+      outline: none;
+      transition: background 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
 
     .search-box__inner:focus-within {
-      border-color: var(--accent-red);
-      background: rgba(255,255,255,0.07);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 4px rgba(229,9,20,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
-      transform: translateY(-2px);
+      background: #141720;
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.5);
+      transform: translateY(-1px);
     }
 
     .search-box__icon {
@@ -582,12 +581,31 @@
 
     .genre-card {
       position: relative;
-      height: 80px;
+      height: 72px;
       border-radius: var(--radius-md);
       overflow: hidden;
       cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.08);
-      transition: all 0.25s;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: #111319 !important;
+      transition: all 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .genre-card:hover {
+      transform: translateY(-2px) scale(1.02);
+      border-color: rgba(255, 255, 255, 0.16);
+      background: #161822 !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .genre-card__name {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      height: 100%;
+      font-family: var(--font-ui);
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #e5e7eb;
     }
 
     .genre-card:hover {
@@ -641,6 +659,7 @@
       .results-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 </head>
 <body>
 
@@ -772,17 +791,17 @@
     const genreGrid       = document.getElementById('genre-grid');
 
     // ── Géneros visuales ──────────────────────────────────────
-    const GENRES = [
-      { id: 28,  name: 'Acción',         emoji: '💥', type: 'movie' },
-      { id: 35,  name: 'Comedia',        emoji: '😂', type: 'movie' },
-      { id: 27,  name: 'Terror',         emoji: '👻', type: 'movie' },
-      { id: 878, name: 'Sci-Fi',         emoji: '🚀', type: 'movie' },
-      { id: 10749,name: 'Romance',       emoji: '💘', type: 'movie' },
-      { id: 53,  name: 'Thriller',       emoji: '🔪', type: 'movie' },
-      { id: 16,  name: 'Animación',      emoji: '🎨', type: 'movie' },
-      { id: 18,  name: 'Drama',          emoji: '🎭', type: 'movie' },
-      { id: 12,  name: 'Aventura',       emoji: '🗺️', type: 'movie' },
-      { id: 80,  name: 'Crimen',         emoji: '🕵️', type: 'movie' },
+        const GENRES = [
+      { id: 28,  name: 'Acción',         icon: '<svg class="iconly-icon" width="20" height="20" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>', type: 'movie' },
+      { id: 35,  name: 'Comedia',        icon: '<svg class="iconly-icon" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>', type: 'movie' },
+      { id: 27,  name: 'Terror',         icon: '<svg class="iconly-icon" width="20" height="20" viewBox="0 0 24 24"><path d="M9 10h.01M15 10h.01M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/></svg>', type: 'movie' },
+      { id: 878, name: 'Sci-Fi',         icon: '<svg class="iconly-icon" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-30 12 12)"/></svg>', type: 'movie' },
+      { id: 10749,name: 'Romance',       icon: '<svg class="iconly-icon" width="20" height="20" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>', type: 'movie' },
+      { id: 53,  name: 'Thriller',       icon: '<svg class="iconly-icon" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', type: 'movie' },
+      { id: 16,  name: 'Animación',      icon: '<svg class="iconly-icon" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></svg>', type: 'movie' },
+      { id: 18,  name: 'Drama',          icon: '<svg class="iconly-icon" width="20" height="20" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>', type: 'movie' },
+      { id: 12,  name: 'Aventura',       icon: '<svg class="iconly-icon" width="20" height="20" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>', type: 'movie' },
+      { id: 80,  name: 'Crimen',         icon: '<svg class="iconly-icon" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>', type: 'movie' },
     ];
 
     const GENRE_COLORS = [
@@ -802,7 +821,7 @@
       genreGrid.innerHTML = GENRES.map((g, i) => `
         <button class="genre-card" data-genre-id="${g.id}" data-genre-name="${g.name}" data-genre-type="${g.type}"
           style="background:${GENRE_COLORS[i]};">
-          <div class="genre-card__name">${g.emoji} ${g.name}</div>
+          <div class="genre-card__name">${g.icon} <span>${g.name}</span></div>
         </button>
       `).join('');
 
@@ -1060,6 +1079,19 @@
 
     // ── Init ─────────────────────────────────────────────────
     renderGenres();
+
+    // ── Anime.js Stagger Entrance Animation ──
+    if (typeof anime !== 'undefined') {
+      anime({
+        targets: '.genre-card',
+        opacity: [0, 1],
+        translateY: [15, 0],
+        delay: anime.stagger(35, { start: 100 }),
+        easing: 'easeOutQuad',
+        duration: 350
+      });
+    }
+
     initFromURL();
 
     // Autofocus en el input
