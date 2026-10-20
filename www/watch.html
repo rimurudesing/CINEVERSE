@@ -200,6 +200,67 @@
     @media (min-width: 601px) {
       .adsterra-banner--mobile { display: none; }
     }
+
+    /* ── Barra de Servidores del Reproductor (Vimeus & VidLink) ── */
+    .player-servers-header {
+      display: flex;
+      align-items: center;
+      background: #141518;
+      border: 1px solid var(--border-subtle);
+      border-bottom: none;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      user-select: none;
+    }
+    .player-servers-header::-webkit-scrollbar {
+      display: none;
+    }
+    .player-servers-list {
+      display: flex;
+      align-items: stretch;
+      flex-wrap: nowrap;
+    }
+    .server-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.25rem;
+      background: #1a1c22;
+      color: #9ca3af;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+    .server-tab:hover {
+      background: #262932;
+      color: #ffffff;
+    }
+    .server-tab.active {
+      background: #0b0c0e;
+      color: #ffffff;
+      box-shadow: inset 0 2px 0 0 var(--accent-red);
+    }
+    .server-tab .server-icon {
+      font-size: 0.95rem;
+    }
+    .server-tab-badge {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      background: rgba(229, 9, 20, 0.2);
+      color: #ff4d4d;
+      font-weight: 800;
+    }
   </style>
 </head>
 <body>

@@ -40,6 +40,18 @@ function getVimeusURL(mediaType, tmdbId, season, episode) {
 }
 
 
+
+function getVidlinkURL(mediaType, tmdbId, season, episode) {
+  const id = String(tmdbId || '');
+  const se = season ? String(season) : '1';
+  const ep = episode ? String(episode) : '1';
+  if (mediaType === 'movie') {
+    return 'https://vidlink.pro/movie/' + id + '?primaryColor=e50914';
+  } else {
+    return 'https://vidlink.pro/tv/' + id + '/' + se + '/' + ep + '?primaryColor=e50914';
+  }
+}
+
 // ── Controlador Principal ────────────────────────────────────────────────────
 class WatchPageController {
   constructor() {
@@ -49,6 +61,7 @@ class WatchPageController {
     this.currentUser  = null;
     this.season  = null;
     this.episode = null;
+    this.currentServer = localStorage.getItem('cineverse_player_server') || 'vimeus';
     this.isAnimeMode = false;
     this.smartlinkUrl = 'https://www.effectivecpmnetwork.com/n8bfacm3rn?key=dae2ae5c2f289ded4d55b6217baeed0c';
   }
@@ -161,6 +174,52 @@ class WatchPageController {
     this.renderAd(playerRoot, vimeusURL);
   }
 
+
+  getServerURL(serverKey) {
+    if (serverKey === 'vidlink') {
+      return getVidlinkURL(this.mediaType, this.mediaId, this.season, this.episode);
+    }
+    return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
+  }
+
+  buildServersBar() {
+    const s = this.currentServer;
+    return `
+      <div class="player-servers-header" id="player-servers-header">
+        <div class="player-servers-list">
+          <button class="server-tab ${s === 'vimeus' ? 'active' : ''}" data-server="vimeus">
+            <span class="server-icon">🎬</span> Servidor 1 (Vimeus)
+          </button>
+          <button class="server-tab ${s === 'vidlink' ? 'active' : ''}" data-server="vidlink">
+            <span class="server-icon">⚡</span> Servidor 2 (VidLink) <span class="server-tab-badge">HD</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  bindServerTabs() {
+    const tabs = document.querySelectorAll('.server-tab');
+    const iframe = document.getElementById('vimeus-iframe');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const serverKey = tab.dataset.server;
+        if (!serverKey || serverKey === this.currentServer) return;
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        this.currentServer = serverKey;
+        localStorage.setItem('cineverse_player_server', serverKey);
+        
+        const newUrl = this.getServerURL(serverKey);
+        if (iframe) {
+          iframe.src = newUrl;
+          const serverName = serverKey === 'vidlink' ? 'VidLink' : 'Vimeus';
+          showToast(`Cambiando a ${serverName}... 🔄`, 'info');
+        }
+      });
+    });
+  }
+
   renderActualPlayer(playerRoot, vimeusURL) {
     // Sumar 15 XP por iniciar reproducción (gamificación)
     addXP(15).then(res => {
@@ -169,7 +228,10 @@ class WatchPageController {
       }
     });
 
+    const initialSrc = this.currentServer === 'vidlink' ? this.getServerURL('vidlink') : vimeusURL;
+
     playerRoot.innerHTML = `
+      ${this.buildServersBar()}
       <div class="vimeus-player-wrap" id="vimeus-player-wrapper" style="
         position: relative;
         width: 100%;
@@ -193,7 +255,7 @@ class WatchPageController {
 
         <iframe
           id="vimeus-iframe"
-          src="${vimeusURL}"
+          src="${initialSrc}"
           style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; display: block;"
           allowfullscreen
           allow="autoplay; fullscreen; picture-in-picture"
@@ -249,6 +311,7 @@ class WatchPageController {
     `;
 
     // Vincular eventos del botón de Cast y PiP
+    this.bindServerTabs();
     this.bindCastButton();
     this.bindPiPAndGestures();
 
@@ -795,7 +858,7 @@ class WatchPageController {
 
       const iframe  = document.getElementById('vimeus-iframe');
       if (iframe) {
-        iframe.src = getVimeusURL(this.mediaType, this.mediaId, season, episode);
+        iframe.src = this.getServerURL(this.currentServer);
         showToast(`T${season} E${episode} cargando...`, 'info');
         
         // Guardar reproducción en el historial
