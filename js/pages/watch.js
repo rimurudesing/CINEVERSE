@@ -48,6 +48,7 @@ class WatchPageController {
     this.mediaDetails = null;
     this.currentUser  = null;
     this.season  = null;
+    this.currentServer = localStorage.getItem('cineverse_player_server') || 'voe';
     this.episode = null;
     this.isAnimeMode = false;
     this.smartlinkUrl = 'https://www.effectivecpmnetwork.com/n8bfacm3rn?key=dae2ae5c2f289ded4d55b6217baeed0c';
@@ -161,6 +162,157 @@ class WatchPageController {
     this.renderAd(playerRoot, vimeusURL);
   }
 
+  
+  // ── Gestión Multi-Servidores y Reproductor VOE ────────────────────────────
+  getServerURL(serverKey) {
+    const key = `${this.mediaType}_${this.mediaId}${this.mediaType === 'tv' ? `_${this.season}_${this.episode}` : ''}`;
+    
+    // 1. VOE (con enlace personalizado o proveedor integrado)
+    if (serverKey === 'voe') {
+      const customVOE = localStorage.getItem(`cv_voe_${key}`);
+      if (customVOE) return customVOE;
+      if (this.mediaType === 'movie') {
+        return `https://vidsrc.cc/v2/embed/movie/${this.mediaId}`;
+      } else {
+        return `https://vidsrc.cc/v2/embed/tv/${this.mediaId}/${this.season || 1}/${this.episode || 1}`;
+      }
+    }
+    
+    if (serverKey === 'streamplay') {
+      if (this.mediaType === 'movie') {
+        return `https://multiembed.mov/?video_id=${this.mediaId}&tmdb=1`;
+      } else {
+        return `https://multiembed.mov/?video_id=${this.mediaId}&tmdb=1&s=${this.season || 1}&e=${this.episode || 1}`;
+      }
+    }
+
+    if (serverKey === 'bysekoze') {
+      if (this.mediaType === 'movie') {
+        return `https://autoembed.co/movie/tmdb/${this.mediaId}`;
+      } else {
+        return `https://autoembed.co/tv/tmdb/${this.mediaId}-${this.season || 1}-${this.episode || 1}`;
+      }
+    }
+
+    if (serverKey === 'luluvido') {
+      if (this.mediaType === 'movie') {
+        return `https://vidlink.pro/movie/${this.mediaId}`;
+      } else {
+        return `https://vidlink.pro/tv/${this.mediaId}/${this.season || 1}/${this.episode || 1}`;
+      }
+    }
+
+    if (serverKey === 'powvideo') {
+      if (this.mediaType === 'movie') {
+        return `https://player.smashy.stream/movie/${this.mediaId}`;
+      } else {
+        return `https://player.smashy.stream/tv/${this.mediaId}?s=${this.season || 1}&e=${this.episode || 1}`;
+      }
+    }
+
+    if (serverKey === 'dsvplay') {
+      if (this.mediaType === 'movie') {
+        return `https://2embed.cc/embed/${this.mediaId}`;
+      } else {
+        return `https://2embed.cc/embedtv/${this.mediaId}&s=${this.season || 1}&e=${this.episode || 1}`;
+      }
+    }
+
+    // Vimeus original
+    return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
+  }
+
+  buildServersBar() {
+    const s = this.currentServer;
+    return `
+      <div class="player-servers-header" id="player-servers-header">
+        <div class="player-servers-list">
+          <button class="server-tab ${s === 'streamplay' ? 'active' : ''}" data-server="streamplay">
+            <span class="server-flag">🇪🇸</span> STREAMPLAY
+          </button>
+          <button class="server-tab ${s === 'bysekoze' ? 'active' : ''}" data-server="bysekoze">
+            <span class="server-flag">🇪🇸</span> BYSEKOZE
+          </button>
+          <button class="server-tab ${s === 'luluvido' ? 'active' : ''}" data-server="luluvido">
+            <span class="server-flag">🇪🇸</span> LULUVIDO
+          </button>
+          <button class="server-tab ${s === 'voe' ? 'active' : ''}" data-server="voe">
+            <span class="server-flag">🇪🇸</span> VOE
+          </button>
+          <button class="server-tab ${s === 'powvideo' ? 'active' : ''}" data-server="powvideo">
+            <span class="server-flag">🇪🇸</span> POWVIDEO
+          </button>
+          <button class="server-tab ${s === 'dsvplay' ? 'active' : ''}" data-server="dsvplay">
+            <span class="server-flag">🇪🇸</span> DSVPLAY
+          </button>
+          <button class="server-tab ${s === 'vimeus' ? 'active' : ''}" data-server="vimeus">
+            <span class="server-flag">🎬</span> VIMEUS
+          </button>
+        </div>
+        <button id="btn-custom-voe" class="btn-custom-voe" title="Pegar enlace directo de VOE">
+          ⚙️ Enlace VOE
+        </button>
+      </div>
+    `;
+  }
+
+  bindServerTabs() {
+    const tabs = document.querySelectorAll('.server-tab');
+    const iframe = document.getElementById('vimeus-iframe');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const serverKey = tab.dataset.server;
+        if (!serverKey || serverKey === this.currentServer) return;
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        this.currentServer = serverKey;
+        localStorage.setItem('cineverse_player_server', serverKey);
+        
+        const newUrl = this.getServerURL(serverKey);
+        if (iframe) {
+          iframe.src = newUrl;
+          showToast(`Cambiando a servidor ${serverKey.toUpperCase()}...🟡`, 'info');
+        }
+      });
+    });
+
+    const customVoeBtn = document.getElementById('btn-custom-voe');
+    if (customVoeBtn) {
+      customVoeBtn.addEventListener('click', () => {
+        const key = `${this.mediaType}_${this.mediaId}${this.mediaType === 'tv' ? `_${this.season}_${this.episode}` : ''}`;
+        const existing = localStorage.getItem(`cv_voe_${key}`) || '';
+        const input = prompt('Introduce el enlace directo de VOE (ej: https://voe.sx/e/abcdef123):', existing);
+        if (input !== null) {
+          let val = input.trim();
+          if (val) {
+            if (val.includes('voe.sx/') && !val.includes('voe.sx/e/')) {
+              val = val.replace('voe.sx/', 'voe.sx/e/');
+            }
+            localStorage.setItem(`cv_voe_${key}`, val);
+            showToast('Enlace VOE personalizado guardado ✅', 'success');
+          } else {
+            localStorage.removeItem(`cv_voe_${key}`);
+            showToast('Enlace VOE restablecido al predeterminado', 'info');
+          }
+          this.switchServer('voe');
+        }
+      });
+    }
+  }
+
+  switchServer(serverKey) {
+    this.currentServer = serverKey;
+    localStorage.setItem('cineverse_player_server', serverKey);
+    const tabs = document.querySelectorAll('.server-tab');
+    tabs.forEach(t => {
+      t.classList.toggle('active', t.dataset.server === serverKey);
+    });
+    const iframe = document.getElementById('vimeus-iframe');
+    if (iframe) {
+      iframe.src = this.getServerURL(serverKey);
+    }
+  }
+
   renderActualPlayer(playerRoot, vimeusURL) {
     // Sumar 15 XP por iniciar reproducción (gamificación)
     addXP(15).then(res => {
@@ -249,6 +401,7 @@ class WatchPageController {
     `;
 
     // Vincular eventos del botón de Cast y PiP
+    this.bindServerTabs();
     this.bindCastButton();
     this.bindPiPAndGestures();
 
@@ -795,7 +948,7 @@ class WatchPageController {
 
       const iframe  = document.getElementById('vimeus-iframe');
       if (iframe) {
-        iframe.src = getVimeusURL(this.mediaType, this.mediaId, season, episode);
+        iframe.src = this.getServerURL(this.currentServer);
         showToast(`T${season} E${episode} cargando...`, 'info');
         
         // Guardar reproducción en el historial
