@@ -1074,7 +1074,7 @@
           </p>
 
           <!-- Botón Descargar Linux -->
-          <a href="#" class="btn-download-linux" id="btn-download-linux" style="width: 100%; text-decoration: none; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+          <a href="https://www.mediafire.com/file/hp0xmzuv61f1cl4/CineVerse-Linux.tar.gz/file" target="_blank" rel="noopener" class="btn-download-linux" id="btn-download-linux" style="width: 100%; text-decoration: none; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
             <svg style="width: 22px; height: 22px; fill: currentColor; flex-shrink: 0;" viewBox="0 0 24 24">
               <path d="M12.002 0c-2.38 0-4.309 1.93-4.309 4.31v5.772c0 .416.062.82.179 1.205C6.77 12.035 5.5 13.567 5.5 15.378c0 1.488.857 2.766 2.083 3.398-.052.296-.083.6-.083.914 0 2.379 1.929 4.31 4.31 4.31s4.31-1.931 4.31-4.31c0-.314-.031-.618-.083-.914 1.226-.632 2.083-1.91 2.083-3.398 0-1.811-1.27-3.343-2.372-4.091.117-.385.179-.789.179-1.205V4.31C16.311 1.93 14.382 0 12.002 0z"/>
             </svg>
@@ -1608,7 +1608,7 @@
 
       // URLs oficiales de descarga
       let windowsDownloadUrl = 'https://www.mediafire.com/file/5rahj9j0pdwuqi4/CineVerse-Setup.exe/file';
-      let linuxDownloadUrl = '';
+      let linuxDownloadUrl = 'https://www.mediafire.com/file/hp0xmzuv61f1cl4/CineVerse-Linux.tar.gz/file';
       (async () => {
         try {
           const { getGlobalSettings } = await import('./js/settings.js');
@@ -1691,31 +1691,7 @@
       if (btnDownloadLinux) {
         btnDownloadLinux.addEventListener('click', (e) => {
           e.preventDefault();
-          if (linuxDownloadUrl) {
-            launchDownloadProgress('Descargando CineVerse Linux', 'Conectando con MediaFire para descargar <strong>CineVerse-Linux.tar.gz</strong>...', linuxDownloadUrl);
-          } else {
-            const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(14px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
-            overlay.innerHTML = `
-              <div style="background:#13131a;border:1px solid rgba(233,84,32,0.4);border-radius:18px;max-width:460px;width:100%;padding:2rem;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.85);font-family:var(--font-ui);">
-                <div style="font-size:2.5rem;margin-bottom:0.75rem;">🐧</div>
-                <h3 style="color:#fff;font-size:1.3rem;margin:0 0 0.5rem;font-weight:800;">Paquete Linux Generado</h3>
-                <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.5;margin:0 0 1.25rem;">
-                  El paquete oficial para Linux <strong>CineVerse-Linux.tar.gz</strong> ya está compilado en la raíz de tu proyecto:
-                </p>
-                <div style="background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:0.8rem;font-family:monospace;font-size:0.8rem;color:#ff7849;word-break:break-all;text-align:left;margin-bottom:1.25rem;">
-                  C:\\Users\\DELL\\OneDrive\\Desktop\\Cineverse\\CineVerse-Linux.tar.gz
-                </div>
-                <p style="color:var(--text-muted);font-size:0.82rem;line-height:1.45;margin:0 0 1.5rem;">
-                  Súbelo a MediaFire para activar el enlace directo en este botón.
-                </p>
-                <button id="linux-guide-close" style="width:100%;background:linear-gradient(135deg,#E95420 0%,#77216F 100%);color:#fff;border:none;padding:0.85rem;border-radius:10px;font-weight:700;font-size:0.95rem;cursor:pointer;">Entendido</button>
-              </div>
-            `;
-            document.body.appendChild(overlay);
-            overlay.querySelector('#linux-guide-close').addEventListener('click', () => overlay.remove());
-            overlay.addEventListener('click', (ev) => { if (ev.target === overlay) overlay.remove(); });
-          }
+          launchDownloadProgress('Descargando CineVerse Linux', 'Conectando con MediaFire para descargar <strong>CineVerse-Linux.tar.gz</strong>...', linuxDownloadUrl);
         });
       }
 
