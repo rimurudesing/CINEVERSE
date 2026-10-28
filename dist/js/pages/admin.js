@@ -45,11 +45,17 @@ class AdminDashboardController {
       return;
     }
 
+    // Acceso concedido: Ocultar pantalla de carga Anti-FOUC y mostrar panel
+    const authGuard = document.getElementById('admin-auth-guard');
+    const mainContainer = document.getElementById('admin-main-container');
+    if (authGuard) authGuard.style.display = 'none';
+    if (mainContainer) mainContainer.style.display = 'block';
+
     // 3. Cargar pestañas de navegación
     this.setupTabs();
 
     // 4. Cargar datos de la pestaña por defecto (Licencias) y otros en paralelo
-    await Promise.all([
+    await Promise.allSettled([
       this.loadStats(),
       this.loadCodes(),
       this.loadPremiumUsers(),
