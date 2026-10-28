@@ -22,15 +22,21 @@ import { detectAdBlock, showAdBlockModal } from '../adblock-detector.js';
 const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
 
 // ── Configuración de Vimeus ──────────────────────────────────────────────────
-const VIMEUS_VIEW_KEY = 'SIdNplTsfvK71V6ZRXUI1tti-rS3EwKRolj0mmqedZ4';
+const VIMEUS_VIEW_KEY = '25Tqx20dkTAAEwYg-QImuDY5oIbdlxJQlOPru7Jt0ek';
 
-function getVimeusURL(mediaType, tmdbId, season, episode) {
+function getVimeusURL(mediaType, tmdbId, season, episode, isAnime) {
   var id = String(tmdbId || '');
   var se = season  ? String(season)  : '';
   var ep = episode ? String(episode) : '';
 
   if (mediaType === 'movie') {
     return 'https://vimeus.com/e/movie?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
+  } else if (isAnime) {
+    // Endpoint dedicado para anime segun docs de Vimeus
+    var url = 'https://vimeus.com/e/anime?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
+    if (se) url += '&se=' + se;
+    if (ep) url += '&ep=' + ep;
+    return url;
   } else {
     var url = 'https://vimeus.com/e/serie?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
     if (se) url += '&se=' + se;
@@ -163,7 +169,7 @@ class WatchPageController {
     const playerRoot = document.getElementById('player-area-root');
     if (!playerRoot) return;
 
-    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
+    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, this.isAnime);
 
     // Comprobar estado Premium
     const profile   = this.currentUser ? (this.currentUser.profile || {}) : {};
@@ -197,7 +203,7 @@ class WatchPageController {
     if (serverKey === 'vidlink') {
       return getVidlinkURL(this.mediaType, this.mediaId, this.season, this.episode);
     }
-    return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
+    return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, this.isAnime);
   }
 
   buildServersBar() {
@@ -276,6 +282,7 @@ class WatchPageController {
           src="${initialSrc}"
           style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; display: block;"
           allowfullscreen
+          referrerpolicy="origin"
           allow="autoplay; fullscreen; picture-in-picture"
         ></iframe>
 
