@@ -1009,18 +1009,18 @@
         <!-- 2. VISTA WINDOWS -->
         <div class="platform-view-card" id="card-windows" style="display: none;">
           <div style="margin-bottom: 1.25rem;">
-            <span style="color: #0078D4; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; font-family: var(--font-ui);">App Oficial de Escritorio</span>
+            <span style="color: #0078D4; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; font-family: var(--font-ui);">Instalador Nativo Oficial</span>
             <h1 class="app-title">CineVerse para Windows PC</h1>
           </div>
           
           <div class="meta-list" style="margin-bottom: 1.25rem;">
             <div class="meta-item">
               <span>📦</span>
-              <span>Versión: <strong>1.4.0 Desktop</strong></span>
+              <span>Versión: <strong>1.4.0 (64-bit)</strong></span>
             </div>
             <div class="meta-item">
-              <span>⚡</span>
-              <span>Instalación: <strong>Instantánea (0 MB)</strong></span>
+              <span>💾</span>
+              <span>Formato: <strong>Instalador .EXE (NSIS)</strong></span>
             </div>
             <div class="meta-item">
               <span>🪟</span>
@@ -1029,16 +1029,22 @@
           </div>
 
           <p style="color: var(--text-secondary); font-family: var(--font-ui); font-size: 0.95rem; line-height: 1.6; margin: 0 0 1.5rem 0;">
-            Instala CineVerse como una aplicación nativa en tu ordenador. Sin barras de navegador, con soporte multi-monitor, aceleración por hardware para streaming Ultra HD 4K y acceso directo en tu Menú Inicio y Barra de Tareas.
+            Instalador ejecutable nativo (.exe) para Windows con asistente guiado. Crea accesos directos en el Escritorio y Menú Inicio, y se registra con su <strong>desinstalador oficial</strong> en la Configuración de Windows y Panel de Control.
           </p>
 
-          <!-- Botón Instalar Windows -->
-          <button class="btn-download-win" id="btn-install-windows" style="width: 100%;">
+          <!-- Botón Descargar Instalador Windows .EXE -->
+          <a href="#" class="btn-download-win" id="btn-download-windows" style="width: 100%; text-decoration: none; margin-bottom: 0.75rem;">
             <svg style="width: 22px; height: 22px; fill: white; flex-shrink: 0;" viewBox="0 0 24 24">
               <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4h-13.051M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801"/>
             </svg>
-            Instalar CineVerse en Windows (1 Clic)
-          </button>
+            Descargar Instalador Windows (.exe)
+          </a>
+
+          <div style="text-align: center; margin-top: 0.5rem;">
+            <button id="btn-install-windows-pwa" style="background: transparent; border: none; color: var(--text-muted); font-size: 0.8rem; cursor: pointer; text-decoration: underline; font-family: var(--font-ui);">
+              ¿Prefieres versión ligera web en navegador (PWA)? Clic aquí
+            </button>
+          </div>
         </div>
 
         <!-- 3. VISTA LINUX -->
@@ -1146,18 +1152,18 @@
       <div class="steps-grid platform-view-steps" id="steps-windows" style="display: none;">
         <div class="step-card">
           <div class="step-num" style="background: linear-gradient(135deg, #0078D4 0%, #0050B3 100%);">1</div>
-          <h3>Haz Clic en Instalar</h3>
-          <p>Presiona el botón <strong>"Instalar CineVerse en Windows"</strong> arriba, o el icono de instalación 💻 en la barra de direcciones de tu navegador (Edge, Chrome o Brave).</p>
+          <h3>Descarga el Instalador</h3>
+          <p>Presiona el botón superior y descarga el archivo oficial <strong>CineVerse-Setup.exe</strong>.</p>
         </div>
         <div class="step-card">
           <div class="step-num" style="background: linear-gradient(135deg, #0078D4 0%, #0050B3 100%);">2</div>
-          <h3>Confirma la Instalación</h3>
-          <p>En la ventana emergente de Windows, haz clic en <strong>"Instalar"</strong>. CineVerse se descargará y configurará en menos de 2 segundos.</p>
+          <h3>Ejecuta el Asistente</h3>
+          <p>Abre el archivo descargado. El instalador configurará CineVerse en tu PC con acceso directo en el Escritorio.</p>
         </div>
         <div class="step-card">
           <div class="step-num" style="background: linear-gradient(135deg, #0078D4 0%, #0050B3 100%);">3</div>
-          <h3>Acceso Directo y Modo Ventana</h3>
-          <p>¡Listo! La app se anclará a tu <strong>Menú Inicio</strong> y <strong>Barra de Tareas</strong> para abrirse a pantalla completa como cualquier programa de PC.</p>
+          <h3>Desinstalable en 1 Clic</h3>
+          <p>¡Listo! La app queda registrada en tu sistema y podrás desinstalarla fácilmente desde <em>Configuración > Aplicaciones instaladas</em>.</p>
         </div>
       </div>
 
@@ -1594,10 +1600,53 @@
         });
       });
 
-      // Botones de instalación Windows y Linux
-      const btnWin = document.getElementById('btn-install-windows');
-      if (btnWin) {
-        btnWin.addEventListener('click', () => triggerPwaInstall('Windows'));
+      // Botón descarga instalador Windows .EXE nativo
+      let windowsDownloadUrl = '';
+      (async () => {
+        try {
+          const { getGlobalSettings } = await import('./js/settings.js');
+          const settings = await getGlobalSettings();
+          if (settings?.windows_download_url) {
+            windowsDownloadUrl = settings.windows_download_url;
+            const btnW = document.getElementById('btn-download-windows');
+            if (btnW) btnW.href = windowsDownloadUrl;
+          }
+        } catch (e) {}
+      })();
+
+      const btnDownloadWin = document.getElementById('btn-download-windows');
+      if (btnDownloadWin) {
+        btnDownloadWin.addEventListener('click', (e) => {
+          if (!windowsDownloadUrl) {
+            e.preventDefault();
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(14px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
+            overlay.innerHTML = `
+              <div style="background:#13131a;border:1px solid rgba(0,120,212,0.4);border-radius:18px;max-width:460px;width:100%;padding:2rem;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.85);font-family:var(--font-ui);">
+                <div style="width:60px;height:60px;border-radius:50%;background:rgba(0,120,212,0.15);border:1px solid rgba(0,120,212,0.5);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:1.8rem;">💻</div>
+                <h3 style="color:#fff;font-size:1.3rem;margin:0 0 0.5rem;font-weight:800;">Instalador Windows Listo</h3>
+                <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.5;margin:0 0 1.25rem;">
+                  El instalador nativo oficial <strong>CineVerse-Setup.exe</strong> está generado en tu equipo:
+                </p>
+                <div style="background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:0.8rem;font-family:monospace;font-size:0.8rem;color:#00e5ff;word-break:break-all;text-align:left;margin-bottom:1.25rem;">
+                  C:\\Users\\DELL\\OneDrive\\Desktop\\Cineverse\\CineVerse-Setup.exe
+                </div>
+                <p style="color:var(--text-muted);font-size:0.82rem;line-height:1.45;margin:0 0 1.5rem;">
+                  💡 Haz doble clic en ese archivo en tu carpeta para instalarlo ahora en tu PC (con acceso directo en el Escritorio y desinstalador en Windows).
+                </p>
+                <button id="win-guide-close" style="width:100%;background:linear-gradient(135deg,#0078D4 0%,#0050B3 100%);color:#fff;border:none;padding:0.85rem;border-radius:10px;font-weight:700;font-size:0.95rem;cursor:pointer;">Entendido</button>
+              </div>
+            `;
+            document.body.appendChild(overlay);
+            overlay.querySelector('#win-guide-close').addEventListener('click', () => overlay.remove());
+            overlay.addEventListener('click', (ev) => { if (ev.target === overlay) overlay.remove(); });
+          }
+        });
+      }
+
+      const btnWinPwa = document.getElementById('btn-install-windows-pwa');
+      if (btnWinPwa) {
+        btnWinPwa.addEventListener('click', () => triggerPwaInstall('Windows'));
       }
 
       const btnLinux = document.getElementById('btn-install-linux');

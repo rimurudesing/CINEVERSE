@@ -1,0 +1,26 @@
+{
+  "appId": "com.cineverse.desktop",
+  "productName": "CineVerse",
+  "directories": {
+    "output": "dist-desktop"
+  },
+  "files": [
+    "desktop/**/*",
+    "assets/icon.png",
+    "assets/favicon.ico",
+    "www/**/*"
+  ],
+  "win": {
+    "target": ["nsis"],
+    "icon": "assets/icon.png"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "CineVerse",
+    "uninstallDisplayName": "CineVerse",
+    "runAfterFinish": true
+  }
+}

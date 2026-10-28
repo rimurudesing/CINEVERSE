@@ -49,3 +49,7 @@ www/*.apk
 dist/*.apk
 
 # dist/ y build.js son necesarios para Cloudflare Pages — NO ignorar
+
+# Desktop builds (Electron)
+dist-desktop/
+*.exe
