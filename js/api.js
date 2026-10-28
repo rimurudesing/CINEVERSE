@@ -225,6 +225,16 @@ export class TMDBApi {
     return data ? data : { results: [], total_results: 0, total_pages: 0 };
   }
 
+  async discoverAnime(params = {}) {
+    const animeParams = {
+      with_genres: 16,
+      with_original_language: 'ja',
+      sort_by: 'popularity.desc',
+      ...params
+    };
+    return this.discoverTV(animeParams);
+  }
+
   /* ==========================================================================
      GENRES
      ========================================================================== */

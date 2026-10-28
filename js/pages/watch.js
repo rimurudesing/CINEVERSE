@@ -52,6 +52,39 @@ function getVidlinkURL(mediaType, tmdbId, season, episode) {
   }
 }
 
+function getVidSrcURL(mediaType, tmdbId, season, episode) {
+  const id = String(tmdbId || '');
+  const se = season ? String(season) : '1';
+  const ep = episode ? String(episode) : '1';
+  if (mediaType === 'movie') {
+    return 'https://vidsrc.cc/v2/embed/movie/' + id;
+  } else {
+    return 'https://vidsrc.cc/v2/embed/tv/' + id + '/' + se + '/' + ep;
+  }
+}
+
+function getEmbedSuURL(mediaType, tmdbId, season, episode) {
+  const id = String(tmdbId || '');
+  const se = season ? String(season) : '1';
+  const ep = episode ? String(episode) : '1';
+  if (mediaType === 'movie') {
+    return 'https://embed.su/embed/movie/' + id;
+  } else {
+    return 'https://embed.su/embed/tv/' + id + '/' + se + '/' + ep;
+  }
+}
+
+function getAutoEmbedURL(mediaType, tmdbId, season, episode) {
+  const id = String(tmdbId || '');
+  const se = season ? String(season) : '1';
+  const ep = episode ? String(episode) : '1';
+  if (mediaType === 'movie') {
+    return 'https://player.autoembed.cc/embed/movie/' + id;
+  } else {
+    return 'https://player.autoembed.cc/embed/tv/' + id + '/' + se + '/' + ep;
+  }
+}
+
 // ── Controlador Principal ────────────────────────────────────────────────────
 class WatchPageController {
   constructor() {
@@ -176,10 +209,19 @@ class WatchPageController {
 
 
   getServerURL(serverKey) {
-    if (serverKey === 'vidlink') {
-      return getVidlinkURL(this.mediaType, this.mediaId, this.season, this.episode);
+    switch (serverKey) {
+      case 'vidlink':
+        return getVidlinkURL(this.mediaType, this.mediaId, this.season, this.episode);
+      case 'vidsrc':
+        return getVidSrcURL(this.mediaType, this.mediaId, this.season, this.episode);
+      case 'embedsu':
+        return getEmbedSuURL(this.mediaType, this.mediaId, this.season, this.episode);
+      case 'autoembed':
+        return getAutoEmbedURL(this.mediaType, this.mediaId, this.season, this.episode);
+      case 'vimeus':
+      default:
+        return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
     }
-    return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
   }
 
   buildServersBar() {
@@ -188,10 +230,19 @@ class WatchPageController {
       <div class="player-servers-header" id="player-servers-header">
         <div class="player-servers-list">
           <button class="server-tab ${s === 'vimeus' ? 'active' : ''}" data-server="vimeus">
-            <span class="server-icon">🎬</span> Servidor 1 (Vimeus)
+            <span class="server-icon">🎬</span> Servidor 1 (Vimeus - Latino)
           </button>
           <button class="server-tab ${s === 'vidlink' ? 'active' : ''}" data-server="vidlink">
-            <span class="server-icon">⚡</span> Servidor 2 (VidLink) <span class="server-tab-badge">HD</span>
+            <span class="server-icon">⚡</span> Servidor 2 (VidLink - Anime/HD) <span class="server-tab-badge">HD</span>
+          </button>
+          <button class="server-tab ${s === 'vidsrc' ? 'active' : ''}" data-server="vidsrc">
+            <span class="server-icon">🍿</span> Servidor 3 (VidSrc)
+          </button>
+          <button class="server-tab ${s === 'embedsu' ? 'active' : ''}" data-server="embedsu">
+            <span class="server-icon">🚀</span> Servidor 4 (Embed.su)
+          </button>
+          <button class="server-tab ${s === 'autoembed' ? 'active' : ''}" data-server="autoembed">
+            <span class="server-icon">🌐</span> Servidor 5 (AutoEmbed)
           </button>
         </div>
       </div>
@@ -213,7 +264,14 @@ class WatchPageController {
         const newUrl = this.getServerURL(serverKey);
         if (iframe) {
           iframe.src = newUrl;
-          const serverName = serverKey === 'vidlink' ? 'VidLink' : 'Vimeus';
+          const serverNames = {
+            vimeus: 'Vimeus (Latino)',
+            vidlink: 'VidLink (Anime / HD)',
+            vidsrc: 'VidSrc (Global)',
+            embedsu: 'Embed.su (Rápido)',
+            autoembed: 'AutoEmbed (Multi)'
+          };
+          const serverName = serverNames[serverKey] || serverKey;
           showToast(`Cambiando a ${serverName}... 🔄`, 'info');
         }
       });
@@ -228,7 +286,7 @@ class WatchPageController {
       }
     });
 
-    const initialSrc = this.currentServer === 'vidlink' ? this.getServerURL('vidlink') : vimeusURL;
+    const initialSrc = this.getServerURL(this.currentServer);
 
     playerRoot.innerHTML = `
       ${this.buildServersBar()}

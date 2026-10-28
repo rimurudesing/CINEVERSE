@@ -35,14 +35,16 @@ class HomePageController {
         onAirTVList,
         upcomingList,
         topMovies,
-        topTV
+        topTV,
+        animeData
       ] = await Promise.all([
         api.getTrending('all', 'week'),
         api.getNowPlaying(1),
         api.getOnAir(1),
         api.getUpcoming(1),
         api.getTopRated('movie', 1),
-        api.getTopRated('tv', 1)
+        api.getTopRated('tv', 1),
+        api.discoverAnime({ page: 1 })
       ]);
 
       // 3. Inicializar Hero Spotlight con los 5 primeros trending
@@ -55,6 +57,9 @@ class HomePageController {
       new Carousel('#nowplaying-carousel', nowPlayingList, 'En Cartelera Ahora', 'En Cines');
       new Carousel('#onair-carousel', onAirTVList, 'Series en Emisión', 'En Emisión');
       new Carousel('#upcoming-carousel', upcomingList, 'Próximos Estrenos', 'Próximamente');
+      if (animeData && animeData.results) {
+        new Carousel('#anime-carousel', animeData.results, 'Anime Popular 🔥', 'Japón');
+      }
 
       // 5. Cargar Grids de Más Valoradas
       this.renderTopRatedGrid('movie', topMovies);
@@ -74,6 +79,7 @@ class HomePageController {
       '#trending-carousel',
       '#nowplaying-carousel',
       '#onair-carousel',
+      '#anime-carousel',
       '#upcoming-carousel'
     ];
     carouselRoots.forEach(selector => {

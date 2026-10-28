@@ -4,6 +4,7 @@ const ICONLY = {
   home: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-5h-4v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/></svg>`,
   movie: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M7 4v16M17 4v16M2 12h20M2 8h5M2 16h5M17 8h5M17 16h5"/></svg>`,
   tv: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M17 3l-5 4-5-4"/></svg>`,
+  anime: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
   upcoming: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>`,
   download: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>`,
   profile: `<svg class="iconly-icon" width="18" height="18" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
@@ -79,6 +80,7 @@ export function renderNavbar() {
         <a href="index.html"      class="navbar__link active-press" data-link="home">${ICONLY.home} <span>Inicio</span></a>
         <a href="peliculas.html"  class="navbar__link active-press" data-link="movie">${ICONLY.movie} <span>Películas</span></a>
         <a href="series.html"     class="navbar__link active-press" data-link="tv">${ICONLY.tv} <span>Series</span></a>
+        <a href="anime.html"      class="navbar__link active-press" data-link="anime">${ICONLY.anime} <span>Anime</span></a>
         <a href="estrenos.html"   class="navbar__link active-press" data-link="upcoming">${ICONLY.upcoming} <span>Estrenos</span></a>
         ${downloadLink}
         <a href="perfil.html"     class="navbar__link active-press" data-link="profile">${ICONLY.profile} <span>Perfil</span></a>
@@ -106,6 +108,7 @@ export function renderNavbar() {
     <a href="index.html"     class="navbar__mobile-link active-press" data-link="home">${ICONLY.home} <span>Inicio</span></a>
     <a href="peliculas.html" class="navbar__mobile-link active-press" data-link="movie">${ICONLY.movie} <span>Películas</span></a>
     <a href="series.html"    class="navbar__mobile-link active-press" data-link="tv">${ICONLY.tv} <span>Series</span></a>
+    <a href="anime.html"     class="navbar__mobile-link active-press" data-link="anime">${ICONLY.anime} <span>Anime</span></a>
     <a href="estrenos.html"  class="navbar__mobile-link active-press" data-link="upcoming">${ICONLY.upcoming} <span>Estrenos</span></a>
     ${downloadLinkMobile}
     <a href="perfil.html"    class="navbar__mobile-link active-press" data-link="profile">${ICONLY.profile} <span>Perfil</span></a>
@@ -170,6 +173,7 @@ function highlightActiveLink() {
 
   if      (currentPath.includes('peliculas.html'))  activeTab = 'movie';
   else if (currentPath.includes('series.html'))     activeTab = 'tv';
+  else if (currentPath.includes('anime.html'))      activeTab = 'anime';
   else if (currentPath.includes('estrenos.html'))   activeTab = 'upcoming';
   else if (currentPath.includes('movie.html'))      activeTab = 'movie';
   else if (currentPath.includes('serie.html'))      activeTab = 'tv';
