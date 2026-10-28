@@ -22,5 +22,10 @@
     "shortcutName": "CineVerse",
     "uninstallDisplayName": "CineVerse",
     "runAfterFinish": true
+  },
+  "linux": {
+    "target": ["tar.gz"],
+    "icon": "assets/icon.png",
+    "category": "AudioVideo"
   }
 }

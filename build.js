@@ -1,26 +1,20 @@
 import fs from 'fs';
 import path from 'path';
 
-const excludeDirs = ['.git', 'node_modules', 'android', 'www', 'dist', 'build', 'supabase', 'functions', 'scratch'];
-
+const excludeDirs = ['.git', 'node_modules', 'android', 'www', 'dist', 'build', 'supabase', 'functions', 'scratch', 'dist-desktop', 'desktop'];
+const excludeFiles = ['package.json', 'package-lock.json', 'electron-builder.json', 'Cineverse.apk', 'CineVerse-Setup.exe'];
 
 // Minificador nativo ultra rápido usando regex
 function minifyJS(content) {
-  // Elimina comentarios de bloque /* ... */ y de línea // ...
   let cleaned = content.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
-  // Simplifica espacios en blanco y saltos de línea múltiples
   cleaned = cleaned.replace(/\s+/g, ' ');
-  // Remueve espacios superfluos alrededor de operadores y delimitadores comunes
   cleaned = cleaned.replace(/\s*([{}()\[\],;=+\-*/|&<>?:!])\s*/g, '$1');
   return cleaned.trim();
 }
 
 function minifyCSS(content) {
-  // Elimina comentarios
   let cleaned = content.replace(/\/\*[\s\S]*?\*\//g, '');
-  // Simplifica espacios y saltos de línea
   cleaned = cleaned.replace(/\s+/g, ' ');
-  // Remueve espacios superfluos
   cleaned = cleaned.replace(/\s*([{}l,;:>+~])\s*/g, '$1');
   return cleaned.trim();
 }
@@ -42,7 +36,7 @@ function processAndCopyFile(srcPath, destPath) {
   
   if (ext === '.js' && !srcPath.includes('min.js')) {
     const rawContent = fs.readFileSync(srcPath, 'utf8');
-    if (!srcPath.endsWith("build.js")) validateJS(srcPath, rawContent); // Validar antes de copiar
+    if (!srcPath.endsWith("build.js")) validateJS(srcPath, rawContent);
     const minified = minifyJS(rawContent);
     fs.writeFileSync(destPath, minified, 'utf8');
   } else if (ext === '.css' && !srcPath.includes('min.css')) {
@@ -50,7 +44,6 @@ function processAndCopyFile(srcPath, destPath) {
     const minified = minifyCSS(rawContent);
     fs.writeFileSync(destPath, minified, 'utf8');
   } else {
-    // Archivos HTML, imágenes y otros assets se copian de manera directa
     fs.copyFileSync(srcPath, destPath);
   }
 }
@@ -63,7 +56,7 @@ function copyDir(src, dest) {
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
 
-    if (excludeDirs.includes(entry.name) || entry.name.endsWith('.apk')) {
+    if (excludeDirs.includes(entry.name) || excludeFiles.includes(entry.name) || entry.name.endsWith('.apk') || entry.name.endsWith('.exe')) {
       continue;
     }
 
@@ -80,4 +73,3 @@ console.log('Starting build, syntax validation and minification...');
 copyDir('.', 'www');
 copyDir('.', 'dist');
 console.log('Build, syntax validation and minification completed successfully! 🚀');
-

@@ -1033,7 +1033,7 @@
           </p>
 
           <!-- Botón Descargar Instalador Windows .EXE -->
-          <a href="#" class="btn-download-win" id="btn-download-windows" style="width: 100%; text-decoration: none; margin-bottom: 0.75rem;">
+          <a href="https://www.mediafire.com/file/5rahj9j0pdwuqi4/CineVerse-Setup.exe/file" target="_blank" rel="noopener" class="btn-download-win" id="btn-download-windows" style="width: 100%; text-decoration: none; margin-bottom: 0.75rem;">
             <svg style="width: 22px; height: 22px; fill: white; flex-shrink: 0;" viewBox="0 0 24 24">
               <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4h-13.051M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801"/>
             </svg>
@@ -1050,36 +1050,42 @@
         <!-- 3. VISTA LINUX -->
         <div class="platform-view-card" id="card-linux" style="display: none;">
           <div style="margin-bottom: 1.25rem;">
-            <span style="color: #E95420; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; font-family: var(--font-ui);">App Nativa Universal</span>
-            <h1 class="app-title">CineVerse para Linux</h1>
+            <span style="color: #E95420; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; font-family: var(--font-ui);">Paquete Nativo Portable</span>
+            <h1 class="app-title">CineVerse para Linux PC</h1>
           </div>
           
           <div class="meta-list" style="margin-bottom: 1.25rem;">
             <div class="meta-item">
               <span>📦</span>
-              <span>Versión: <strong>1.4.0 Universal</strong></span>
+              <span>Versión: <strong>1.4.0 (64-bit)</strong></span>
+            </div>
+            <div class="meta-item">
+              <span>💾</span>
+              <span>Formato: <strong>Binario Portable (.tar.gz)</strong></span>
             </div>
             <div class="meta-item">
               <span>🐧</span>
-              <span>Distros: <strong>Ubuntu / Arch / Fedora / Debian</strong></span>
-            </div>
-            <div class="meta-item">
-              <span>⚡</span>
-              <span>Tipo: <strong>App Nativa PWA</strong></span>
+              <span>Distros: <strong>Ubuntu / Fedora / Arch / Debian</strong></span>
             </div>
           </div>
 
           <p style="color: var(--text-secondary); font-family: var(--font-ui); font-size: 0.95rem; line-height: 1.6; margin: 0 0 1.5rem 0;">
-            Instala CineVerse en cualquier distribución Linux moderna sin compilar paquetes. Totalmente integrado con GNOME Shell, KDE Plasma y lanzadores de aplicaciones XFCE/Wayland con aceleración por video VA-API.
+            Paquete nativo ejecutable para distribuciones Linux de 64 bits. Descomprime y ejecuta directamente sin instalar dependencias adicionales, con soporte para Wayland, X11 y aceleración por GPU.
           </p>
 
-          <!-- Botón Instalar Linux -->
-          <button class="btn-download-linux" id="btn-install-linux" style="width: 100%;">
+          <!-- Botón Descargar Linux -->
+          <a href="#" class="btn-download-linux" id="btn-download-linux" style="width: 100%; text-decoration: none; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
             <svg style="width: 22px; height: 22px; fill: currentColor; flex-shrink: 0;" viewBox="0 0 24 24">
               <path d="M12.002 0c-2.38 0-4.309 1.93-4.309 4.31v5.772c0 .416.062.82.179 1.205C6.77 12.035 5.5 13.567 5.5 15.378c0 1.488.857 2.766 2.083 3.398-.052.296-.083.6-.083.914 0 2.379 1.929 4.31 4.31 4.31s4.31-1.931 4.31-4.31c0-.314-.031-.618-.083-.914 1.226-.632 2.083-1.91 2.083-3.398 0-1.811-1.27-3.343-2.372-4.091.117-.385.179-.789.179-1.205V4.31C16.311 1.93 14.382 0 12.002 0z"/>
             </svg>
-            Instalar CineVerse en Linux (1 Clic)
-          </button>
+            Descargar CineVerse Linux (.tar.gz)
+          </a>
+
+          <div style="text-align: center; margin-top: 0.5rem;">
+            <button id="btn-install-linux-pwa" style="background: transparent; border: none; color: var(--text-muted); font-size: 0.8rem; cursor: pointer; text-decoration: underline; font-family: var(--font-ui);">
+              ¿Prefieres versión ligera web en navegador (PWA)? Clic aquí
+            </button>
+          </div>
         </div>
 
         <!-- Beneficios por tipo (Compartido para todas las plataformas) -->
@@ -1171,18 +1177,18 @@
       <div class="steps-grid platform-view-steps" id="steps-linux" style="display: none;">
         <div class="step-card">
           <div class="step-num" style="background: linear-gradient(135deg, #E95420 0%, #77216F 100%);">1</div>
-          <h3>Abre en tu Navegador</h3>
-          <p>Utiliza Chrome, Chromium, Brave o Edge en tu distribución favorita (Ubuntu, Debian, Fedora, Arch, etc.).</p>
+          <h3>Descarga el Paquete</h3>
+          <p>Descarga el archivo <strong>CineVerse-Linux.tar.gz</strong> desde el enlace superior.</p>
         </div>
         <div class="step-card">
           <div class="step-num" style="background: linear-gradient(135deg, #E95420 0%, #77216F 100%);">2</div>
-          <h3>Pulsa Instalar en Linux</h3>
-          <p>Haz clic en el botón superior o en el icono de instalación de la barra de URL para confirmar la instalación nativa.</p>
+          <h3>Extrae el Archivo</h3>
+          <p>Haz clic derecho y presiona <em>Extraer aquí</em> (o ejecuta en terminal: <code>tar -xvf CineVerse-Linux.tar.gz</code>).</p>
         </div>
         <div class="step-card">
           <div class="step-num" style="background: linear-gradient(135deg, #E95420 0%, #77216F 100%);">3</div>
-          <h3>Integrado al Sistema</h3>
-          <p>La app se añadirá automáticamente al lanzador de aplicaciones del sistema (archivo .desktop) con icono en alta resolución.</p>
+          <h3>Ejecuta y Disfruta</h3>
+          <p>Haz doble clic en el archivo <strong>cineverse</strong> (o <code>./cineverse</code> en terminal) ¡y listo! Todo tu cine en Linux.</p>
         </div>
       </div>
     </section>
@@ -1600,8 +1606,9 @@
         });
       });
 
-      // Botón descarga instalador Windows .EXE nativo
-      let windowsDownloadUrl = '';
+      // URLs oficiales de descarga
+      let windowsDownloadUrl = 'https://www.mediafire.com/file/5rahj9j0pdwuqi4/CineVerse-Setup.exe/file';
+      let linuxDownloadUrl = '';
       (async () => {
         try {
           const { getGlobalSettings } = await import('./js/settings.js');
@@ -1614,34 +1621,107 @@
         } catch (e) {}
       })();
 
+      function launchDownloadProgress(title, sub, destUrl) {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,10,10,0.88);backdrop-filter:blur(15px);display:flex;justify-content:center;align-items:center;z-index:9999;opacity:0;transition:opacity 0.3s ease;';
+        
+        const modal = document.createElement('div');
+        modal.style.cssText = 'background:linear-gradient(135deg,rgba(20,20,25,0.95)0%,rgba(10,10,12,0.98)100%);border:1px solid rgba(0,120,212,0.3);border-radius:18px;padding:2.5rem;max-width:420px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.7);transform:scale(0.9);transition:transform 0.3s ease;font-family:var(--font-ui);';
+        
+        modal.innerHTML = `
+          <div style="width:60px;height:60px;border-radius:50%;background:rgba(0,120,212,0.15);border:1px solid rgba(0,120,212,0.4);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1.25rem;">
+            <svg style="width:30px;height:30px;fill:#0078D4;" viewBox="0 0 24 24">
+              <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+            </svg>
+          </div>
+          <h3 style="color:#fff;font-size:1.3rem;font-weight:700;margin:0 0 0.5rem;">${title}</h3>
+          <p style="color:var(--text-secondary);font-size:0.88rem;margin:0 0 1.5rem;line-height:1.45;">${sub}</p>
+          <div style="width:100%;height:6px;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;margin-bottom:1rem;">
+            <div id="dl-prog-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#0078D4,#0050B3);border-radius:10px;transition:width 0.1s linear;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-secondary);">
+            <span id="dl-stat-txt">Verificando firma digital...</span>
+            <span id="dl-pct-txt">0%</span>
+          </div>
+        `;
+        
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        overlay.offsetHeight;
+        overlay.style.opacity = '1';
+        modal.style.transform = 'scale(1)';
+        
+        const bar = overlay.querySelector('#dl-prog-bar');
+        const st = overlay.querySelector('#dl-stat-txt');
+        const pt = overlay.querySelector('#dl-pct-txt');
+        
+        let p = 0;
+        const iv = setInterval(() => {
+          if (p < 100) {
+            p += 5;
+            if (p > 100) p = 100;
+            bar.style.width = p + '%';
+            pt.textContent = p + '%';
+            if (p === 30) st.textContent = 'Conectando con servidores MediaFire...';
+            if (p === 75) st.textContent = 'Preparando descarga segura...';
+            if (p === 100) st.textContent = 'Redirigiendo...';
+          } else {
+            clearInterval(iv);
+            setTimeout(() => {
+              overlay.style.opacity = '0';
+              modal.style.transform = 'scale(0.9)';
+              setTimeout(() => {
+                overlay.remove();
+                window.open(destUrl, '_blank');
+              }, 300);
+            }, 300);
+          }
+        }, 50);
+      }
+
       const btnDownloadWin = document.getElementById('btn-download-windows');
       if (btnDownloadWin) {
         btnDownloadWin.addEventListener('click', (e) => {
-          if (!windowsDownloadUrl) {
-            e.preventDefault();
+          e.preventDefault();
+          launchDownloadProgress('Descargando Instalador Windows', 'Conectando con MediaFire para descargar <strong>CineVerse-Setup.exe</strong>...', windowsDownloadUrl);
+        });
+      }
+
+      const btnDownloadLinux = document.getElementById('btn-download-linux');
+      if (btnDownloadLinux) {
+        btnDownloadLinux.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (linuxDownloadUrl) {
+            launchDownloadProgress('Descargando CineVerse Linux', 'Conectando con MediaFire para descargar <strong>CineVerse-Linux.tar.gz</strong>...', linuxDownloadUrl);
+          } else {
             const overlay = document.createElement('div');
             overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(14px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
             overlay.innerHTML = `
-              <div style="background:#13131a;border:1px solid rgba(0,120,212,0.4);border-radius:18px;max-width:460px;width:100%;padding:2rem;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.85);font-family:var(--font-ui);">
-                <div style="width:60px;height:60px;border-radius:50%;background:rgba(0,120,212,0.15);border:1px solid rgba(0,120,212,0.5);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:1.8rem;">💻</div>
-                <h3 style="color:#fff;font-size:1.3rem;margin:0 0 0.5rem;font-weight:800;">Instalador Windows Listo</h3>
+              <div style="background:#13131a;border:1px solid rgba(233,84,32,0.4);border-radius:18px;max-width:460px;width:100%;padding:2rem;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.85);font-family:var(--font-ui);">
+                <div style="font-size:2.5rem;margin-bottom:0.75rem;">🐧</div>
+                <h3 style="color:#fff;font-size:1.3rem;margin:0 0 0.5rem;font-weight:800;">Paquete Linux Generado</h3>
                 <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.5;margin:0 0 1.25rem;">
-                  El instalador nativo oficial <strong>CineVerse-Setup.exe</strong> está generado en tu equipo:
+                  El paquete oficial para Linux <strong>CineVerse-Linux.tar.gz</strong> ya está compilado en la raíz de tu proyecto:
                 </p>
-                <div style="background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:0.8rem;font-family:monospace;font-size:0.8rem;color:#00e5ff;word-break:break-all;text-align:left;margin-bottom:1.25rem;">
-                  C:\\Users\\DELL\\OneDrive\\Desktop\\Cineverse\\CineVerse-Setup.exe
+                <div style="background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:0.8rem;font-family:monospace;font-size:0.8rem;color:#ff7849;word-break:break-all;text-align:left;margin-bottom:1.25rem;">
+                  C:\\Users\\DELL\\OneDrive\\Desktop\\Cineverse\\CineVerse-Linux.tar.gz
                 </div>
                 <p style="color:var(--text-muted);font-size:0.82rem;line-height:1.45;margin:0 0 1.5rem;">
-                  💡 Haz doble clic en ese archivo en tu carpeta para instalarlo ahora en tu PC (con acceso directo en el Escritorio y desinstalador en Windows).
+                  Súbelo a MediaFire para activar el enlace directo en este botón.
                 </p>
-                <button id="win-guide-close" style="width:100%;background:linear-gradient(135deg,#0078D4 0%,#0050B3 100%);color:#fff;border:none;padding:0.85rem;border-radius:10px;font-weight:700;font-size:0.95rem;cursor:pointer;">Entendido</button>
+                <button id="linux-guide-close" style="width:100%;background:linear-gradient(135deg,#E95420 0%,#77216F 100%);color:#fff;border:none;padding:0.85rem;border-radius:10px;font-weight:700;font-size:0.95rem;cursor:pointer;">Entendido</button>
               </div>
             `;
             document.body.appendChild(overlay);
-            overlay.querySelector('#win-guide-close').addEventListener('click', () => overlay.remove());
+            overlay.querySelector('#linux-guide-close').addEventListener('click', () => overlay.remove());
             overlay.addEventListener('click', (ev) => { if (ev.target === overlay) overlay.remove(); });
           }
         });
+      }
+
+      const btnLinuxPwa = document.getElementById('btn-install-linux-pwa');
+      if (btnLinuxPwa) {
+        btnLinuxPwa.addEventListener('click', () => triggerPwaInstall('Linux'));
       }
 
       const btnWinPwa = document.getElementById('btn-install-windows-pwa');
@@ -1649,10 +1729,7 @@
         btnWinPwa.addEventListener('click', () => triggerPwaInstall('Windows'));
       }
 
-      const btnLinux = document.getElementById('btn-install-linux');
-      if (btnLinux) {
-        btnLinux.addEventListener('click', () => triggerPwaInstall('Linux'));
-      }
+
 
       // Botón de descarga Android (MediaFire con modal progresivo)
       const downloadBtn = document.getElementById('download-btn');

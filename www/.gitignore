@@ -53,3 +53,5 @@ dist/*.apk
 # Desktop builds (Electron)
 dist-desktop/
 *.exe
+
+*.tar.gz
