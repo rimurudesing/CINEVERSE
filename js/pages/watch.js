@@ -63,7 +63,7 @@ class WatchPageController {
     this.currentUser  = null;
     this.season  = null;
     this.episode = null;
-    this.currentServer = localStorage.getItem('cineverse_player_server') || 'vimeus';
+    this.currentServer = 'vidlink';
     this.isAnimeMode = false;
     this.smartlinkUrl = 'https://www.effectivecpmnetwork.com/n8bfacm3rn?key=dae2ae5c2f289ded4d55b6217baeed0c';
   }
@@ -132,16 +132,13 @@ class WatchPageController {
       const isAnime = this.isAnimeMode || (isAnimeGenre && isJapaneseOrigin) || (params.get('server') === 'anime');
       this.isAnime = isAnime;
 
-      // Vincular reproductor por tipo de contenido:
-      // - Si es Anime -> VidLink Anime HD (Servidor 2)
-      // - Si es Película o Serie -> Vimeus (Servidor 1)
+      // Servidor principal predeterminado: VidLink (100% online y estable para Películas, Series y Anime)
+      // Servidor secundario: Vimeus (respaldo)
       const explicitServer = params.get('server');
-      if (explicitServer === 'vidlink' || explicitServer === 'anime') {
-        this.currentServer = 'vidlink';
-      } else if (explicitServer === 'vimeus') {
+      if (explicitServer === 'vimeus') {
         this.currentServer = 'vimeus';
       } else {
-        this.currentServer = isAnime ? 'vidlink' : 'vimeus';
+        this.currentServer = 'vidlink';
       }
 
       // 3. Actualizar título de pestaña
@@ -208,11 +205,11 @@ class WatchPageController {
     return `
       <div class="player-servers-header" id="player-servers-header">
         <div class="player-servers-list">
-          <button class="server-tab ${s === 'vimeus' ? 'active' : ''}" data-server="vimeus">
-            <span class="server-icon">🎬</span> Servidor 1 (Vimeus)
-          </button>
           <button class="server-tab ${s === 'vidlink' ? 'active' : ''}" data-server="vidlink">
-            <span class="server-icon">⚡</span> Servidor 2 (VidLink Anime HD) <span class="server-tab-badge">HD</span>
+            <span class="server-icon">⚡</span> Servidor 1 (VidLink HD / Anime) <span class="server-tab-badge">ACTIVO</span>
+          </button>
+          <button class="server-tab ${s === 'vimeus' ? 'active' : ''}" data-server="vimeus">
+            <span class="server-icon">🎬</span> Servidor 2 (Vimeus)
           </button>
         </div>
       </div>
@@ -234,7 +231,7 @@ class WatchPageController {
         const newUrl = this.getServerURL(serverKey);
         if (iframe) {
           iframe.src = newUrl;
-          const serverName = serverKey === 'vidlink' ? 'VidLink Anime HD' : 'Vimeus';
+          const serverName = serverKey === 'vidlink' ? 'VidLink HD' : 'Vimeus';
           showToast(`Cambiando a ${serverName}... 🔄`, 'info');
         }
       });
