@@ -419,7 +419,15 @@
   <div class="page-transition-overlay out"></div>
 
   <!-- Contenedor Principal Dashboard Admin -->
-  <main class="container" style="padding-bottom: 5rem;">
+    <!-- Guard de Seguridad Anti-FOUC (Protección de Acceso) -->
+  <div id="admin-auth-guard" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; gap: 1.25rem;">
+    <div style="width: 50px; height: 50px; border-radius: 50%; border: 3px solid rgba(229,9,20,0.15); border-top-color: var(--accent-red); animation: spin 0.8s linear infinite;"></div>
+    <div style="font-family: var(--font-ui); font-size: 1.25rem; font-weight: 700; color: #fff;">Verificando credenciales de seguridad...</div>
+    <div style="color: var(--text-muted); font-size: 0.85rem; max-width: 340px;">Validando rol de administrador cifrado con Supabase antes de renderizar el panel.</div>
+  </div>
+
+  <!-- Contenedor Principal Dashboard Admin (Oculto hasta validar) -->
+  <main class="container" id="admin-main-container" style="display: none; padding-bottom: 5rem;">
     
     <!-- Botón Volver -->
     <a href="perfil.html" class="btn btn--secondary" style="margin-bottom: 1.5rem; display: inline-flex; align-items: center; gap: 0.5rem; width: fit-content; text-decoration: none;">

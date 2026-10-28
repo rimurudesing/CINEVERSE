@@ -10,7 +10,7 @@
 
 import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { getCurrentUser } from '../auth.js';
-import { navigateTo, initPageTransition, showToast, formatDate } from '../utils.js';
+import { navigateTo, initPageTransition, showToast, formatDate, sanitizeHTML } from '../utils.js';
 import { initCustomCursor } from '../cursor.js';
 import { getGlobalSettings, saveGlobalSettings } from '../settings.js';
 import '../components/navbar.js';
@@ -641,16 +641,16 @@ class AdminDashboardController {
           <td>
             <div style="display:flex; align-items:center; gap:0.75rem;">
               <div style="position:relative; width:38px; height:38px; flex-shrink:0;">
-                <img src="${avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:none;" onError="this.src='${defaultAvatar}'">
+                <img src="${sanitizeHTML(avatar)}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:none;" onError="this.src='${defaultAvatar}'">
                 <span style="position:absolute; bottom:0; right:0; width:10px; height:10px; background:#10B981; border:2px solid var(--bg-secondary); border-radius:50%; box-shadow:0 0 6px #10B981;"></span>
               </div>
               <div>
-                <strong style="color:#fff; font-size:0.88rem; display:block;">${username}</strong>
-                <span style="font-size:0.72rem; color:var(--text-muted); font-family:var(--font-mono);">${u.id ? u.id.slice(0, 8) + '...' : ''}</span>
+                <strong style="color:#fff; font-size:0.88rem; display:block;">${sanitizeHTML(username)}</strong>
+                <span style="font-size:0.72rem; color:var(--text-muted); font-family:var(--font-mono);">${u.id ? sanitizeHTML(u.id.slice(0, 8)) + '...' : ''}</span>
               </div>
             </div>
           </td>
-          <td style="font-weight:600; color:var(--text-primary);">${displayName}</td>
+          <td style="font-weight:600; color:var(--text-primary);">${sanitizeHTML(displayName)}</td>
           <td>${roleBadge}</td>
           <td>
             <span style="display:inline-flex; align-items:center; gap:0.4rem; color:#10B981; font-weight:600; font-size:0.8rem;">
