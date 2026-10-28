@@ -52,38 +52,7 @@ function getVidlinkURL(mediaType, tmdbId, season, episode) {
   }
 }
 
-function getVidSrcURL(mediaType, tmdbId, season, episode) {
-  const id = String(tmdbId || '');
-  const se = season ? String(season) : '1';
-  const ep = episode ? String(episode) : '1';
-  if (mediaType === 'movie') {
-    return 'https://vidsrc.cc/v2/embed/movie/' + id;
-  } else {
-    return 'https://vidsrc.cc/v2/embed/tv/' + id + '/' + se + '/' + ep;
-  }
-}
 
-function getEmbedSuURL(mediaType, tmdbId, season, episode) {
-  const id = String(tmdbId || '');
-  const se = season ? String(season) : '1';
-  const ep = episode ? String(episode) : '1';
-  if (mediaType === 'movie') {
-    return 'https://embed.su/embed/movie/' + id;
-  } else {
-    return 'https://embed.su/embed/tv/' + id + '/' + se + '/' + ep;
-  }
-}
-
-function getAutoEmbedURL(mediaType, tmdbId, season, episode) {
-  const id = String(tmdbId || '');
-  const se = season ? String(season) : '1';
-  const ep = episode ? String(episode) : '1';
-  if (mediaType === 'movie') {
-    return 'https://player.autoembed.cc/embed/movie/' + id;
-  } else {
-    return 'https://player.autoembed.cc/embed/tv/' + id + '/' + se + '/' + ep;
-  }
-}
 
 // ── Controlador Principal ────────────────────────────────────────────────────
 class WatchPageController {
@@ -156,11 +125,30 @@ class WatchPageController {
         return;
       }
 
-      // 2. Actualizar título de pestaña
+      // 2. Detectar si el contenido es un Anime
+      const isAnimeGenre = this.mediaDetails.genres?.some(g => g.id === 16);
+      const isJapaneseOrigin = this.mediaDetails.original_language === 'ja' || 
+                               (Array.isArray(this.mediaDetails.origin_country) && this.mediaDetails.origin_country.includes('JP'));
+      const isAnime = this.isAnimeMode || (isAnimeGenre && isJapaneseOrigin) || (params.get('server') === 'anime');
+      this.isAnime = isAnime;
+
+      // Vincular reproductor por tipo de contenido:
+      // - Si es Anime -> VidLink Anime HD (Servidor 2)
+      // - Si es Película o Serie -> Vimeus (Servidor 1)
+      const explicitServer = params.get('server');
+      if (explicitServer === 'vidlink' || explicitServer === 'anime') {
+        this.currentServer = 'vidlink';
+      } else if (explicitServer === 'vimeus') {
+        this.currentServer = 'vimeus';
+      } else {
+        this.currentServer = isAnime ? 'vidlink' : 'vimeus';
+      }
+
+      // 3. Actualizar título de pestaña
       const title = this.mediaDetails.title || this.mediaDetails.name;
       document.title = `${title} — CineVerse`;
 
-      // 3. Renderizar UI
+      // 4. Renderizar UI
       this.renderPlayer();
       this.renderMeta();
       this.renderSidebar();
@@ -209,19 +197,10 @@ class WatchPageController {
 
 
   getServerURL(serverKey) {
-    switch (serverKey) {
-      case 'vidlink':
-        return getVidlinkURL(this.mediaType, this.mediaId, this.season, this.episode);
-      case 'vidsrc':
-        return getVidSrcURL(this.mediaType, this.mediaId, this.season, this.episode);
-      case 'embedsu':
-        return getEmbedSuURL(this.mediaType, this.mediaId, this.season, this.episode);
-      case 'autoembed':
-        return getAutoEmbedURL(this.mediaType, this.mediaId, this.season, this.episode);
-      case 'vimeus':
-      default:
-        return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
+    if (serverKey === 'vidlink') {
+      return getVidlinkURL(this.mediaType, this.mediaId, this.season, this.episode);
     }
+    return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
   }
 
   buildServersBar() {
@@ -230,19 +209,10 @@ class WatchPageController {
       <div class="player-servers-header" id="player-servers-header">
         <div class="player-servers-list">
           <button class="server-tab ${s === 'vimeus' ? 'active' : ''}" data-server="vimeus">
-            <span class="server-icon">🎬</span> Servidor 1 (Vimeus - Latino)
+            <span class="server-icon">🎬</span> Servidor 1 (Vimeus)
           </button>
           <button class="server-tab ${s === 'vidlink' ? 'active' : ''}" data-server="vidlink">
-            <span class="server-icon">⚡</span> Servidor 2 (VidLink - Anime/HD) <span class="server-tab-badge">HD</span>
-          </button>
-          <button class="server-tab ${s === 'vidsrc' ? 'active' : ''}" data-server="vidsrc">
-            <span class="server-icon">🍿</span> Servidor 3 (VidSrc)
-          </button>
-          <button class="server-tab ${s === 'embedsu' ? 'active' : ''}" data-server="embedsu">
-            <span class="server-icon">🚀</span> Servidor 4 (Embed.su)
-          </button>
-          <button class="server-tab ${s === 'autoembed' ? 'active' : ''}" data-server="autoembed">
-            <span class="server-icon">🌐</span> Servidor 5 (AutoEmbed)
+            <span class="server-icon">⚡</span> Servidor 2 (VidLink Anime HD) <span class="server-tab-badge">HD</span>
           </button>
         </div>
       </div>
@@ -264,14 +234,7 @@ class WatchPageController {
         const newUrl = this.getServerURL(serverKey);
         if (iframe) {
           iframe.src = newUrl;
-          const serverNames = {
-            vimeus: 'Vimeus (Latino)',
-            vidlink: 'VidLink (Anime / HD)',
-            vidsrc: 'VidSrc (Global)',
-            embedsu: 'Embed.su (Rápido)',
-            autoembed: 'AutoEmbed (Multi)'
-          };
-          const serverName = serverNames[serverKey] || serverKey;
+          const serverName = serverKey === 'vidlink' ? 'VidLink Anime HD' : 'Vimeus';
           showToast(`Cambiando a ${serverName}... 🔄`, 'info');
         }
       });
