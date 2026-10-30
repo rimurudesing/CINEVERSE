@@ -28,17 +28,20 @@ class HomePageController {
     this.showInitialLoaders();
 
     try {
-      // Cargar datos concurrentemente
-      const [
-        trendingList,
-        nowPlayingList,
-        onAirTVList,
-        upcomingList,
-        topMovies,
-        topTV,
-        animeData
-      ] = await Promise.all([
-        api.getTrending('all', 'week'),
+      // FASE 1 — Cargar trending primero (hero visible en ~1-2s)
+      const trendingList = await api.getTrending('all', 'week');
+
+      if (trendingList && trendingList.length > 0) {
+        // Iniciar hero sin await — no bloquear el hilo principal
+        this.heroSpotlight.init(trendingList.slice(0, 5));
+        new Carousel('#trending-carousel', trendingList, 'Tendencias', 'Esta Semana');
+      }
+
+      // Pequeño yield para que el navegador pinte el primer frame
+      await new Promise(r => setTimeout(r, 0));
+
+      // FASE 2 — Carouseles secundarios con Promise.allSettled (uno que falle no rompe todo)
+      const secondaryResults = await Promise.allSettled([
         api.getNowPlaying(1),
         api.getOnAir(1),
         api.getUpcoming(1),
@@ -47,29 +50,30 @@ class HomePageController {
         api.discoverAnime({ page: 1 })
       ]);
 
-      // 3. Inicializar Hero Spotlight con los 5 primeros trending
-      if (trendingList && trendingList.length > 0) {
-        await this.heroSpotlight.init(trendingList.slice(0, 5));
-      }
+      const [nowPlayingList, onAirTVList, upcomingList, topMovies, topTV, animeData] =
+        secondaryResults.map(r => r.status === 'fulfilled' ? r.value : null);
 
-      // 4. Cargar Carruseles
-      new Carousel('#trending-carousel', trendingList, 'Trending', 'Esta Semana');
-      new Carousel('#nowplaying-carousel', nowPlayingList, 'En Cartelera Ahora', 'En Cines');
-      new Carousel('#onair-carousel', onAirTVList, 'Series en Emisión', 'En Emisión');
-      new Carousel('#upcoming-carousel', upcomingList, 'Próximos Estrenos', 'Próximamente');
+      if (nowPlayingList) new Carousel('#nowplaying-carousel', nowPlayingList, 'En Cartelera Ahora', 'En Cines');
+      if (onAirTVList)    new Carousel('#onair-carousel',     onAirTVList,    'Series en Emisión',  'En Emisión');
+      if (upcomingList)   new Carousel('#upcoming-carousel',  upcomingList,   'Próximos Estrenos',  'Próximamente');
       if (animeData && animeData.results) {
-        new Carousel('#anime-carousel', animeData.results, 'Anime Popular 🔥', 'Japón');
+        new Carousel('#anime-carousel', animeData.results, 'Anime Popular 🎌', 'Japón');
       }
 
-      // 5. Cargar Grids de Más Valoradas
-      this.renderTopRatedGrid('movie', topMovies);
-      this.renderTopRatedGrid('tv', topTV);
-
-      // 6. Configurar Explorador por Géneros
-      this.initGenreExplorer();
+      // FASE 3 — Grids y explorador con baja prioridad (deferred)
+      const renderLowPriority = () => {
+        if (topMovies) this.renderTopRatedGrid('movie', topMovies);
+        if (topTV)     this.renderTopRatedGrid('tv',    topTV);
+        this.initGenreExplorer();
+      };
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(renderLowPriority, { timeout: 4000 });
+      } else {
+        setTimeout(renderLowPriority, 150);
+      }
 
     } catch (error) {
-      console.error("Error al inicializar la página de inicio:", error);
+      console.error('Error al inicializar la página de inicio:', error);
     }
   }
 

@@ -2,39 +2,98 @@
 
 /**
  * Optimización y Navegación Espacial (D-Pad / TV) para Smart TVs y Android TV
- * Versión 2.0 — Rendimiento optimizado para chipsets lentos de TV
+ * Versión 3.0 — Detección mejorada + rendimiento optimizado
  */
 
-// Detectar si el dispositivo es una televisión mediante el UserAgent
+// Detectar si el dispositivo es una televisión
 export function isTVDevice() {
   const ua = navigator.userAgent.toLowerCase();
-  return ua.includes('smarttv') ||
-         ua.includes('tizen') ||
-         ua.includes('webos') ||
-         ua.includes('googletv') ||
-         ua.includes('androidtv') ||
-         ua.includes('appletv') ||
-         ua.includes('roku') ||
-         ua.includes('playstation') ||
-         ua.includes('xbox') ||
-         ua.includes('nintendo') ||
-         ua.includes('aftb') || // Fire TV
-         ua.includes('tv');
+
+  // User agents explícitos de TV
+  const tvUAPatterns = [
+    'smarttv', 'smart-tv', 'hbbtv', 'opera tv', 'tv safari',
+    'tizen', 'webos', 'viera', 'netrangemmh',
+    'googletv', 'google tv',
+    'androidtv', 'android tv',
+    'appletv', 'apple tv',
+    'roku',
+    'playstation', 'xbox', 'nintendo',
+    'aftb', 'aftm', 'aftt', 'afts', 'aftba', // Fire TV variants
+    'mibox', 'mi box', 'shield',
+    'nexus player',
+    'chromecast',
+    'bravia',
+    'aquos',
+  ];
+  if (tvUAPatterns.some(p => ua.includes(p))) return true;
+
+  // Heurística: pantalla muy grande + sin touch + pointer:none (típico de TV)
+  const isLargeScreen = window.screen.width >= 1280 && window.screen.height >= 720;
+  const noTouch = window.matchMedia('(hover: hover) and (pointer: coarse)').matches === false;
+  const hasNoFinePointer = window.matchMedia('(pointer: none)').matches;
+  if (isLargeScreen && (hasNoFinePointer)) return true;
+
+  // Heurística: Capacitor + pantalla grande = probable TV box con APK
+  const isCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  if (isCapacitor && window.screen.width >= 1920) return true;
+
+  return false;
 }
 
-// Activar clase de modo TV en el body para optimizar CSS
+// Activar modo TV: añadir clase CSS + optimizaciones
 export function initTVMode() {
   const isTV = isTVDevice();
+
   if (isTV) {
+    document.documentElement.classList.add('tv-mode');
     document.body.classList.add('tv-mode');
-    console.log('[CineVerse TV] Modo TV activado. Desactivando efectos pesados.');
+    console.log('[CineVerse TV] Modo TV activado — optimizaciones de rendimiento aplicadas.');
+
+    // Deshabilitar animaciones pesadas de CSS
+    applyTVPerformanceOptimizations();
   }
 
-  // Hacer que los elementos interactivos dinámicos de CineVerse sean enfocables
+  // Navegación espacial con D-Pad (funciona también en TV boxes con ratón lento)
   setupFocusableElements();
+  setupSpatialNavigation(isTV);
+}
 
-  // Escuchar eventos de teclas de dirección para navegación espacial (D-Pad)
-  setupSpatialNavigation();
+// Optimizaciones de rendimiento específicas para TV
+function applyTVPerformanceOptimizations() {
+  const style = document.createElement('style');
+  style.id = 'tv-perf-overrides';
+  style.textContent = `
+    /* Eliminar backdrop-filter (muy costoso en GPU de TV) */
+    .tv-mode * {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    /* Reducir transiciones al mínimo funcional */
+    .tv-mode *, .tv-mode *::before, .tv-mode *::after {
+      transition-duration: 150ms !important;
+      animation-duration: 200ms !important;
+    }
+    /* GPU hint en carruseles */
+    .tv-mode .carousel-section__track,
+    .tv-mode .hero__backdrop {
+      transform: translateZ(0);
+      will-change: transform;
+    }
+    /* Cursor del sistema en TV (no custom cursor) */
+    .tv-mode { cursor: auto !important; }
+    .tv-mode * { cursor: inherit !important; }
+    /* Focus visible grande para control remoto */
+    .tv-mode :focus-visible {
+      outline: 3px solid #e50914 !important;
+      outline-offset: 4px !important;
+      border-radius: 6px !important;
+    }
+    /* Aumentar legibilidad */
+    .tv-mode .movie-card__title { font-size: 1.1rem !important; }
+    .tv-mode .navbar { height: 80px !important; }
+    .tv-mode .btn, .tv-mode button { min-height: 3rem !important; font-size: 1rem !important; }
+  `;
+  document.head.appendChild(style);
 }
 
 // ── Cache de elementos enfocables ─────────────────────────────────────────────
@@ -44,7 +103,6 @@ let _cacheTimeout = null;
 
 function invalidateFocusCache() {
   _focusablesDirty = true;
-  // Debounce: reconstruir cache sólo 150ms después del último cambio DOM
   clearTimeout(_cacheTimeout);
   _cacheTimeout = setTimeout(() => { _focusablesCache = null; }, 150);
 }
@@ -58,21 +116,18 @@ function getFocusablesInViewport() {
 
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const margin = 200; // px de margen extra fuera del viewport visible
+  const margin = 200;
 
   const visible = [];
   for (let i = 0; i < all.length; i++) {
     const el = all[i];
     if (el === document.body) continue;
-    // Rápida comprobación de visibilidad sin reflow (style cache)
     const style = window.getComputedStyle(el);
     if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') continue;
-
     const rect = el.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) continue;
     if (rect.bottom < -margin || rect.top > vh + margin) continue;
     if (rect.right < -margin || rect.left > vw + margin) continue;
-
     visible.push({ el, rect });
   }
 
@@ -81,24 +136,18 @@ function getFocusablesInViewport() {
   return visible;
 }
 
-// Escanear periódicamente para asegurar que tarjetas y botones dinámicos sean enfocables
 function setupFocusableElements() {
   const selectors = [
-    '.movie-card',
-    '.pill',
-    '.suggestion-tag',
-    '.form-checkbox-wrapper',
-    '.genre-checkbox',
-    '.suggestion-genre-btn',
-    '.carousel-section__btn',
-    '.tab-btn'
+    '.movie-card', '.pill', '.suggestion-tag',
+    '.genre-checkbox', '.suggestion-genre-btn',
+    '.carousel-section__btn', '.tab-btn'
   ];
 
   const makeFocusable = () => {
     invalidateFocusCache();
     document.querySelectorAll(selectors.join(',')).forEach(el => {
       const tag = el.tagName.toLowerCase();
-      const needsTabindex = tag !== 'a' && tag !== 'button' && tag !== 'input' && tag !== 'select' && tag !== 'textarea';
+      const needsTabindex = !['a','button','input','select','textarea'].includes(tag);
       if (needsTabindex && !el.hasAttribute('tabindex')) {
         el.setAttribute('tabindex', '0');
       }
@@ -107,7 +156,6 @@ function setupFocusableElements() {
 
   makeFocusable();
 
-  // Observer con throttling para no invalidar el cache demasiado a menudo
   let observerTimer = null;
   const observer = new MutationObserver(() => {
     clearTimeout(observerTimer);
@@ -116,10 +164,14 @@ function setupFocusableElements() {
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
-// ── Algoritmo de Navegación Espacial 2D optimizado ───────────────────────────
-function setupSpatialNavigation() {
+// ── Algoritmo de Navegación Espacial 2D ──────────────────────────────────────
+function setupSpatialNavigation(isTV) {
   let tvFocusActive = false;
-  let isNavigating = false; // Throttle de navegación para TVs lentas
+  let isNavigating = false;
+
+  // Throttle más agresivo en TV (hardware más lento)
+  const NAV_THROTTLE_MS = isTV ? 120 : 0;
+  let lastNavTime = 0;
 
   document.addEventListener('keydown', (e) => {
     const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
@@ -128,7 +180,6 @@ function setupSpatialNavigation() {
 
     if (!isArrow && !isEnter) return;
 
-    // Activar visuales de TV al primer uso del D-Pad
     if (!tvFocusActive) {
       tvFocusActive = true;
       document.body.classList.add('tv-focus-active');
@@ -136,11 +187,10 @@ function setupSpatialNavigation() {
 
     const currentEl = document.activeElement;
 
-    // Manejar Enter
     if (isEnter) {
       if (currentEl && currentEl !== document.body) {
         const tag = currentEl.tagName.toLowerCase();
-        if (tag !== 'input' && tag !== 'textarea' && tag !== 'button' && tag !== 'select' && tag !== 'a') {
+        if (!['input','textarea','button','select','a'].includes(tag)) {
           e.preventDefault();
           currentEl.click();
         }
@@ -148,18 +198,20 @@ function setupSpatialNavigation() {
       return;
     }
 
-    e.preventDefault(); // Evitar scroll nativo de la página
+    e.preventDefault();
 
-    // Throttle: ignorar si ya estamos procesando una navegación (TVs muy lentas)
+    // Throttle para TVs lentas
+    const now = Date.now();
+    if (now - lastNavTime < NAV_THROTTLE_MS) return;
+    lastNavTime = now;
+
     if (isNavigating) return;
     isNavigating = true;
     requestAnimationFrame(() => { isNavigating = false; });
 
-    // Obtener elementos visibles (desde cache si está fresco)
     const candidates = getFocusablesInViewport();
     if (candidates.length === 0) return;
 
-    // Si nada está enfocado, enfocar el primero visible
     const currentIdx = candidates.findIndex(c => c.el === currentEl);
     if (currentIdx === -1) {
       candidates[0].el.focus({ preventScroll: true });
@@ -183,7 +235,6 @@ function setupSpatialNavigation() {
       const dx = cx - curCX;
       const dy = cy - curCY;
 
-      // Comprobar dirección
       let inDir = false;
       if (e.key === 'ArrowLeft'  && dx < -5) inDir = true;
       if (e.key === 'ArrowRight' && dx >  5) inDir = true;
@@ -191,7 +242,6 @@ function setupSpatialNavigation() {
       if (e.key === 'ArrowDown'  && dy >  5) inDir = true;
       if (!inDir) continue;
 
-      // Puntuación: preferir el eje principal, penalizar la desviación
       let score;
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         score = Math.abs(dx) + Math.abs(dy) * 2.5;
@@ -216,7 +266,6 @@ function setupSpatialNavigation() {
 function scrollToElement(el) {
   const rect = el.getBoundingClientRect();
   const threshold = 100;
-
   if (rect.bottom > window.innerHeight - threshold) {
     window.scrollBy({ top: rect.bottom - window.innerHeight + threshold, behavior: 'auto' });
   } else if (rect.top < threshold) {
@@ -224,7 +273,7 @@ function scrollToElement(el) {
   }
 }
 
-// Autoejecución al cargar el script
+// Auto-ejecución
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initTVMode);
 } else {

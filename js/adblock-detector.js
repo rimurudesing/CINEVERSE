@@ -3,20 +3,26 @@
 import { showToast, navigateTo } from './utils.js';
 
 /**
- * Detecta de manera robusta la presencia de un bloqueador de publicidad (AdBlocker).
- * Combina la inserción de elementos DOM sospechosos con una petición de red señuelo (fetch).
- * @returns {Promise<boolean>} Resolves to true if AdBlock is active, false otherwise.
+ * Detecta de manera robusta la presencia de un bloqueador de publicidad.
+ * Tiene un timeout máximo de 3 segundos para no bloquear el render en TV/móvil lento.
+ * @returns {Promise<boolean>} true si AdBlock está activo, false si no.
  */
 export function detectAdBlock() {
   return new Promise((resolve) => {
-    // En APK nativa (Capacitor) no se ejecutan extensiones de navegador AdBlock, omitir
-    const isNative = window.location.protocol === 'file:' || 
+    // En APK nativa (Capacitor / file:) nunca hay extensiones AdBlock
+    const isNative = window.location.protocol === 'file:' ||
                      (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
-                     navigator.userAgent.includes('Capacitor');
+                     navigator.userAgent.includes('Capacitor') ||
+                     navigator.userAgent.toLowerCase().includes('electron');
+
     if (isNative) {
       resolve(false);
       return;
     }
+
+    // Timeout de seguridad: máximo 3 segundos — si tarda más, asumimos sin AdBlock
+    // (evita bloquear el render en dispositivos lentos como Android TV)
+    const safetyTimeout = setTimeout(() => resolve(false), 3000);
 
     // 1. Crear un elemento trampa con clases comunes bloqueadas
     const ad = document.createElement('div');
@@ -25,24 +31,27 @@ export function detectAdBlock() {
     ad.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;pointer-events:none;opacity:0;';
     document.body.appendChild(ad);
 
-    window.setTimeout(() => {
-      const isDomBlocked = ad.offsetHeight === 0 || 
-                           ad.clientHeight === 0 || 
+    setTimeout(() => {
+      const isDomBlocked = ad.offsetHeight === 0 ||
+                           ad.clientHeight === 0 ||
                            (window.getComputedStyle && window.getComputedStyle(ad).display === 'none') ||
                            (window.getComputedStyle && window.getComputedStyle(ad).visibility === 'hidden');
       ad.remove();
 
       if (isDomBlocked) {
+        clearTimeout(safetyTimeout);
         resolve(true);
       } else {
-        // 2. Método alternativo de red: hacer un fetch a un dominio publicitario conocido
+        // 2. Método alternativo de red (fetch a dominio publicitario)
         const decoyURL = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
         fetch(decoyURL, { method: 'HEAD', mode: 'no-cors', cache: 'no-store' })
           .then(() => {
-            resolve(false); // La petición de red tuvo éxito
+            clearTimeout(safetyTimeout);
+            resolve(false);
           })
           .catch(() => {
-            resolve(true); // Falló la petición de red (común en AdBlockers)
+            clearTimeout(safetyTimeout);
+            resolve(true);
           });
       }
     }, 150);
@@ -53,7 +62,6 @@ export function detectAdBlock() {
  * Muestra el modal bloqueante de AdBlock con estilos premium.
  */
 export function showAdBlockModal() {
-  // Evitar duplicados
   if (document.getElementById('adblock-modal-overlay')) return;
 
   const overlay = document.createElement('div');
@@ -98,7 +106,7 @@ export function showAdBlockModal() {
       font-size: 2.2rem;
       animation: pulseGlow 2s infinite ease-in-out;
     ">
-      🚫
+      🛡️
     </div>
     <style>
       @keyframes pulseGlow {
@@ -108,9 +116,9 @@ export function showAdBlockModal() {
     </style>
     <h2 style="color: #fff; font-size: 1.6rem; font-weight: 800; margin: 0 0 1rem 0; letter-spacing: 0.5px;">AdBlock Detectado</h2>
     <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.65; margin: 0 0 2.25rem 0;">
-      Hemos detectado que utilizas un bloqueador de anuncios. CineVerse se mantiene gratis gracias a la publicidad. 
+      Hemos detectado que utilizas un bloqueador de anuncios. CineVerse se mantiene gratis gracias a la publicidad.
       <br><br>
-      Para continuar viendo películas y series, por favor <strong>desactiva AdBlock</strong> para este sitio o adquiere <strong>CineVerse Premium</strong> para navegar libre de anuncios.
+      Para continuar, por favor <strong>desactiva AdBlock</strong> para este sitio o adquiere <strong>CineVerse Premium</strong>.
     </p>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
       <button id="adblock-retry-btn" style="
@@ -126,7 +134,7 @@ export function showAdBlockModal() {
         transition: transform 0.2s, background 0.2s;
         box-shadow: 0 4px 15px rgba(255,255,255,0.15);
       ">
-        🔄 Ya lo desactivé, recargar
+        ✅ Ya lo desactivé, recargar
       </button>
       <button id="adblock-premium-btn" style="
         background: linear-gradient(135deg, var(--accent-red) 0%, #900a0a 100%);
@@ -149,7 +157,6 @@ export function showAdBlockModal() {
   overlay.appendChild(card);
   document.body.appendChild(overlay);
 
-  // Vincular eventos del modal
   document.getElementById('adblock-retry-btn')?.addEventListener('click', () => {
     window.location.reload();
   });
@@ -158,6 +165,5 @@ export function showAdBlockModal() {
     navigateTo('perfil.html?tab=premium');
   });
 
-  // Bloquear el scroll en el body
   document.body.style.overflow = 'hidden';
 }
