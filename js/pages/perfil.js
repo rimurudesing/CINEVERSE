@@ -246,7 +246,7 @@ class ProfilePageController {
     const viralPromoEl = document.getElementById('profile-viral-promo');
     if (viralPromoEl) {
       if (!isPremium) {
-        viralPromoEl.style.display = 'block';
+        viralPromoEl.style.display = 'none';
         viralPromoEl.innerHTML = `
           <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(229, 9, 20, 0.1) 0%, rgba(245, 197, 24, 0.05) 100%); border: 1px dashed var(--accent-red); border-radius: var(--radius-md); font-family: var(--font-ui); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
             <h4 style="color: #FFD700; font-size: 1.1rem; font-weight: 700; margin: 0 0 0.5rem; display: flex; align-items: center; gap: 0.5rem;">

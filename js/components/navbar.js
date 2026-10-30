@@ -566,6 +566,8 @@ function _buildPromoPanel() {
 }
 
 function _showPromoPanel() {
+  return; // Promociones desactivadas
+
   if (document.getElementById(PROMO_PANEL_ID)) return;
 
   _injectPromoPanelStyles();

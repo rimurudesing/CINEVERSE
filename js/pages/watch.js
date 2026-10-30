@@ -100,17 +100,7 @@ class WatchPageController {
       }
     } catch(e) {}
 
-    // Validar AdBlock para usuarios gratuitos
-    const profile = this.currentUser ? (this.currentUser.profile || {}) : {};
-    const isPremium = !!profile.is_premium;
-    if (!isPremium) {
-      const adBlockActive = await detectAdBlock();
-      if (adBlockActive) {
-        showAdBlockModal();
-        return;
-      }
-    }
-
+    // AdBlock check disabled - 100% clean experience
     // Default to season 1, episode 1 if playing a show and not specified
     if (this.mediaType === 'tv') {
       if (!this.season) this.season = 1;
@@ -170,34 +160,9 @@ class WatchPageController {
     if (!playerRoot) return;
 
     const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, this.isAnime);
-
-    // Comprobar estado Premium
-    const profile   = this.currentUser ? (this.currentUser.profile || {}) : {};
-    const isPremium = !!profile.is_premium;
-
-    // Si el usuario es Premium siempre va directo al reproductor
-    if (isPremium) {
-      this.renderActualPlayer(playerRoot, vimeusURL);
-      return;
-    }
-
-    // Si los anuncios están desactivados globalmente, también va directo al reproductor
-    try {
-      const settings    = await getGlobalSettings();
-      const adsEnabled  = settings.global_ads_enabled !== false;
-      if (!adsEnabled) {
-        console.log('[watch] Anuncios globalmente desactivados — reproducción directa.');
-        this.renderActualPlayer(playerRoot, vimeusURL);
-        return;
-      }
-    } catch (e) {
-      // Si falla la consulta, mostrar el anuncio (fail-open)
-    }
-
-    // Usuario Free con anuncios activos
-    this.renderAd(playerRoot, vimeusURL);
+    // Reproducción directa limpia para todos los usuarios
+    this.renderActualPlayer(playerRoot, vimeusURL);
   }
-
 
   getServerURL(serverKey) {
     if (serverKey === 'vidlink') {
@@ -277,13 +242,14 @@ class WatchPageController {
           pointer-events: none; z-index: 0;
         "></div>
 
-        <iframe
+                <iframe
           id="vimeus-iframe"
           src="${initialSrc}"
           style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; display: block;"
           allowfullscreen
           referrerpolicy="origin"
-          allow="autoplay; fullscreen; picture-in-picture"
+          allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
         ></iframe>
 
 
