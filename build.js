@@ -56,7 +56,7 @@ function copyDir(src, dest) {
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
 
-    if (excludeDirs.includes(entry.name) || excludeFiles.includes(entry.name) || entry.name.endsWith('.apk') || entry.name.endsWith('.exe')) {
+    if (excludeDirs.includes(entry.name) || excludeFiles.includes(entry.name) || entry.name.endsWith('.apk') || entry.name.endsWith('.exe') || entry.name.endsWith('.tar.gz') || entry.name.endsWith('.zip')) {
       continue;
     }
 
