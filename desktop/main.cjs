@@ -60,12 +60,13 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
   });
 
-  // Si se pierde la conexión o falla la navegación
-  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-    // Sólo cargar local si es un error de red real (no cancelaciones -3)
-    if (errorCode !== -3) {
-      mainWindow.loadFile(path.join(__dirname, '../www/index.html'));
-    }
+  // Si se pierde la conexión o falla la navegación en el frame principal
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+    // IGNORAR SIEMPRE errores de iframes (video players, servidores de streaming externos)
+    if (!isMainFrame) return;
+    // Ignorar cancelaciones normales
+    if (errorCode === -3) return;
+    console.warn('[CineVerse Desktop] Error en frame principal:', errorCode, errorDescription);
   });
 
   // Manejo de enlaces externos (MediaFire, donaciones, etc.)

@@ -687,4 +687,8 @@ class InfoPageController {
 }
 
 const controller = new InfoPageController();
-document.addEventListener('DOMContentLoaded', () => controller.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => controller.init());
+} else {
+  controller.init();
+}

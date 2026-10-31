@@ -25,14 +25,16 @@ if (isSupabaseConfigured && window.supabase) {
       detectSessionInUrl: true,
     };
 
-    // Anular navigator.locks sólo en entornos sin soporte real (Capacitor/file:)
-    // En Electron el polyfill ya fue inyectado por main.cjs antes de cargar la página
-    // En web con navigator.locks real, dejarlo funcionar normalmente
-    const hasRealLocks = !isNative && !isElectron && typeof navigator.locks !== 'undefined' && typeof navigator.locks.request === 'function';
+    // Anular navigator.locks en entornos sin soporte confiable (Capacitor, Electron, file:)
+    // para prevenir bloqueos silenciosos o cuelgues durante el refresh de tokens
+    const hasRealLocks = !isNative && !isElectron && typeof navigator !== 'undefined' && typeof navigator.locks !== 'undefined' && typeof navigator.locks.request === 'function';
     if (!hasRealLocks) {
       authConfig.lock = async (name, acquireTimeout, fn) => {
-        // Bypass: ejecutar fn directamente sin navigator.locks
-        return await fn();
+        // Soporta tanto firma (name, fn) de 2 args como (name, timeout, fn) de 3 args
+        const callback = typeof fn === 'function' ? fn : (typeof acquireTimeout === 'function' ? acquireTimeout : null);
+        if (callback) {
+          return await callback();
+        }
       };
     }
 

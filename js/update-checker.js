@@ -36,7 +36,7 @@ function isNewerVersion(localVersion, remoteVersion) {
  */
 export async function checkForUpdates({ force = false } = {}) {
   // Solo verificar si estamos en la APK nativa
-  if (!IS_NATIVE && !force) return;
+  if (!force) return; // Desactivado en inicio automático para no interrumpir al usuario
 
   // No molestar al usuario más de una vez por sesión
   const sessionKey = 'cv_update_checked';

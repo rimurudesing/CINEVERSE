@@ -46,8 +46,11 @@ export class TMDBApi {
       }
     }
 
+    const abortCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = abortCtrl ? setTimeout(() => abortCtrl.abort(), 9000) : null;
     try {
-      const response = await window.fetch(url);
+      const response = await window.fetch(url, abortCtrl ? { signal: abortCtrl.signal } : undefined);
+      if (timeoutId) clearTimeout(timeoutId);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

@@ -323,7 +323,9 @@ class AnimePageController {
 }
 
 // Inicializar la página de anime al cargar
-document.addEventListener('DOMContentLoaded', () => {
-  const controller = new AnimePageController();
-  controller.init();
-});
+const initAnime = () => { const controller = new AnimePageController(); controller.init(); };
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAnime);
+} else {
+  initAnime();
+}

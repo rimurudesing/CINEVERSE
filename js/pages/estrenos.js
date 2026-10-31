@@ -421,5 +421,9 @@ class EstrenosPageController {
 }
 
 const controller = new EstrenosPageController();
-document.addEventListener('DOMContentLoaded', () => controller.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => controller.init());
+} else {
+  controller.init();
+}
 export default controller;

@@ -309,4 +309,8 @@ class PeliculasPageController {
 }
 
 const controller = new PeliculasPageController();
-document.addEventListener('DOMContentLoaded', () => controller.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => controller.init());
+} else {
+  controller.init();
+}

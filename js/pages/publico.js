@@ -346,5 +346,9 @@ class PublicProfileController {
 }
 
 const controller = new PublicProfileController();
-document.addEventListener('DOMContentLoaded', () => controller.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => controller.init());
+} else {
+  controller.init();
+}
 export default controller;

@@ -970,4 +970,8 @@ class TVPageController {
 
 // Inicializar controlador
 const controller = new TVPageController();
-document.addEventListener('DOMContentLoaded', () => controller.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => controller.init());
+} else {
+  controller.init();
+}

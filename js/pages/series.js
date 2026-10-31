@@ -308,4 +308,8 @@ class SeriesPageController {
 }
 
 const controller = new SeriesPageController();
-document.addEventListener('DOMContentLoaded', () => controller.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => controller.init());
+} else {
+  controller.init();
+}

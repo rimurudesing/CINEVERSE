@@ -456,4 +456,8 @@ class SearchPageController {
 
 // Inicializar controlador
 const controller = new SearchPageController();
-document.addEventListener('DOMContentLoaded', () => controller.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => controller.init());
+} else {
+  controller.init();
+}

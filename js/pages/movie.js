@@ -822,4 +822,8 @@ class MoviePageController {
 
 // Inicializar el controlador
 const controller = new MoviePageController();
-document.addEventListener('DOMContentLoaded', () => controller.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => controller.init());
+} else {
+  controller.init();
+}

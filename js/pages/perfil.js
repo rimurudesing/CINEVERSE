@@ -2563,4 +2563,8 @@ class ProfilePageController {
 
 // Inicializar
 const controller = new ProfilePageController();
-document.addEventListener('DOMContentLoaded', () => controller.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => controller.init());
+} else {
+  controller.init();
+}

@@ -28,27 +28,24 @@ class HomePageController {
     this.showInitialLoaders();
 
     try {
-      // FASE 1 — Cargar trending primero (hero visible en ~1-2s)
-      const trendingList = await api.getTrending('all', 'week');
+      // Cargar todas las secciones simultáneamente para máxima velocidad en TV y móvil
+      const [trendingRes, secondaryResults] = await Promise.all([
+        api.getTrending('all', 'week').catch(() => []),
+        Promise.allSettled([
+          api.getNowPlaying(1),
+          api.getOnAir(1),
+          api.getUpcoming(1),
+          api.getTopRated('movie', 1),
+          api.getTopRated('tv', 1),
+          api.discoverAnime({ page: 1 })
+        ])
+      ]);
 
-      if (trendingList && trendingList.length > 0) {
-        // Iniciar hero sin await — no bloquear el hilo principal
+      const trendingList = Array.isArray(trendingRes) ? trendingRes : (trendingRes?.results || []);
+      if (trendingList.length > 0) {
         this.heroSpotlight.init(trendingList.slice(0, 5));
         new Carousel('#trending-carousel', trendingList, 'Tendencias', 'Esta Semana');
       }
-
-      // Pequeño yield para que el navegador pinte el primer frame
-      await new Promise(r => setTimeout(r, 0));
-
-      // FASE 2 — Carouseles secundarios con Promise.allSettled (uno que falle no rompe todo)
-      const secondaryResults = await Promise.allSettled([
-        api.getNowPlaying(1),
-        api.getOnAir(1),
-        api.getUpcoming(1),
-        api.getTopRated('movie', 1),
-        api.getTopRated('tv', 1),
-        api.discoverAnime({ page: 1 })
-      ]);
 
       const [nowPlayingList, onAirTVList, upcomingList, topMovies, topTV, animeData] =
         secondaryResults.map(r => r.status === 'fulfilled' ? r.value : null);
@@ -206,4 +203,8 @@ class HomePageController {
 
 // Inicializar el controlador cuando cargue la página
 const controller = new HomePageController();
-document.addEventListener('DOMContentLoaded', () => controller.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => controller.init());
+} else {
+  controller.init();
+}

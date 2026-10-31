@@ -1204,4 +1204,8 @@ class AdminDashboardController {
 }
 
 const controller = new AdminDashboardController();
-document.addEventListener('DOMContentLoaded', () => controller.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => controller.init());
+} else {
+  controller.init();
+}

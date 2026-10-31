@@ -2,40 +2,43 @@
 
 /**
  * Optimización y Navegación Espacial (D-Pad / TV) para Smart TVs y Android TV
- * Versión 3.0 — Detección mejorada + rendimiento optimizado
+ * Versión 4.0 — Detección universal + rendimiento 60FPS sin lag de puntero
  */
 
-// Detectar si el dispositivo es una televisión
+// Detectar si el dispositivo es una televisión o TV Box
 export function isTVDevice() {
-  const ua = navigator.userAgent.toLowerCase();
+  if (typeof window === 'undefined') return false;
+  const ua = (navigator.userAgent || '').toLowerCase();
 
-  // User agents explícitos de TV
+  // 1. User agents explícitos de TV y marcas de Smart TV
   const tvUAPatterns = [
-    'smarttv', 'smart-tv', 'hbbtv', 'opera tv', 'tv safari',
-    'tizen', 'webos', 'viera', 'netrangemmh',
-    'googletv', 'google tv',
-    'androidtv', 'android tv',
-    'appletv', 'apple tv',
-    'roku',
+    'tv', 'smarttv', 'smart-tv', 'hbbtv', 'opera tv', 'tv safari',
+    'tizen', 'webos', 'web0s', 'viera', 'netrangemmh',
+    'googletv', 'google tv', 'androidtv', 'android tv',
+    'appletv', 'apple tv', 'roku',
     'playstation', 'xbox', 'nintendo',
-    'aftb', 'aftm', 'aftt', 'afts', 'aftba', // Fire TV variants
-    'mibox', 'mi box', 'shield',
-    'nexus player',
-    'chromecast',
-    'bravia',
-    'aquos',
+    'aftb', 'aftm', 'aftt', 'afts', 'aftba', 'aftk',
+    'mibox', 'mi box', 'shield', 'nexus player', 'chromecast',
+    'bravia', 'aquos', 'hisense', 'toshiba', 'philips', 'tcl', 'kylo', 'itv', 'cineversetv'
   ];
   if (tvUAPatterns.some(p => ua.includes(p))) return true;
 
-  // Heurística: pantalla muy grande + sin touch + pointer:none (típico de TV)
-  const isLargeScreen = window.screen.width >= 1280 && window.screen.height >= 720;
-  const noTouch = window.matchMedia('(hover: hover) and (pointer: coarse)').matches === false;
-  const hasNoFinePointer = window.matchMedia('(pointer: none)').matches;
-  if (isLargeScreen && (hasNoFinePointer)) return true;
+  // 2. Capacitor o APK nativo en pantalla apaisada (TV boxes HDMI / Android TV)
+  const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
+                   window.location.protocol === 'file:' ||
+                   ua.includes('capacitor');
+  const isLandscape = window.innerWidth > window.innerHeight;
 
-  // Heurística: Capacitor + pantalla grande = probable TV box con APK
-  const isCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-  if (isCapacitor && window.screen.width >= 1920) return true;
+  if (isNative && isLandscape) {
+    return true;
+  }
+
+  // 3. Heurística de Smart TV web
+  if (window.screen.width >= 1280 && window.screen.height >= 720 && isLandscape) {
+    if (window.matchMedia && (window.matchMedia('(pointer: none)').matches || window.matchMedia('(hover: hover) and (pointer: coarse)').matches)) {
+      return true;
+    }
+  }
 
   return false;
 }
@@ -47,51 +50,74 @@ export function initTVMode() {
   if (isTV) {
     document.documentElement.classList.add('tv-mode');
     document.body.classList.add('tv-mode');
-    console.log('[CineVerse TV] Modo TV activado — optimizaciones de rendimiento aplicadas.');
+    console.log('[CineVerse TV] Modo TV y optimizaciones de fluidez activadas.');
 
     // Deshabilitar animaciones pesadas de CSS
     applyTVPerformanceOptimizations();
   }
 
-  // Navegación espacial con D-Pad (funciona también en TV boxes con ratón lento)
+  // Navegación espacial con D-Pad (control remoto)
   setupFocusableElements();
   setupSpatialNavigation(isTV);
 }
 
 // Optimizaciones de rendimiento específicas para TV
 function applyTVPerformanceOptimizations() {
+  if (document.getElementById('tv-perf-overrides')) return;
+
   const style = document.createElement('style');
   style.id = 'tv-perf-overrides';
   style.textContent = `
-    /* Eliminar backdrop-filter (muy costoso en GPU de TV) */
+    /* Fluidez absoluta: Eliminar backdrop-filter (mata la GPU en TV boxes) */
+    .tv-mode,
     .tv-mode * {
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
     }
-    /* Reducir transiciones al mínimo funcional */
-    .tv-mode *, .tv-mode *::before, .tv-mode *::after {
-      transition-duration: 150ms !important;
-      animation-duration: 200ms !important;
-    }
-    /* GPU hint en carruseles */
+
+    /* Eliminar sombras gaussianas pesadas que traban el movimiento del ratón */
+    .tv-mode .movie-card,
     .tv-mode .carousel-section__track,
-    .tv-mode .hero__backdrop {
+    .tv-mode .hero,
+    .tv-mode .navbar {
+      box-shadow: none !important;
+    }
+
+    /* Reducir transiciones a valores ligeros */
+    .tv-mode *, .tv-mode *::before, .tv-mode *::after {
+      transition-duration: 100ms !important;
+      animation-duration: 150ms !important;
+    }
+
+    /* Desactivar zooms hover en cards para que el ratón se mueva ultra ligero */
+    .tv-mode .movie-card:hover {
+      transform: none !important;
+    }
+
+    /* Aceleración por hardware para capas principales */
+    .tv-mode .carousel-section__track,
+    .tv-mode .hero__backdrop,
+    .tv-mode main {
       transform: translateZ(0);
       will-change: transform;
     }
-    /* Cursor del sistema en TV (no custom cursor) */
-    .tv-mode { cursor: auto !important; }
-    .tv-mode * { cursor: inherit !important; }
-    /* Focus visible grande para control remoto */
-    .tv-mode :focus-visible {
-      outline: 3px solid #e50914 !important;
-      outline-offset: 4px !important;
-      border-radius: 6px !important;
+
+    /* Cursor de hardware estándar sin retrasos de software */
+    .tv-mode, .tv-mode * {
+      cursor: auto !important;
     }
-    /* Aumentar legibilidad */
-    .tv-mode .movie-card__title { font-size: 1.1rem !important; }
-    .tv-mode .navbar { height: 80px !important; }
-    .tv-mode .btn, .tv-mode button { min-height: 3rem !important; font-size: 1rem !important; }
+
+    /* Focus visible nítido para control remoto */
+    .tv-mode :focus-visible,
+    .tv-mode .dpad-focused {
+      outline: 4px solid #e50914 !important;
+      outline-offset: 3px !important;
+      border-radius: 8px !important;
+    }
+
+    /* Tamaños cómodos para TV */
+    .tv-mode .navbar { height: 75px !important; }
+    .tv-mode .btn, .tv-mode button { min-height: 2.8rem !important; }
   `;
   document.head.appendChild(style);
 }
@@ -156,51 +182,48 @@ function setupFocusableElements() {
 
   makeFocusable();
 
-  let observerTimer = null;
-  const observer = new MutationObserver(() => {
-    clearTimeout(observerTimer);
-    observerTimer = setTimeout(makeFocusable, 100);
-  });
+  const observer = new MutationObserver(debounce(() => {
+    makeFocusable();
+  }, 250));
+
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
-// ── Algoritmo de Navegación Espacial 2D ──────────────────────────────────────
+function debounce(fn, ms) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  };
+}
+
+// ── Motor de Navegación D-Pad ─────────────────────────────────────────────────
+let isNavigating = false;
+let lastNavTime = 0;
+const NAV_THROTTLE_MS = 100;
+
 function setupSpatialNavigation(isTV) {
-  let tvFocusActive = false;
-  let isNavigating = false;
-
-  // Throttle más agresivo en TV (hardware más lento)
-  const NAV_THROTTLE_MS = isTV ? 120 : 0;
-  let lastNavTime = 0;
-
   document.addEventListener('keydown', (e) => {
-    const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
-    const isArrow = arrowKeys.includes(e.key);
-    const isEnter = e.key === 'Enter';
+    const dpadKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+    const isDPad = dpadKeys.includes(e.key) || [38, 40, 37, 39, 29460, 29461, 4, 5].includes(e.keyCode);
 
-    if (!isArrow && !isEnter) return;
-
-    if (!tvFocusActive) {
-      tvFocusActive = true;
-      document.body.classList.add('tv-focus-active');
-    }
-
-    const currentEl = document.activeElement;
-
-    if (isEnter) {
-      if (currentEl && currentEl !== document.body) {
-        const tag = currentEl.tagName.toLowerCase();
-        if (!['input','textarea','button','select','a'].includes(tag)) {
-          e.preventDefault();
-          currentEl.click();
+    if (!isDPad) {
+      if (e.key === 'Enter' || e.keyCode === 13) {
+        const active = document.activeElement;
+        if (active && active.classList.contains('movie-card')) {
+          active.click();
         }
       }
       return;
     }
 
+    const currentEl = document.activeElement;
+    if (currentEl && (currentEl.tagName === 'INPUT' || currentEl.tagName === 'TEXTAREA')) {
+      return;
+    }
+
     e.preventDefault();
 
-    // Throttle para TVs lentas
     const now = Date.now();
     if (now - lastNavTime < NAV_THROTTLE_MS) return;
     lastNavTime = now;
@@ -244,9 +267,9 @@ function setupSpatialNavigation(isTV) {
 
       let score;
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        score = Math.abs(dx) + Math.abs(dy) * 2.5;
+        score = Math.abs(dx) + Math.abs(dy) * 2.2;
       } else {
-        score = Math.abs(dy) + Math.abs(dx) * 2.5;
+        score = Math.abs(dy) + Math.abs(dx) * 2.2;
       }
 
       if (score < bestScore) {
@@ -262,7 +285,6 @@ function setupSpatialNavigation(isTV) {
   });
 }
 
-// Scroll instantáneo (sin smooth) para TVs — más responsivo
 function scrollToElement(el) {
   const rect = el.getBoundingClientRect();
   const threshold = 100;
@@ -273,7 +295,7 @@ function scrollToElement(el) {
   }
 }
 
-// Auto-ejecución
+// Auto-ejecución inmediata
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initTVMode);
 } else {

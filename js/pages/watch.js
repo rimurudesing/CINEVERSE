@@ -1225,9 +1225,12 @@ class WatchPageController {
 
 // Inicializar
 export const watchPageController = new WatchPageController();
-document.addEventListener('DOMContentLoaded', async () => {
-  await watchPageController.init();
-});
+const initWatch = async () => { await watchPageController.init(); };
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initWatch);
+} else {
+  initWatch();
+}
 
 
 

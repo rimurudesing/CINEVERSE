@@ -794,4 +794,8 @@ class LoginPageController {
 
 // Inicializar controlador
 const controller = new LoginPageController();
-document.addEventListener('DOMContentLoaded', () => controller.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => controller.init());
+} else {
+  controller.init();
+}

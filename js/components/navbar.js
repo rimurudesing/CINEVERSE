@@ -773,64 +773,8 @@ function _closeUpdateNotif(el) {
 }
 
 export function checkForAppUpdate() {
-  // Solo dentro de la APK nativa
-  if (!isNativeApp) return;
-
-  // Consultar la versión más reciente desde el servidor en vivo
-  fetch('https://cineverse-7u5.pages.dev/version.json')
-    .then(res => { if (!res.ok) throw new Error('No response'); return res.json(); })
-    .then(data => {
-      const remoteVersion = data.version;
-      if (!remoteVersion) return;
-
-      // Si la versión instalada ya es igual o mayor a la remota → no mostrar nada
-      if (!_isNewerThan(CURRENT_APP_VER, remoteVersion)) return;
-
-      // Si el usuario ya descartó/descargó exactamente esta versión → no volver a molestar
-      const dismissedVer = localStorage.getItem(DISMISSED_VER_KEY);
-      if (dismissedVer === remoteVersion) return;
-
-      _injectUpdateNotifStyles();
-
-      const notif = document.createElement('div');
-      notif.id = UPDATE_NOTIF_ID;
-      notif.innerHTML = `
-        <div class="cv-update-card">
-          <div class="cv-update-icon">📲</div>
-          <div class="cv-update-content">
-            <div class="cv-update-title">¡Actualización disponible! v${remoteVersion}</div>
-            <div class="cv-update-desc">Tienes la v${CURRENT_APP_VER}. ¡Descarga la nueva versión para tener todo lo nuevo!</div>
-          </div>
-          <div class="cv-update-actions">
-            <a class="cv-update-btn-primary" href="https://cineverse.pages.dev/descargar.html" target="_blank" rel="noopener" id="cv-update-download-btn">
-              Descargar ↗
-            </a>
-            <button class="cv-update-btn-dismiss" id="cv-update-dismiss-btn">Ahora no</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(notif);
-
-      // Al hacer click en descargar → guardar que ya se descargó/descartó ESTA versión
-      document.getElementById('cv-update-download-btn')?.addEventListener('click', () => {
-        localStorage.setItem(DISMISSED_VER_KEY, remoteVersion);
-        _closeUpdateNotif(notif);
-      });
-
-      // Al descartar → también guardar la versión para no volver a molestar
-      document.getElementById('cv-update-dismiss-btn')?.addEventListener('click', () => {
-        localStorage.setItem(DISMISSED_VER_KEY, remoteVersion);
-        _closeUpdateNotif(notif);
-      });
-
-      // Auto-descartar tras 15 segundos
-      setTimeout(() => {
-        if (document.getElementById(UPDATE_NOTIF_ID)) _closeUpdateNotif(notif);
-      }, 15000);
-    })
-    .catch(() => {
-      // Fallo silencioso — sin conexión o servidor no disponible
-    });
+  // Desactivado para experiencia limpia sin interrupciones
+  return;
 }
 
 /**
