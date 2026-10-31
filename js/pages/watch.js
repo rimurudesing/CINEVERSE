@@ -31,6 +31,22 @@ if (typeof window !== 'undefined') {
     console.log('[CineVerse] Bloqueado popup de publicidad:', url);
     return null;
   };
+
+  // Prevenir redirección del frame principal por anuncios dentro del reproductor
+  let isInternalNavigation = false;
+  document.addEventListener('click', (e) => {
+    if (e.target && e.target.closest && e.target.closest('a, button, input, select, textarea, nav, header, .nav-btn')) {
+      isInternalNavigation = true;
+      setTimeout(() => { isInternalNavigation = false; }, 800);
+    }
+  }, true);
+
+  window.addEventListener('beforeunload', (e) => {
+    if (!isInternalNavigation) {
+      e.preventDefault();
+      return (e.returnValue = '');
+    }
+  });
 }
 
 // ── Configuración de Vimeus ──────────────────────────────────────────────────
