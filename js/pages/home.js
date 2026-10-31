@@ -10,6 +10,7 @@ import { initPageTransition } from '../utils.js';
 import { initCustomCursor } from '../cursor.js';
 import '../components/navbar.js';
 import { skeleton } from '../components/skeleton.js';
+import { getHistory } from '../history.js';
 
 class HomePageController {
   constructor() {
@@ -58,6 +59,54 @@ class HomePageController {
       }
 
       // FASE 3 — Grids y explorador con baja prioridad (deferred)
+      
+      // ── MEJORA 22: Cargar "Continuar Viendo" desde el historial ──────────────
+      const historyItems = await getHistory(12);
+      if (historyItems && historyItems.length > 0) {
+        const rootCont = document.querySelector('#continue-watching-root');
+        if (rootCont) {
+          rootCont.style.display = 'block';
+          new Carousel('#continue-watching-carousel', historyItems, 'Continuar Viendo', 'Tu Historial');
+        }
+      }
+
+      // ── MEJORA 43: Cargar Tendencias en tu Región ─────────────────────────────
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        let userRegion = 'MX';
+        if (tz.includes('Europe') || tz.includes('Madrid')) userRegion = 'ES';
+        else if (tz.includes('Buenos_Aires')) userRegion = 'AR';
+        else if (tz.includes('Bogota')) userRegion = 'CO';
+        else if (tz.includes('Santiago')) userRegion = 'CL';
+        else if (tz.includes('Lima')) userRegion = 'PE';
+
+        const regionMovies = await api.getTrendingByRegion('movie', userRegion);
+        if (regionMovies && regionMovies.length > 0) {
+          const regionRoot = document.querySelector('#region-trending-root');
+          if (regionRoot) {
+            regionRoot.style.display = 'block';
+            new Carousel('#region-trending-carousel', regionMovies, `Tendencias en tu País (${userRegion})`, 'Populares');
+          }
+        }
+      } catch (e) {
+        console.warn('Error cargando tendencias de región:', e);
+      }
+
+      // ── MEJORA 25: Recomendado para Ti ────────────────────────────────────────
+      try {
+        const recGenre = (historyItems[0]?.genre_ids?.[0]) || 28; // Acción o el del último visto
+        const recommended = await api.discoverByGenre(recGenre, 'movie', 1);
+        if (recommended && recommended.length > 0) {
+          const recRoot = document.querySelector('#recommended-root');
+          if (recRoot) {
+            recRoot.style.display = 'block';
+            new Carousel('#recommended-carousel', recommended, '⭐ Recomendado para Ti', 'Personalizado');
+          }
+        }
+      } catch (e) {
+        console.warn('Error cargando recomendados:', e);
+      }
+
       const renderLowPriority = () => {
         if (topMovies) this.renderTopRatedGrid('movie', topMovies);
         if (topTV)     this.renderTopRatedGrid('tv',    topTV);

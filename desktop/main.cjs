@@ -69,6 +69,26 @@ function createWindow() {
     console.warn('[CineVerse Desktop] Error en frame principal:', errorCode, errorDescription);
   });
 
+  // Dominios de autenticación permitidos (Google OAuth + Supabase)
+  const AUTH_DOMAINS = [
+    'accounts.google.com',
+    'accounts.youtube.com',
+    'oeibxtnltxxcaiwvpldi.supabase.co',
+    'supabase.co',
+    'google.com',
+    'apis.google.com',
+    'myaccount.google.com'
+  ];
+
+  function isAuthUrl(targetUrl) {
+    try {
+      const parsed = new URL(targetUrl);
+      return AUTH_DOMAINS.some(d => parsed.hostname === d || parsed.hostname.endsWith('.' + d));
+    } catch {
+      return false;
+    }
+  }
+
   // Dominios externos permitidos para abrir en el navegador del sistema (descargas, donaciones)
   const ALLOWED_EXTERNAL_DOMAINS = [
     'mediafire.com', 'www.mediafire.com',
@@ -86,8 +106,16 @@ function createWindow() {
     }
   }
 
+  // Personalizar User-Agent para que Google OAuth permita el inicio de sesión sin error disallowed_useragent
+  const standardUserAgent = mainWindow.webContents.userAgent.replace(/Electron\/\S+\s/i, '');
+  mainWindow.webContents.setUserAgent(standardUserAgent);
+
   // Manejo de ventanas emergentes (bloquea popups de anuncios de reproductores)
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (isAuthUrl(url)) {
+      // Permitir que flujos de OAuth abran ventana o se ejecuten
+      return { action: 'allow' };
+    }
     if (isAllowedExternal(url)) {
       shell.openExternal(url);
     } else {
@@ -96,15 +124,17 @@ function createWindow() {
     return { action: 'deny' };
   });
 
-  // Interceptar navegación externa (bloquea redirecciones automáticas del reproductor)
+  // Interceptar navegación externa (bloquea redirecciones automáticas del reproductor, permite app y auth)
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (!url.startsWith('https://cineverse-7u5.pages.dev') && !url.startsWith('file://')) {
-      event.preventDefault();
-      if (isAllowedExternal(url)) {
-        shell.openExternal(url);
-      } else {
-        console.log('[CineVerse Desktop] Bloqueada redirección no autorizada:', url);
-      }
+    if (url.startsWith('https://cineverse-7u5.pages.dev') || url.startsWith('file://') || isAuthUrl(url)) {
+      // Navegación permitida dentro de la aplicación o flujo de login
+      return;
+    }
+    event.preventDefault();
+    if (isAllowedExternal(url)) {
+      shell.openExternal(url);
+    } else {
+      console.log('[CineVerse Desktop] Bloqueada redirección no autorizada:', url);
     }
   });
 

@@ -3,6 +3,9 @@
 import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { getCurrentUser } from '../auth.js';
 import { buildTMDBImageURL, formatYear, formatRating, getMediaType, navigateTo, showToast } from '../utils.js';
+import { toggleWatchlist as toggleWatchlistExt, isInWatchlist } from '../watchlist.js';
+import { getItemProgress } from '../history.js';
+import { api } from '../api.js';
 
 /**
  * Asegura que el perfil del usuario exista en la tabla profiles.
@@ -115,6 +118,7 @@ export function createMovieCard(item, options = {}) {
   card.setAttribute('tabindex', '0');
   card.setAttribute('role', 'button');
   card.setAttribute('aria-label', `${title} (${year}), valoración ${rating}`);
+  card.setAttribute('data-backdrop', item.backdrop_path || '');
 
   // Mapear color de glow dinámico según el género principal
   const primaryGenreId = genreIds[0] || 0;
@@ -128,6 +132,16 @@ export function createMovieCard(item, options = {}) {
     <span class="movie-card__rating"><svg class="iconly-icon" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${rating}</span>
     <img class="movie-card__img" src="${poster}" alt="${title}" ${lazyLoad ? 'loading="lazy"' : ''}>
     
+    
+    <!-- Barra de progreso de reproducción si el título fue empezado -->
+    ${(() => {
+      const progress = getItemProgress(item.id);
+      if (progress && progress > 0) {
+        return `<div class="movie-card__progress-wrap"><div class="movie-card__progress-bar" style="width: ${progress}%;"></div></div>`;
+      }
+      return '';
+    })()}
+
     <div class="movie-card__overlay">
       <div class="movie-card__info">
         <h3 class="movie-card__title">${title}</h3>
@@ -203,6 +217,33 @@ export function createMovieCard(item, options = {}) {
 
   // Consultar base de datos para pintar los estados activos de los botones favoritos/watchlist si el usuario está logueado
   checkInitialButtonStates(item, listBtn, favBtn);
+
+  
+  // Prefetch en hover inteligente (tras 120ms)
+  let prefetchTimer = null;
+  card.addEventListener('mouseenter', () => {
+    prefetchTimer = setTimeout(() => {
+      if (!card._hasPrefetched) {
+        card._hasPrefetched = true;
+        // Precargar página de detalle en caché del navegador
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = `info.html?id=${item.id}&type=${type}`;
+        document.head.appendChild(link);
+
+        // Precargar datos en la API de TMDB
+        if (type === 'movie') {
+          api.getMovieDetails(item.id).catch(() => {});
+        } else {
+          api.getTvDetails ? api.getTvDetails(item.id).catch(() => {}) : null;
+        }
+      }
+    }, 120);
+  }, { passive: true });
+
+  card.addEventListener('mouseleave', () => {
+    if (prefetchTimer) clearTimeout(prefetchTimer);
+  }, { passive: true });
 
   return card;
 }

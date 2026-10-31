@@ -220,13 +220,21 @@ export function navigateTo(page, params = {}) {
   const queryString = queryParams.toString();
   const url = queryString ? `${page}?${queryString}` : page;
 
+  // View Transitions API nativa para transición ultra-suave
+  if (document.startViewTransition) {
+    document.startViewTransition(() => {
+      window.location.href = url;
+    });
+    return;
+  }
+
   const overlay = document.querySelector('.page-transition-overlay');
   if (overlay) {
     overlay.classList.remove('out');
     overlay.classList.add('in');
     setTimeout(() => {
       window.location.href = url;
-    }, 400); // Sincronizado con CSS transition-duration
+    }, 350);
   } else {
     window.location.href = url;
   }
@@ -438,4 +446,105 @@ export function getCVLoader(text = 'Cargando...') {
       </svg>
       ${text ? `<span class="cv-loader__text">${text}</span>` : ''}
     </div>`;
+}
+
+
+/* ── MEJORA 14, 17, 20, 42: Utilidades avanzadas de Navegación, Temas y Plataforma ── */
+
+/**
+ * Inicializa el Service Worker para caché inteligente y soporte offline
+ */
+export function initServiceWorker() {
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then((reg) => {
+        console.log('[CineVerse] Service Worker registrado con éxito:', reg.scope);
+      }).catch((err) => {
+        console.warn('[CineVerse] No se pudo registrar Service Worker:', err);
+      });
+    });
+  }
+}
+
+/**
+ * Gestos táctiles en dispositivos móviles (Deslizar a la derecha para volver atrás)
+ */
+export function initTouchGestures() {
+  if (typeof window === 'undefined' || !('ontouchstart' in window)) return;
+
+  let startX = 0;
+  let startY = 0;
+
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    if (e.changedTouches.length === 1) {
+      const deltaX = e.changedTouches[0].clientX - startX;
+      const deltaY = e.changedTouches[0].clientY - startY;
+
+      // Deslizar de izquierda a derecha desde el borde (swipe back)
+      if (startX < 60 && deltaX > 90 && Math.abs(deltaY) < 60) {
+        if (window.history.length > 1) {
+          window.history.back();
+        }
+      }
+    }
+  }, { passive: true });
+}
+
+/**
+ * Manejo de temas: 'dark' (Oscuro por defecto), 'light' (Claro), 'amoled' (Negro Puro)
+ */
+export function applyThemeMode(mode = 'dark') {
+  const valid = ['dark', 'light', 'amoled'];
+  const finalMode = valid.includes(mode) ? mode : 'dark';
+  document.documentElement.setAttribute('data-theme', finalMode);
+  try {
+    localStorage.setItem('cineverse_theme_mode', finalMode);
+  } catch {}
+  window.dispatchEvent(new CustomEvent('cineverse:theme-changed', { detail: { mode: finalMode } }));
+  return finalMode;
+}
+
+export function getThemeMode() {
+  try {
+    return localStorage.getItem('cineverse_theme_mode') || 'dark';
+  } catch {
+    return 'dark';
+  }
+}
+
+/**
+ * Manejo de Deep Links: cineverse://watch?id=...&type=... o query param ?watch=...
+ */
+export function handleDeepLinks() {
+  if (typeof window === 'undefined') return;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const watchParam = urlParams.get('watch');
+  const typeParam = urlParams.get('type') || 'movie';
+
+  if (watchParam) {
+    navigateTo('watch.html', { id: watchParam, type: typeParam });
+  }
+}
+
+// Auto-inicialización de características globales
+if (typeof window !== 'undefined') {
+  // Aplicar tema guardado
+  const savedTheme = getThemeMode();
+  document.documentElement.setAttribute('data-theme', savedTheme);
+
+  // Iniciar SW y gestos
+  initServiceWorker();
+  initTouchGestures();
+  handleDeepLinks();
+
+  // Iniciar Gamepad
+  import('./gamepad.js').then(m => m.initGamepad()).catch(() => {});
 }

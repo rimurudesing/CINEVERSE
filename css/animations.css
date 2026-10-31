@@ -419,3 +419,29 @@
     scroll-behavior: auto !important;
   }
 }
+
+
+/* ── View Transitions API: Animaciones de transición suave de páginas ── */
+::view-transition-old(root) {
+  animation: cvPageOut 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+::view-transition-new(root) {
+  animation: cvPageIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes cvPageOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.985); }
+}
+
+@keyframes cvPageIn {
+  from { opacity: 0; transform: scale(1.015); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Animación del Screensaver de TV ── */
+@keyframes pulseScreensaver {
+  0% { transform: scale(1); opacity: 0.75; }
+  50% { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.75; }
+}

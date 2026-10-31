@@ -1,3 +1,100 @@
+
+// ── MEJORA 36: Sonido de navegación Web Audio API (D-Pad) ──────────────────
+let _audioCtx = null;
+function playNavSound(type = 'move') {
+  try {
+    if (!_audioCtx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) _audioCtx = new AudioCtx();
+    }
+    if (!_audioCtx) return;
+
+    if (_audioCtx.state === 'suspended') {
+      _audioCtx.resume();
+    }
+
+    const osc = _audioCtx.createOscillator();
+    const gain = _audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(_audioCtx.destination);
+
+    if (type === 'move') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, _audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, _audioCtx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.04, _audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.001, _audioCtx.currentTime + 0.04);
+      osc.start();
+      osc.stop(_audioCtx.currentTime + 0.045);
+    } else {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(600, _audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, _audioCtx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.06, _audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.001, _audioCtx.currentTime + 0.08);
+      osc.start();
+      osc.stop(_audioCtx.currentTime + 0.085);
+    }
+  } catch (e) {}
+}
+
+// ── MEJORA 37: Screensaver para TV (Inactividad 5 min) ───────────────────────
+let _screensaverTimer = null;
+let _screensaverEl = null;
+
+function resetScreensaverTimer() {
+  clearTimeout(_screensaverTimer);
+  if (_screensaverEl) {
+    _screensaverEl.style.opacity = '0';
+    setTimeout(() => {
+      if (_screensaverEl) {
+        _screensaverEl.remove();
+        _screensaverEl = null;
+      }
+    }, 400);
+  }
+
+  // Si está en modo TV, programar salvapantallas a los 5 minutos (300,000 ms)
+  if (document.body.classList.contains('tv-mode')) {
+    _screensaverTimer = setTimeout(showScreensaver, 300000);
+  }
+}
+
+function showScreensaver() {
+  if (_screensaverEl) return;
+
+  _screensaverEl = document.createElement('div');
+  _screensaverEl.id = 'cv-tv-screensaver';
+  _screensaverEl.style.cssText = `
+    position: fixed; inset: 0; z-index: 999999;
+    background: #000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; font-family: var(--font-display, sans-serif);
+    opacity: 0; transition: opacity 0.6s ease;
+    cursor: none; user-select: none;
+  `;
+  _screensaverEl.innerHTML = `
+    <div style="text-align: center; animation: pulseScreensaver 4s infinite alternate ease-in-out;">
+      <div style="font-size: 3.5rem; color: #E50914; font-weight: 900; letter-spacing: 0.15em; text-shadow: 0 0 30px rgba(229,9,20,0.6);">
+        CINEVERSE
+      </div>
+      <p style="font-size: 0.95rem; color: #888; margin-top: 1rem; font-family: var(--font-ui, sans-serif); letter-spacing: 0.05em;">
+        Presiona cualquier botón en el control para reanudar
+      </p>
+    </div>
+  `;
+
+  document.body.appendChild(_screensaverEl);
+  requestAnimationFrame(() => {
+    if (_screensaverEl) _screensaverEl.style.opacity = '1';
+  });
+}
+
+// Escuchar cualquier interacción para cancelar el salvapantallas
+['keydown', 'mousemove', 'click', 'touchstart'].forEach(evt => {
+  window.addEventListener(evt, resetScreensaverTimer, { passive: true });
+});
+
 /* ═══ cineverse/js/tv.js ═══ */
 
 /**
@@ -211,6 +308,7 @@ function setupSpatialNavigation(isTV) {
       if (e.key === 'Enter' || e.keyCode === 13) {
         const active = document.activeElement;
         if (active && active.classList.contains('movie-card')) {
+          playNavSound('select');
           active.click();
         }
       }
@@ -280,6 +378,7 @@ function setupSpatialNavigation(isTV) {
 
     if (bestEl) {
       bestEl.focus({ preventScroll: true });
+      playNavSound('move');
       scrollToElement(bestEl);
     }
   });

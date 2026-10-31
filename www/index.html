@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'">
+  <script>(function(){try{var t=localStorage.getItem('cineverse_theme_mode')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <!-- v3.0.0 — 2026-06-21 -->
   <!-- Icono y Favicon de la Web -->
   <link rel="icon" type="image/png" href="assets/icon.png">
@@ -137,6 +141,22 @@
     <div class="adsterra-banner adsterra-banner--mobile"></div>
     
     <!-- Carrusel 1: Trending Semanal -->
+    
+    <!-- Sección Continuar Viendo (dinámica) -->
+    <div id="continue-watching-root" style="display: none; margin-bottom: 2rem;">
+      <div id="continue-watching-carousel"></div>
+    </div>
+
+    <!-- Sección Tendencias por Región (dinámica) -->
+    <div id="region-trending-root" style="display: none; margin-bottom: 2rem;">
+      <div id="region-trending-carousel"></div>
+    </div>
+
+    <!-- Sección Recomendado para Ti (dinámica) -->
+    <div id="recommended-root" style="display: none; margin-bottom: 2rem;">
+      <div id="recommended-carousel"></div>
+    </div>
+
     <div id="trending-carousel"></div>
 
     <!-- Carrusel 2: En Cartelera Ahora -->

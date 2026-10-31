@@ -1,3 +1,49 @@
+
+/**
+ * ── MEJORA 13: Extraer color dominante del póster para iluminar la página ──
+ */
+function extractDominantColor(imgUrl) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 30;
+        canvas.height = 45;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, 30, 45);
+        const data = ctx.getImageData(0, 0, 30, 45).data;
+
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let i = 0; i < data.length; i += 16) {
+          // Evitar pixeles muy oscuros o casi blancos
+          const br = (data[i] + data[i+1] + data[i+2]) / 3;
+          if (br > 35 && br < 220) {
+            r += data[i];
+            g += data[i+1];
+            b += data[i+2];
+            count++;
+          }
+        }
+
+        if (count > 0) {
+          r = Math.round(r / count);
+          g = Math.round(g / count);
+          b = Math.round(b / count);
+          resolve(`rgb(${r}, ${g}, ${b})`);
+        } else {
+          resolve('#E50914');
+        }
+      } catch {
+        resolve('#E50914');
+      }
+    };
+    img.onerror = () => resolve('#E50914');
+    img.src = imgUrl;
+  });
+}
+
 /* ═══ cineverse/js/pages/info.js ═══ */
 /* Página de información detallada de película o serie */
 
@@ -16,6 +62,8 @@ import {
 } from '../utils.js';
 import '../components/navbar.js';
 import { RatingRing } from '../components/ratingRing.js';
+import { toggleWatchlist, isInWatchlist } from '../watchlist.js';
+import { setUserRating, getUserRating } from '../ratings.js';
 
 let supabase = null;
 
@@ -65,6 +113,16 @@ class InfoPageController {
 
     // ── PASO 2: Renderizar la página INMEDIATAMENTE (sin esperar auth) ───────
     this._renderHero();
+    // Aplicar extracción de color ambiental
+    if (this.details?.poster_path) {
+      const posterUrl = buildTMDBImageURL(this.details.poster_path, 'w342');
+      extractDominantColor(posterUrl).then(color => {
+        const heroEl = document.querySelector('.info-hero');
+        if (heroEl) {
+          heroEl.style.boxShadow = `inset 0 -120px 100px -20px ${color.replace('rgb', 'rgba').replace(')', ', 0.35)')}`;
+        }
+      });
+    }
     this._render();
 
     // ── PASO 3: Auth + Supabase en segundo plano, actualiza botones después ──

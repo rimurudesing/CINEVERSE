@@ -1,0 +1,104 @@
+/* ═══ cineverse/js/ratings.js — Sistema de Ratings Personal ⭐ ═══ */
+
+import { getSupabase, isSupabaseConfigured } from './supabase.js';
+import { getCurrentUser } from './auth.js';
+import { showToast } from './utils.js';
+
+const LOCAL_KEY = 'cineverse_user_ratings';
+
+function getLocalRatings() {
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function saveLocalRatings(ratings) {
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(ratings));
+  } catch (e) {
+    console.warn('Error guardando ratings locales:', e);
+  }
+}
+
+/**
+ * Guardar o actualizar la calificación de un usuario para un contenido
+ * @param {number|string} tmdbId
+ * @param {number} rating - Valor de 1 a 10
+ * @param {string} mediaType - 'movie' o 'tv'
+ */
+export async function setUserRating(tmdbId, rating, mediaType = 'movie') {
+  if (!tmdbId || !rating) return null;
+
+  const validRating = Math.min(10, Math.max(1, Math.round(rating * 10) / 10));
+  const local = getLocalRatings();
+  local[String(tmdbId)] = {
+    rating: validRating,
+    media_type: mediaType,
+    updated_at: Date.now()
+  };
+  saveLocalRatings(local);
+
+  showToast(`★ Tu puntuación: ${validRating}/10 guardada`, 'success');
+
+  const user = await getCurrentUser().catch(() => null);
+  if (user && isSupabaseConfigured) {
+    try {
+      const supabase = await getSupabase();
+      if (supabase) {
+        await supabase.from('ratings').upsert({
+          user_id: user.id,
+          tmdb_id: parseInt(tmdbId, 10),
+          media_type: mediaType,
+          rating: validRating,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id,tmdb_id' });
+      }
+    } catch (e) {
+      console.warn('[Ratings] Error al sincronizar con Supabase:', e);
+    }
+  }
+
+  window.dispatchEvent(new CustomEvent('cineverse:rating-updated', {
+    detail: { tmdbId, rating: validRating }
+  }));
+
+  return validRating;
+}
+
+/**
+ * Obtener la calificación otorgada por el usuario a un título
+ */
+export async function getUserRating(tmdbId) {
+  if (!tmdbId) return null;
+
+  const local = getLocalRatings();
+  const cached = local[String(tmdbId)];
+  if (cached && typeof cached.rating === 'number') {
+    return cached.rating;
+  }
+
+  const user = await getCurrentUser().catch(() => null);
+  if (user && isSupabaseConfigured) {
+    try {
+      const supabase = await getSupabase();
+      if (supabase) {
+        const { data } = await supabase
+          .from('ratings')
+          .select('rating')
+          .eq('user_id', user.id)
+          .eq('tmdb_id', parseInt(tmdbId, 10))
+          .maybeSingle();
+
+        if (data && typeof data.rating === 'number') {
+          local[String(tmdbId)] = { rating: data.rating, updated_at: Date.now() };
+          saveLocalRatings(local);
+          return data.rating;
+        }
+      }
+    } catch {}
+  }
+
+  return null;
+}

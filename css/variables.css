@@ -84,3 +84,29 @@
   --shadow-glow-red:  0 0 35px rgba(229,9,20,0.3), 0 0 70px rgba(229,9,20,0.12);
 }
 
+
+
+/* ── Temas de Visualización: Claro y AMOLED ── */
+[data-theme="light"] {
+  --bg-primary: #f5f6fa;
+  --bg-secondary: #e8ebf2;
+  --bg-card: #ffffff;
+  --text-primary: #12131a;
+  --text-secondary: #4a4e69;
+  --text-muted: #8d99ae;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --header-bg: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="amoled"] {
+  --bg-primary: #000000;
+  --bg-secondary: #080808;
+  --bg-card: #0d0d0d;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted: #777777;
+  --border-color: rgba(255, 255, 255, 0.06);
+  --glass-bg: rgba(0, 0, 0, 0.95);
+  --header-bg: rgba(0, 0, 0, 0.95);
+}

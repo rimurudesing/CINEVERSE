@@ -466,3 +466,76 @@
   background: linear-gradient(90deg, transparent, rgba(229,9,20,0.4), transparent);
   margin: 2rem 0;
 }
+
+
+/* ── Barra de progreso de reproducción en tarjetas (Continuar Viendo) ── */
+.movie-card__progress-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 10;
+  overflow: hidden;
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+}
+
+.movie-card__progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #E50914, #ff2d2d);
+  box-shadow: 0 0 8px rgba(229, 9, 20, 0.8);
+  transition: width 0.3s ease;
+}
+
+/* ── Hero Trailer Background & Botón de Audio ── */
+.hero-spotlight__trailer-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  animation: heroTrailerFadeIn 1s ease forwards;
+}
+
+.hero-spotlight__trailer-frame iframe {
+  width: 100%;
+  height: 100%;
+  transform: scale(1.35);
+  pointer-events: none;
+}
+
+.hero-spotlight__sound-btn {
+  position: absolute;
+  bottom: 2rem;
+  right: 2.5rem;
+  z-index: 10;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.hero-spotlight__sound-btn:hover {
+  background: rgba(229, 9, 20, 0.8);
+  border-color: #e50914;
+  transform: scale(1.05);
+}
+
+@keyframes heroTrailerFadeIn {
+  to { opacity: 1; }
+}

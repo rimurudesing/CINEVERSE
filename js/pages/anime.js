@@ -1,3 +1,35 @@
+
+/**
+ * ── MEJORA 45: Consulta a la API GraphQL pública de AniList ──
+ */
+async function fetchAniListInfo(romajiOrEnglishTitle) {
+  if (!romajiOrEnglishTitle) return null;
+  const query = `
+    query ($search: String) {
+      Media(search: $search, type: ANIME) {
+        id
+        averageScore
+        popularity
+        status
+        episodes
+        siteUrl
+      }
+    }
+  `;
+
+  try {
+    const res = await fetch('https://graphql.anilist.co', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ query, variables: { search: romajiOrEnglishTitle } })
+    });
+    const data = await res.json();
+    return data?.data?.Media || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 /* ═══ cineverse/js/pages/anime.js ═══ */
 
 import '../admob.js';

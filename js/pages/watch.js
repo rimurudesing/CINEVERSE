@@ -15,6 +15,7 @@ import { initCustomCursor } from '../cursor.js';
 import '../components/navbar.js';
 
 import { showInterstitialAd } from '../admob.js';
+import { addToHistory } from '../history.js';
 import { getGlobalSettings } from '../settings.js';
 import { detectAdBlock, showAdBlockModal } from '../adblock-detector.js';
 
@@ -103,6 +104,16 @@ class WatchPageController {
   }
 
   async init() {
+
+    // Preconnect a servidores de video para máxima velocidad de carga
+    ['https://vimeus.com', 'https://vidlink.pro', 'https://image.tmdb.org'].forEach(url => {
+      const link = document.createElement('link');
+      link.rel = 'preconnect';
+      link.href = url;
+      link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
+    });
+
     initPageTransition();
     initCustomCursor();
 
@@ -332,6 +343,9 @@ class WatchPageController {
     this.bindServerTabs();
     this.bindCastButton();
     this.bindPiPAndGestures();
+
+    // ── MEJORA 12: Inicializar Modo Cine ─────────────────────────────────────
+    this.initTheaterMode();
 
     // Vincular eventos del selector de episodios (series)
     if (this.mediaType === 'tv') {
@@ -858,9 +872,83 @@ class WatchPageController {
           'flex-shrink:0;">',
           playIconSvg + ' <span>Reproducir</span>',
         '</button>',
+        '<button id="next-episode-btn" class="btn btn--secondary" style="',
+          'background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15);',
+          'padding:0.65rem 1rem;font-size:0.83rem;font-weight:700;border-radius:var(--radius-sm);',
+          'display:inline-flex;align-items:center;gap:0.4rem;cursor:pointer;transition:all 0.2s;">',
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"/></svg> <span>Siguiente</span>',
+        '</button>',
 
       '</div>'
     ].join('');
+  }
+
+  
+  /**
+   * ── MEJORA 12: Modo Cine (Theater Mode) ────────────────────────────────────
+   */
+  initTheaterMode() {
+    let overlay = document.querySelector('.theater-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'theater-overlay';
+      document.body.appendChild(overlay);
+    }
+
+    let exitBtn = document.querySelector('.theater-exit-btn');
+    if (!exitBtn) {
+      exitBtn = document.createElement('button');
+      exitBtn.className = 'theater-exit-btn';
+      exitBtn.innerHTML = '✕';
+      exitBtn.title = 'Salir del Modo Cine (ESC)';
+      exitBtn.setAttribute('aria-label', 'Salir del Modo Cine');
+      document.body.appendChild(exitBtn);
+    }
+
+    // Inyectar botón de modo cine en la barra de servidores si existe
+    const serversHeader = document.querySelector('.player-servers-header');
+    if (serversHeader && !serversHeader.querySelector('.theater-toggle-btn')) {
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = 'theater-toggle-btn';
+      toggleBtn.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+          <path d="M7 15h10M7 9h10"></path>
+        </svg>
+        <span>Modo Cine</span>
+      `;
+      toggleBtn.style.marginLeft = 'auto';
+      toggleBtn.style.marginRight = '0.75rem';
+
+      const toggleAction = () => {
+        const isTheater = document.body.classList.toggle('theater-mode');
+        overlay.classList.toggle('active', isTheater);
+        toggleBtn.classList.toggle('active', isTheater);
+      };
+
+      toggleBtn.addEventListener('click', toggleAction);
+      exitBtn.addEventListener('click', () => {
+        document.body.classList.remove('theater-mode');
+        overlay.classList.remove('active');
+        toggleBtn.classList.remove('active');
+      });
+      overlay.addEventListener('click', () => {
+        document.body.classList.remove('theater-mode');
+        overlay.classList.remove('active');
+        toggleBtn.classList.remove('active');
+      });
+
+      // Tecla ESC para salir
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.body.classList.contains('theater-mode')) {
+          document.body.classList.remove('theater-mode');
+          overlay.classList.remove('active');
+          toggleBtn.classList.remove('active');
+        }
+      });
+
+      serversHeader.appendChild(toggleBtn);
+    }
   }
 
   bindEpisodeBarEvents() {
@@ -885,6 +973,30 @@ class WatchPageController {
     const modalTitle   = document.getElementById('ep-modal-series-title');
 
     if (!seasonDrop || !epDrop || !playBtn) return;
+
+    const nextBtn = document.getElementById('next-episode-btn');
+    nextBtn?.addEventListener('click', () => {
+      const currentEp = parseInt(this.episode || 1, 10);
+      const currentSe = parseInt(this.season || 1, 10);
+      const seasons = this.mediaDetails.seasons || [];
+      const currentSeasonData = seasons.find(s => s.season_number === currentSe);
+      const maxEp = currentSeasonData ? currentSeasonData.episode_count : 50;
+
+      if (currentEp < maxEp) {
+        selectAndPlay(currentSe, currentEp + 1);
+        showToast(`Cargando Episodio ${currentEp + 1}...`, 'info');
+      } else {
+        // Siguiente temporada
+        const nextSe = currentSe + 1;
+        const nextSeData = seasons.find(s => s.season_number === nextSe);
+        if (nextSeData) {
+          selectAndPlay(nextSe, 1);
+          showToast(`Cargando Temporada ${nextSe} Episodio 1...`, 'info');
+        } else {
+          showToast('¡Has llegado al último episodio disponible!', 'info');
+        }
+      }
+    });
 
     const seasons = this.mediaDetails.seasons
       ? this.mediaDetails.seasons.filter(s => s.season_number > 0)

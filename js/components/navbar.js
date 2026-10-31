@@ -87,6 +87,7 @@ export function renderNavbar() {
       </nav>
 
       <div class="navbar__actions">
+        <button class="navbar__theme-toggle-btn active-press" aria-label="Cambiar tema" id="navbar-theme-btn" title="Cambiar modo de tema (Oscuro / Claro / AMOLED)" style="background:transparent;border:none;cursor:pointer;font-size:1.15rem;display:flex;align-items:center;justify-content:center;padding:0.4rem;border-radius:50%;color:var(--text-secondary);transition:transform 0.2s;">🌙</button>
         <a href="buscar.html" class="navbar__search-btn active-press" aria-label="Buscar" id="navbar-search-btn">${ICONLY.search}</a>
         <button class="navbar__hamburger" aria-label="Abrir menú">
           <span></span>
