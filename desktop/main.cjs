@@ -69,17 +69,42 @@ function createWindow() {
     console.warn('[CineVerse Desktop] Error en frame principal:', errorCode, errorDescription);
   });
 
-  // Manejo de enlaces externos (MediaFire, donaciones, etc.)
+  // Dominios externos permitidos para abrir en el navegador del sistema (descargas, donaciones)
+  const ALLOWED_EXTERNAL_DOMAINS = [
+    'mediafire.com', 'www.mediafire.com',
+    'github.com', 'www.github.com',
+    'paypal.me', 'www.paypal.me',
+    'themoviedb.org', 'www.themoviedb.org'
+  ];
+
+  function isAllowedExternal(targetUrl) {
+    try {
+      const parsed = new URL(targetUrl);
+      return ALLOWED_EXTERNAL_DOMAINS.some(d => parsed.hostname === d || parsed.hostname.endsWith('.' + d));
+    } catch {
+      return false;
+    }
+  }
+
+  // Manejo de ventanas emergentes (bloquea popups de anuncios de reproductores)
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    if (isAllowedExternal(url)) {
+      shell.openExternal(url);
+    } else {
+      console.log('[CineVerse Desktop] Bloqueado popup de publicidad:', url);
+    }
     return { action: 'deny' };
   });
 
-  // Interceptar clicks en <a target="_blank"> también
+  // Interceptar navegación externa (bloquea redirecciones automáticas del reproductor)
   mainWindow.webContents.on('will-navigate', (event, url) => {
     if (!url.startsWith('https://cineverse-7u5.pages.dev') && !url.startsWith('file://')) {
       event.preventDefault();
-      shell.openExternal(url);
+      if (isAllowedExternal(url)) {
+        shell.openExternal(url);
+      } else {
+        console.log('[CineVerse Desktop] Bloqueada redirección no autorizada:', url);
+      }
     }
   });
 

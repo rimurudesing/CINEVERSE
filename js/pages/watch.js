@@ -21,6 +21,18 @@ import { detectAdBlock, showAdBlockModal } from '../adblock-detector.js';
 // ── Detección de plataforma nativa (APK Capacitor) ──────────────────────────
 const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
 
+// ── Bloqueo de popups y redirecciones no autorizadas desde reproductores ──────
+if (typeof window !== 'undefined') {
+  const _origOpen = window.open;
+  window.open = function(url, target, features) {
+    if (url && (url.includes('mediafire.com') || url.includes('paypal.me') || url.includes('github.com'))) {
+      return _origOpen ? _origOpen.call(window, url, target, features) : null;
+    }
+    console.log('[CineVerse] Bloqueado popup de publicidad:', url);
+    return null;
+  };
+}
+
 // ── Configuración de Vimeus ──────────────────────────────────────────────────
 const VIMEUS_VIEW_KEY = '25Tqx20dkTAAEwYg-QImuDY5oIbdlxJQlOPru7Jt0ek';
 
@@ -249,7 +261,6 @@ class WatchPageController {
           allowfullscreen
           referrerpolicy="origin"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
         ></iframe>
 
 
