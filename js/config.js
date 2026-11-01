@@ -24,3 +24,6 @@ export const TMDB_BACKDROP_SIZES = {
 export const SUPABASE_URL = "https://oeibxtnltxxcaiwvpldi.supabase.co";
 export const SUPABASE_ANON_KEY = "sb_publishable_qlJxPHqUnCD1xhuXCJ--kg_nMg44rCn";
 
+
+// Versión de la app — build.js la reemplaza automáticamente con la versión de package.json
+export const APP_VERSION = '3.0.0';
