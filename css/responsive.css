@@ -264,9 +264,7 @@ body.tv-focus-active :focus {
 }
 
 /* En TV, ocultamos el cursor personalizado si se usa */
-body.tv-mode {
-  cursor: none !important;
-}
+body.tv-mode { cursor: auto !important; }
 
 /* Optimización de rendimiento para TVs (Tizen, webOS, etc.):
    Deshabilitar efectos pesados de rendering como difuminados dinámicos (backdrop-filters) y animaciones continuas */

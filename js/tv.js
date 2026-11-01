@@ -71,7 +71,7 @@ function showScreensaver() {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     color: #fff; font-family: var(--font-display, sans-serif);
     opacity: 0; transition: opacity 0.6s ease;
-    cursor: none; user-select: none;
+    cursor: auto; user-select: none;
   `;
   _screensaverEl.innerHTML = `
     <div style="text-align: center; animation: pulseScreensaver 4s infinite alternate ease-in-out;">
@@ -121,13 +121,19 @@ export function isTVDevice() {
   if (tvUAPatterns.some(p => ua.includes(p))) return true;
 
   // 2. Capacitor o APK nativo en pantalla apaisada (TV boxes HDMI / Android TV)
-  const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
-                   window.location.protocol === 'file:' ||
-                   ua.includes('capacitor');
-  const isLandscape = window.innerWidth > window.innerHeight;
+    // 2. Dispositivos nativos: Solo TV si tiene UA explícito o Leanback (NUNCA en Electron de PC)
+  if (ua.includes('electron')) {
+    return false; // PC de escritorio siempre tiene ratón y teclado normal
+  }
 
-  if (isNative && isLandscape) {
+  // 3. Android TV / TV boxes reales (identificadas por la app en MainActivity con CineVerseTV o leanback)
+  if (ua.includes('cineversetv') || ua.includes('leanback') || ua.includes('googletv')) {
     return true;
+  }
+
+  // Si tiene ratón de alta precisión (pointer: fine), NO es una TV
+  if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
+    return false;
   }
 
   // 3. Heurística de Smart TV web
@@ -399,4 +405,12 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initTVMode);
 } else {
   initTVMode();
+}
+
+
+// Asegurar que el puntero del mouse del sistema esté SIEMPRE visible
+if (typeof window !== 'undefined') {
+  window.addEventListener('mousemove', () => {
+    document.body.style.cursor = 'auto';
+  }, { passive: true, once: false });
 }

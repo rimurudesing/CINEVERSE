@@ -82,7 +82,4 @@ ul, ol {
 }
 
 /* Ocultar cursor nativo si está activada la clase de cursor personalizado */
-body.custom-cursor-active,
-body.custom-cursor-active * {
-  cursor: none !important;
-}
+body.custom-cursor-active { cursor: auto; }
