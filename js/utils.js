@@ -456,13 +456,18 @@ export function getCVLoader(text = 'Cargando...') {
  */
 export function initServiceWorker() {
   if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').then((reg) => {
-        console.log('[CineVerse] Service Worker registrado con éxito:', reg.scope);
-      }).catch((err) => {
-        console.warn('[CineVerse] No se pudo registrar Service Worker:', err);
-      });
-    });
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const reg of registrations) {
+        reg.unregister().then(() => {
+          console.log('[CineVerse] Service Worker desregistrado correctamente');
+        });
+      }
+    }).catch(() => {});
+    if (window.caches) {
+      caches.keys().then((keys) => {
+        keys.forEach(k => caches.delete(k));
+      }).catch(() => {});
+    }
   }
 }
 
@@ -487,7 +492,6 @@ export function initTouchGestures() {
       const deltaX = e.changedTouches[0].clientX - startX;
       const deltaY = e.changedTouches[0].clientY - startY;
 
-      // Deslizar de izquierda a derecha desde el borde (swipe back)
       if (startX < 60 && deltaX > 90 && Math.abs(deltaY) < 60) {
         if (window.history.length > 1) {
           window.history.back();
