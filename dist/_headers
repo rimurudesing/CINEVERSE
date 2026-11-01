@@ -1,3 +1,9 @@
+/sw.js
+  Content-Type: application/javascript; charset=utf-8
+  Cache-Control: no-cache, no-store, must-revalidate, max-age=0
+  Pragma: no-cache
+  Expires: 0
+
 /*.js
   Content-Type: application/javascript; charset=utf-8
   Cache-Control: no-cache, no-store, must-revalidate
@@ -34,7 +40,7 @@
   X-Robots-Tag: noarchive, nosnippet
 
   # ── Bloquear ataques de tipo Clickjacking y XSS ─────────────────────────────
-  Content-Security-Policy: default-src 'self' https://cineverse-7u5.pages.dev https://*.pages.dev; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' wss: https:; frame-src 'self' https: blob:; object-src 'none'; base-uri 'self'; form-action 'self';
+  Content-Security-Policy: default-src 'self' https://cineverse-7u5.pages.dev https://*.pages.dev; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' wss: https:; frame-src 'self' https: blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com https://*.supabase.co https://*.google.com;
 
   # ── Seguridad de transporte HTTPS ────────────────────────────────────────────
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload

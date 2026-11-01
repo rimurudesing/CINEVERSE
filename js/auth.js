@@ -68,10 +68,19 @@ export async function signInWithGoogle() {
   }
   
   const client = await getClient();
+  
+  // Usar URL canónica de producción en Supabase para evitar rechazos en Electron, APK o localhost
+  const origin = window.location.origin;
+  const isWebHttps = origin && origin.startsWith('https://') && !origin.includes('localhost');
+  const redirectUrl = isWebHttps ? (origin + '/index.html') : 'https://cineverse-7u5.pages.dev/index.html';
+
   const { data, error } = await client.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin + '/index.html'
+      redirectTo: redirectUrl,
+      queryParams: {
+        prompt: 'select_account'
+      }
     }
   });
   

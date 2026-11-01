@@ -1,6 +1,5 @@
-/* ═══ cineverse/sw.js — Desactivador y Limpiador de Service Worker ═══ */
+/* ═══ cineverse/sw.js — Kill-Switch de Service Worker y Limpiador de Caché ═══ */
 
-// Desactivar y limpiar cualquier caché anterior inmediatamente
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
@@ -17,4 +16,11 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// No interceptar peticiones de red: permitir que el navegador y Cloudflare manejen todo directamente
+// Bypass total y transparente hacia la red: NUNCA genera ERR_FAILED
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      return new Response('', { status: 408, statusText: 'Network Error' });
+    })
+  );
+});
