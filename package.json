@@ -1,7 +1,7 @@
 {
   "name": "cineverse",
-  "version": "1.0.0",
-  "description": "",
+  "version": "3.1.1",
+  "description": "CineVerse — Streaming Discovery App",
   "main": "desktop/main.cjs",
   "scripts": {
     "sync": "node build.js",
@@ -10,7 +10,10 @@
     "build": "node build.js",
     "build:desktop": "node build.js && electron-builder --win",
     "build:linux": "node build.js && electron-builder --linux",
-    "desktop": "electron desktop/main.cjs"
+    "desktop": "electron desktop/main.cjs",
+    "version:patch": "node bump-version.cjs patch && node build.js",
+    "version:minor": "node bump-version.cjs minor && node build.js",
+    "version:major": "node bump-version.cjs major && node build.js"
   },
   "repository": {
     "type": "git",
