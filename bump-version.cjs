@@ -1,6 +1,7 @@
 /**
  * bump-version.cjs
- * Sube la versión en package.json y actualiza ?v= en todos los HTML.
+ * Sube la versión en package.json, actualiza ?v= en todos los HTML,
+ * y sincroniza versionName / versionCode en android/app/build.gradle.
  * Uso: node bump-version.cjs [major|minor|patch]  (default: patch)
  */
 const fs   = require('fs');
@@ -37,4 +38,15 @@ for (const file of htmlFiles) {
   }
 }
 console.log(`✅ ${updatedFiles} archivos HTML actualizados`);
-console.log(`\n🎬 Versión actualizada a ${newVersion}. Ejecuta: node build.js`);
+
+// Actualizar android/app/build.gradle si existe
+const gradlePath = path.join(__dirname, 'android', 'app', 'build.gradle');
+if (fs.existsSync(gradlePath)) {
+  let gradle = fs.readFileSync(gradlePath, 'utf8');
+  gradle = gradle.replace(/versionCode\s+(\d+)/, (m, c) => `versionCode ${Number(c) + 1}`);
+  gradle = gradle.replace(/versionName\s+"[^"]+"/, `versionName "${newVersion}"`);
+  fs.writeFileSync(gradlePath, gradle, 'utf8');
+  console.log(`✅ Android build.gradle → versionName "${newVersion}"`);
+}
+
+console.log(`\n🎬 Versión global sincronizada a ${newVersion}. Ejecuta: node build.js`);

@@ -66,7 +66,8 @@ function startLocalServer(rootDir) {
         const contentType = MIME_TYPES[ext] || 'application/octet-stream';
         res.writeHead(200, {
           'Content-Type': contentType,
-          'Access-Control-Allow-Origin': '*'
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
         });
         res.end(data);
       });
@@ -85,9 +86,9 @@ function startLocalServer(rootDir) {
 async function createWindow() {
   const ses = session.defaultSession;
 
-  // Limpiar cualquier Service Worker persistido previamente para evitar ERR_FAILED
+  // Limpiar cualquier Service Worker persistido y cache vieja para evitar ERR_FAILED
   try {
-    await ses.clearStorageData({ storages: ['serviceworkers'] });
+    await ses.clearStorageData({ storages: ['serviceworkers', 'cachestorage'] });
   } catch (e) {}
 
   // Configurar cookies y cuota de storage
@@ -108,7 +109,7 @@ async function createWindow() {
     height: 800,
     minWidth: 960,
     minHeight: 600,
-    title: 'CineVerse',
+    title: `CineVerse v${app.getVersion()}`,
     icon: path.join(__dirname, '../assets/icon.png'),
     backgroundColor: '#07070a',
     autoHideMenuBar: true,
