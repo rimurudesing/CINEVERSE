@@ -162,6 +162,30 @@ export function renderNavbar() {
       document.body.style.overflow = '';
     });
   });
+
+  // ── 4. Botón de tema (oscuro / claro / AMOLED) ──────────────────────────────
+  const _syncThemeEmoji = () => {
+    const themeBtn = document.getElementById('navbar-theme-btn');
+    if (!themeBtn) return;
+    const mode = getThemeMode();
+    const emoji = mode === 'light' ? '☀️' : mode === 'amoled' ? '⬛' : '🌙';
+    themeBtn.textContent = emoji;
+    themeBtn.title = mode === 'light'
+      ? 'Modo Claro — Cambiar a AMOLED'
+      : mode === 'amoled'
+        ? 'Modo AMOLED — Cambiar a Oscuro'
+        : 'Modo Oscuro — Cambiar a Claro';
+  };
+
+  // Sincronizar emoji al cargar
+  setTimeout(_syncThemeEmoji, 0);
+
+  header.addEventListener('click', (e) => {
+    const themeBtn = e.target.closest('#navbar-theme-btn');
+    if (!themeBtn) return;
+    cycleThemeMode();
+    _syncThemeEmoji();
+  });
 }
 
 function highlightActiveLink() {

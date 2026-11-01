@@ -69,18 +69,75 @@ export async function signInWithGoogle() {
   
   const client = await getClient();
   
-  // Usar URL canónica de producción en Supabase para evitar rechazos en Electron, APK o localhost
-  const origin = window.location.origin;
-  const isWebHttps = origin && origin.startsWith('https://') && !origin.includes('localhost');
-  const redirectUrl = isWebHttps ? (origin + '/index.html') : 'https://cineverse-7u5.pages.dev/index.html';
+  // Detectar si corremos dentro de Electron
+  const isElectron = !!(window.process && window.process.type) ||
+                     navigator.userAgent.toLowerCase().includes('electron') ||
+                     !!(window.__ELECTRON__);
 
+  // URL de retorno canónica (siempre la web de producción para Supabase)
+  const redirectUrl = 'https://cineverse-7u5.pages.dev/index.html';
+
+  if (isElectron) {
+    // ── Flujo Electron: obtener URL de autorización y abrirla en el navegador del sistema ──
+    // signInWithOAuth con skipBrowserRedirect=true devuelve solo la URL sin navegar
+    const { data, error } = await client.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+        skipBrowserRedirect: true,
+        queryParams: { prompt: 'select_account' }
+      }
+    });
+
+    if (error) throw error;
+
+    // Abrir en el navegador del sistema a través de Electron shell
+    if (data?.url) {
+      // Intentar abrir con Electron shell si está disponible
+      try {
+        if (window.require) {
+          const { shell } = window.require('electron');
+          shell.openExternal(data.url);
+        } else {
+          window.open(data.url, '_blank');
+        }
+      } catch {
+        window.open(data.url, '_blank');
+      }
+    }
+
+    // Polling: esperar hasta 3 minutos a que el usuario complete el OAuth
+    return new Promise((resolve, reject) => {
+      const MAX_WAIT_MS = 3 * 60 * 1000;
+      const POLL_INTERVAL_MS = 2000;
+      let elapsed = 0;
+      
+      const poll = setInterval(async () => {
+        elapsed += POLL_INTERVAL_MS;
+        try {
+          const { data: sessionData } = await client.auth.getSession();
+          if (sessionData?.session?.user) {
+            clearInterval(poll);
+            resolve(sessionData.session);
+          }
+        } catch (e) {
+          // silenciar errores de red durante el polling
+        }
+
+        if (elapsed >= MAX_WAIT_MS) {
+          clearInterval(poll);
+          reject(new Error('Tiempo de espera agotado. Completa el inicio de sesión en el navegador.'));
+        }
+      }, POLL_INTERVAL_MS);
+    });
+  }
+
+  // ── Flujo web normal ──────────────────────────────────────────────────────────
   const { data, error } = await client.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: redirectUrl,
-      queryParams: {
-        prompt: 'select_account'
-      }
+      queryParams: { prompt: 'select_account' }
     }
   });
   

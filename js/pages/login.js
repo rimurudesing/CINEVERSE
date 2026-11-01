@@ -340,7 +340,12 @@ class LoginPageController {
           restoreButton();
           showFormAlert(
             alertId, 'info', 'ℹ️',
-            'Si se abrió una pestaña o ventana para tu cuenta de Google, completa el acceso allí. Si no ves la ventana o tu navegador bloquea ventanas emergentes, puedes iniciar con tu correo y contraseña.'
+            (() => {
+              const isElectron = navigator.userAgent.toLowerCase().includes('electron');
+              return isElectron
+                ? 'Tu navegador se abrió para iniciar sesión con Google. Completa el proceso allí y vuelve a CineVerse — la sesión se detectará automáticamente.'
+                : 'Si se abrió una pestaña para Google, completa el acceso allí. Si tu navegador bloqueó la ventana, usa tu correo y contraseña.';
+            })()
           );
         }, 8000);
 
