@@ -348,7 +348,8 @@ class InfoPageController {
           ${ICONS.trailer} <span>Ver Trailer Oficial</span>
         </button>
         <a href="login.html" class="action-btn-secondary" style="text-align:center;text-decoration:none;">
-          🔐 Inicia sesión para guardar en Mi Lista
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Iniciar sesión para guardar</span>
         </a>
       `;
     }
@@ -374,12 +375,12 @@ class InfoPageController {
 
       <button class="action-btn-secondary ${this.isWatched ? 'is-active' : ''}" id="btn-watched">
         ${this.isWatched ? ICONS.eyeCheck : ICONS.eye}
-        <span>${this.isWatched ? '✓ Ya la he visto' : 'Marcar como vista'}</span>
+        <span>${this.isWatched ? 'Ya la he visto' : 'Marcar como vista'}</span>
       </button>
 
       <button class="action-btn-secondary" id="btn-rate">
         ${ICONS.star}
-        <span>${this.userRating > 0 ? `Mi Calificación: ${this.userRating}/10` : '★ Valorar con Estrellas'}</span>
+        <span>${this.userRating > 0 ? `Mi Nota: ${this.userRating}/10` : 'Valorar con Estrellas'}</span>
       </button>
 
       <button class="action-btn-secondary" id="btn-recommend-movie">
