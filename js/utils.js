@@ -220,24 +220,8 @@ export function navigateTo(page, params = {}) {
   const queryString = queryParams.toString();
   const url = queryString ? `${page}?${queryString}` : page;
 
-  // View Transitions API nativa para transición ultra-suave
-  if (document.startViewTransition) {
-    document.startViewTransition(() => {
-      window.location.href = url;
-    });
-    return;
-  }
-
-  const overlay = document.querySelector('.page-transition-overlay');
-  if (overlay) {
-    overlay.classList.remove('out');
-    overlay.classList.add('in');
-    setTimeout(() => {
-      window.location.href = url;
-    }, 350);
-  } else {
-    window.location.href = url;
-  }
+  // Navegación fluida y directa sin saltos bruscos ("pum") ni flashes
+  window.location.href = url;
 }
 
 /**
@@ -511,6 +495,21 @@ export function applyThemeMode(mode = 'dark') {
   try {
     localStorage.setItem('cineverse_theme_mode', finalMode);
   } catch {}
+
+  const btn = document.getElementById('navbar-theme-btn');
+  if (btn) {
+    if (finalMode === 'light') {
+      btn.innerHTML = '☀️';
+      btn.title = 'Modo actual: Claro (Click para AMOLED)';
+    } else if (finalMode === 'amoled') {
+      btn.innerHTML = '⬛';
+      btn.title = 'Modo actual: AMOLED Negro Puro (Click para Oscuro)';
+    } else {
+      btn.innerHTML = '🌙';
+      btn.title = 'Modo actual: Oscuro Cine (Click para Claro)';
+    }
+  }
+
   window.dispatchEvent(new CustomEvent('cineverse:theme-changed', { detail: { mode: finalMode } }));
   return finalMode;
 }
@@ -521,6 +520,15 @@ export function getThemeMode() {
   } catch {
     return 'dark';
   }
+}
+
+export function cycleThemeMode() {
+  const current = getThemeMode();
+  let next = 'dark';
+  if (current === 'dark') next = 'light';
+  else if (current === 'light') next = 'amoled';
+  else if (current === 'amoled') next = 'dark';
+  return applyThemeMode(next);
 }
 
 /**

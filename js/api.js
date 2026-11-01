@@ -269,6 +269,36 @@ export class TMDBApi {
     const data = await this.fetch(`/person/${id}/tv_credits`);
     return data ? data.cast : [];
   }
+
+
+  async getTrendingByRegion(type = 'movie', region = 'MX') {
+    const data = await this.fetch(`/discover/${type}`, {
+      region: region,
+      sort_by: 'popularity.desc',
+      page: 1
+    });
+    return data ? data.results : [];
+  }
+
+  async discoverByGenre(genreId, type = 'movie', page = 1) {
+    const data = await this.fetch(`/discover/${type}`, {
+      with_genres: genreId,
+      sort_by: 'popularity.desc',
+      page
+    });
+    return data ? data.results : [];
+  }
+
+  async getVideos(type = 'movie', id) {
+    const data = await this.fetch(`/${type}/${id}/videos`);
+    return data ? data.results : [];
+  }
+
+  async getOfficialTrailer(type = 'movie', id) {
+    const videos = await this.getVideos(type, id);
+    if (!videos || videos.length === 0) return null;
+    return videos.find(v => v.site === 'YouTube' && v.type === 'Trailer') || videos[0] || null;
+  }
 }
 
 export const api = new TMDBApi();

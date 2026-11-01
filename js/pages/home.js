@@ -61,13 +61,18 @@ class HomePageController {
       // FASE 3 — Grids y explorador con baja prioridad (deferred)
       
       // ── MEJORA 22: Cargar "Continuar Viendo" desde el historial ──────────────
-      const historyItems = await getHistory(12);
-      if (historyItems && historyItems.length > 0) {
-        const rootCont = document.querySelector('#continue-watching-root');
-        if (rootCont) {
-          rootCont.style.display = 'block';
-          new Carousel('#continue-watching-carousel', historyItems, 'Continuar Viendo', 'Tu Historial');
+      let historyItems = [];
+      try {
+        historyItems = (await getHistory(12)) || [];
+        if (historyItems.length > 0) {
+          const rootCont = document.querySelector('#continue-watching-root');
+          if (rootCont) {
+            rootCont.style.display = 'block';
+            new Carousel('#continue-watching-carousel', historyItems, 'Continuar Viendo', 'Tu Historial');
+          }
         }
+      } catch (e) {
+        console.warn('Error cargando historial:', e);
       }
 
       // ── MEJORA 43: Cargar Tendencias en tu Región ─────────────────────────────
@@ -94,7 +99,8 @@ class HomePageController {
 
       // ── MEJORA 25: Recomendado para Ti ────────────────────────────────────────
       try {
-        const recGenre = (historyItems[0]?.genre_ids?.[0]) || 28; // Acción o el del último visto
+        const lastWatched = (Array.isArray(historyItems) && historyItems.length > 0) ? historyItems[0] : null;
+        const recGenre = (lastWatched?.genre_ids?.[0]) || 28; // Acción o el del último visto
         const recommended = await api.discoverByGenre(recGenre, 'movie', 1);
         if (recommended && recommended.length > 0) {
           const recRoot = document.querySelector('#recommended-root');

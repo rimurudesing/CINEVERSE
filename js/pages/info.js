@@ -323,34 +323,73 @@ class InfoPageController {
 
   // ── Botones de acción ─────────────────────────────────────────────────────
   _buildActionButtons() {
-    const watchLabel = this.mediaType === 'movie' ? '▶ Ver Película' : '▶ Ver Serie';
+    const isMovie = this.mediaType === 'movie';
+    const watchLabel = isMovie ? 'Ver Película Completa' : 'Ver Serie Completa';
+
+    const ICONS = {
+      play: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
+      trailer: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>',
+      heartFilled: '<svg width="17" height="17" viewBox="0 0 24 24" fill="#e50914" stroke="#e50914" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>',
+      heartEmpty: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>',
+      bookmarkFilled: '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+      bookmarkEmpty: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/></svg>',
+      eyeCheck: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+      eye: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+      star: '<svg width="17" height="17" viewBox="0 0 24 24" fill="#fbbf24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+      share: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>'
+    };
 
     if (!this.currentUser) {
       return `
-        <button class="action-btn-primary" id="btn-watch-action">${watchLabel}</button>
-        <button class="action-btn-secondary" id="btn-trailer-action">🎬 Ver Trailer</button>
-        <a href="login.html" class="action-btn-secondary" style="text-align:center;text-decoration:none;">Inicia sesión para guardar</a>
+        <button class="action-btn-primary" id="btn-watch-action">
+          ${ICONS.play} <span>${watchLabel}</span>
+        </button>
+        <button class="action-btn-trailer" id="btn-trailer-action">
+          ${ICONS.trailer} <span>Ver Trailer Oficial</span>
+        </button>
+        <a href="login.html" class="action-btn-secondary" style="text-align:center;text-decoration:none;">
+          🔐 Inicia sesión para guardar en Mi Lista
+        </a>
       `;
     }
 
     return `
-      <button class="action-btn-primary" id="btn-watch-action">${watchLabel}</button>
-      <button class="action-btn-secondary" id="btn-trailer-action">🎬 Ver Trailer</button>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
-        <button class="action-btn-secondary" id="btn-fav">${this.isFav ? '❤️ Favorito' : '🤍 Favorito'}</button>
-        <button class="action-btn-secondary" id="btn-watchlist">${this.isWatchlist ? '✓ Lista' : '+ Watchlist'}</button>
+      <button class="action-btn-primary" id="btn-watch-action">
+        ${ICONS.play} <span>${watchLabel}</span>
+      </button>
+      <button class="action-btn-trailer" id="btn-trailer-action">
+        ${ICONS.trailer} <span>Ver Trailer Oficial</span>
+      </button>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
+        <button class="action-btn-secondary ${this.isFav ? 'is-active' : ''}" id="btn-fav">
+          ${this.isFav ? ICONS.heartFilled : ICONS.heartEmpty}
+          <span>${this.isFav ? 'En Favoritos' : 'Favorito'}</span>
+        </button>
+        <button class="action-btn-secondary ${this.isWatchlist ? 'is-active' : ''}" id="btn-watchlist">
+          ${this.isWatchlist ? ICONS.bookmarkFilled : ICONS.bookmarkEmpty}
+          <span>${this.isWatchlist ? 'En Mi Lista' : '+ Mi Lista'}</span>
+        </button>
       </div>
-      <button class="action-btn-secondary" id="btn-watched">
-        ${this.isWatched ? '✓ Ya la he visto' : '👁️ Marcar como vista'}
+
+      <button class="action-btn-secondary ${this.isWatched ? 'is-active' : ''}" id="btn-watched">
+        ${this.isWatched ? ICONS.eyeCheck : ICONS.eye}
+        <span>${this.isWatched ? '✓ Ya la he visto' : 'Marcar como vista'}</span>
       </button>
+
       <button class="action-btn-secondary" id="btn-rate">
-        ${this.userRating > 0 ? `★ Valorada: ${this.userRating}/10` : '★ Valorar'}
+        ${ICONS.star}
+        <span>${this.userRating > 0 ? `Mi Calificación: ${this.userRating}/10` : '★ Valorar con Estrellas'}</span>
       </button>
+
       <button class="action-btn-secondary" id="btn-recommend-movie">
-        📢 Recomendar a un amigo
+        ${ICONS.share}
+        <span>Recomendar a un amigo</span>
       </button>
     `;
   }
+
+
 
   _rebuildActions() {
     const c = document.getElementById('info-actions-container');

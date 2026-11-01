@@ -12,7 +12,7 @@ const ICONLY = {
 };
 
 import { api } from '../api.js';
-import { navigateTo, buildTMDBImageURL, formatYear, debounce, applyUserTheme, protectWebCode } from '../utils.js';
+import { navigateTo, buildTMDBImageURL, formatYear, debounce, applyUserTheme, protectWebCode, getThemeMode, cycleThemeMode } from '../utils.js';
 
 // Aplicar tema guardado inmediatamente en la carga de la página
 const savedTheme = localStorage.getItem('cineverse_theme_color') || 'red';

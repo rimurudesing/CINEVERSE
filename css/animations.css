@@ -174,12 +174,8 @@
 }
 
 .page-transition-overlay {
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(135deg, var(--accent-red) 0%, #8B0000 100%);
-  z-index: 99999;
-  transform: scaleX(0);
-  pointer-events: none;
+  display: none !important;
+  pointer-events: none !important;
 }
 
 .page-transition-overlay.in {
@@ -422,20 +418,10 @@
 
 
 /* ── View Transitions API: Animaciones de transición suave de páginas ── */
-::view-transition-old(root) {
-  animation: cvPageOut 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
+::view-transition-old(root),
 ::view-transition-new(root) {
-  animation: cvPageIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: none !important;
 }
-
-@keyframes cvPageOut {
-  from { opacity: 1; transform: scale(1); }
-  to   { opacity: 0; transform: scale(0.985); }
-}
-
-@keyframes cvPageIn {
-  from { opacity: 0; transform: scale(1.015); }
   to   { opacity: 1; transform: scale(1); }
 }
 
