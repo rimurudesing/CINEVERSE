@@ -54,75 +54,70 @@ class HomePageController {
       if (nowPlayingList) new Carousel('#nowplaying-carousel', nowPlayingList, 'En Cartelera Ahora', 'En Cines');
       if (onAirTVList)    new Carousel('#onair-carousel',     onAirTVList,    'Series en Emisión',  'En Emisión');
       if (upcomingList)   new Carousel('#upcoming-carousel',  upcomingList,   'Próximos Estrenos',  'Próximamente');
-      if (animeData && animeData.results) {
-        new Carousel('#anime-carousel', animeData.results, 'Anime Popular 🎌', 'Japón');
+      if (animeData) {
+        const animeItems = Array.isArray(animeData) ? animeData : (animeData.results || []);
+        if (animeItems.length > 0) new Carousel('#anime-carousel', animeItems, 'Anime Popular 🎌', 'Japón');
       }
 
-      // FASE 3 — Grids y explorador con baja prioridad (deferred)
-      
-      // ── MEJORA 22: Cargar "Continuar Viendo" desde el historial ──────────────
-      let historyItems = [];
-      try {
-        historyItems = (await getHistory(12)) || [];
-        if (historyItems.length > 0) {
-          const rootCont = document.querySelector('#continue-watching-root');
-          if (rootCont) {
-            rootCont.style.display = 'block';
-            new Carousel('#continue-watching-carousel', historyItems, 'Continuar Viendo', 'Tu Historial');
+      // RENDER INMEDIATO DE GRIDS PRINCIPALES — Cero demoras, cero skeletons atascados
+      if (topMovies) this.renderTopRatedGrid('movie', topMovies);
+      if (topTV)     this.renderTopRatedGrid('tv',    topTV);
+      this.initGenreExplorer();
+
+      // Cargas secundarias asíncronas en segundo plano (no bloquean)
+      (async () => {
+        let historyItems = [];
+        try {
+          historyItems = (await getHistory(12)) || [];
+          if (historyItems.length > 0) {
+            const rootCont = document.querySelector('#continue-watching-root');
+            if (rootCont) {
+              rootCont.style.display = 'block';
+              new Carousel('#continue-watching-carousel', historyItems, 'Continuar Viendo', 'Tu Historial');
+            }
           }
+        } catch (e) {
+          console.warn('Error cargando historial:', e);
         }
-      } catch (e) {
-        console.warn('Error cargando historial:', e);
-      }
 
-      // ── MEJORA 43: Cargar Tendencias en tu Región ─────────────────────────────
-      try {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-        let userRegion = 'MX';
-        if (tz.includes('Europe') || tz.includes('Madrid')) userRegion = 'ES';
-        else if (tz.includes('Buenos_Aires')) userRegion = 'AR';
-        else if (tz.includes('Bogota')) userRegion = 'CO';
-        else if (tz.includes('Santiago')) userRegion = 'CL';
-        else if (tz.includes('Lima')) userRegion = 'PE';
-
-        const regionMovies = await api.getTrendingByRegion('movie', userRegion);
-        if (regionMovies && regionMovies.length > 0) {
-          const regionRoot = document.querySelector('#region-trending-root');
-          if (regionRoot) {
-            regionRoot.style.display = 'block';
-            new Carousel('#region-trending-carousel', regionMovies, `Tendencias en tu País (${userRegion})`, 'Populares');
+        try {
+          const lastWatched = (Array.isArray(historyItems) && historyItems.length > 0) ? historyItems[0] : null;
+          const recGenre = (lastWatched?.genre_ids?.[0]) || 28;
+          const recommended = await api.discoverByGenre(recGenre, 'movie', 1);
+          if (recommended && recommended.length > 0) {
+            const recRoot = document.querySelector('#recommended-root');
+            if (recRoot) {
+              recRoot.style.display = 'block';
+              new Carousel('#recommended-carousel', recommended, '⭐ Recomendado para Ti', 'Personalizado');
+            }
           }
+        } catch (e) {
+          console.warn('Error cargando recomendados:', e);
         }
-      } catch (e) {
-        console.warn('Error cargando tendencias de región:', e);
-      }
+      })();
 
-      // ── MEJORA 25: Recomendado para Ti ────────────────────────────────────────
-      try {
-        const lastWatched = (Array.isArray(historyItems) && historyItems.length > 0) ? historyItems[0] : null;
-        const recGenre = (lastWatched?.genre_ids?.[0]) || 28; // Acción o el del último visto
-        const recommended = await api.discoverByGenre(recGenre, 'movie', 1);
-        if (recommended && recommended.length > 0) {
-          const recRoot = document.querySelector('#recommended-root');
-          if (recRoot) {
-            recRoot.style.display = 'block';
-            new Carousel('#recommended-carousel', recommended, '⭐ Recomendado para Ti', 'Personalizado');
+      (async () => {
+        try {
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+          let userRegion = 'MX';
+          if (tz.includes('Europe') || tz.includes('Madrid')) userRegion = 'ES';
+          else if (tz.includes('Buenos_Aires')) userRegion = 'AR';
+          else if (tz.includes('Bogota')) userRegion = 'CO';
+          else if (tz.includes('Santiago')) userRegion = 'CL';
+          else if (tz.includes('Lima')) userRegion = 'PE';
+
+          const regionMovies = await api.getTrendingByRegion('movie', userRegion);
+          if (regionMovies && regionMovies.length > 0) {
+            const regionRoot = document.querySelector('#region-trending-root');
+            if (regionRoot) {
+              regionRoot.style.display = 'block';
+              new Carousel('#region-trending-carousel', regionMovies, `Tendencias en tu País (${userRegion})`, 'Populares');
+            }
           }
+        } catch (e) {
+          console.warn('Error cargando tendencias de región:', e);
         }
-      } catch (e) {
-        console.warn('Error cargando recomendados:', e);
-      }
-
-      const renderLowPriority = () => {
-        if (topMovies) this.renderTopRatedGrid('movie', topMovies);
-        if (topTV)     this.renderTopRatedGrid('tv',    topTV);
-        this.initGenreExplorer();
-      };
-      if (typeof requestIdleCallback === 'function') {
-        requestIdleCallback(renderLowPriority, { timeout: 4000 });
-      } else {
-        setTimeout(renderLowPriority, 150);
-      }
+      })();
 
     } catch (error) {
       console.error('Error al inicializar la página de inicio:', error);

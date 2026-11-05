@@ -101,8 +101,15 @@ function copyDir(src, dest) {
   }
 }
 
-// ── También actualizar los ?v= en los HTML del propio source (no solo en dist/www) ──
-function patchSourceHTML(version) {
+// ── Sincronizar versión en source config.js y HTML ──
+function patchSourceFiles(version) {
+  const cfgPath = path.join('js', 'config.js');
+  if (fs.existsSync(cfgPath)) {
+    let c = fs.readFileSync(cfgPath, 'utf8');
+    c = c.replace(/export const APP_VERSION\s*=\s*['"][^'"]*['"]\s*;?/, `export const APP_VERSION = '${version}';`);
+    fs.writeFileSync(cfgPath, c, 'utf8');
+  }
+
   const htmlFiles = fs.readdirSync('.').filter(f => f.endsWith('.html'));
   let count = 0;
   for (const file of htmlFiles) {
@@ -115,7 +122,7 @@ function patchSourceHTML(version) {
 
 // ── Copiar y optimizar a www y dist para producción y app nativa ──
 console.log(`Starting build v${APP_VER}, syntax validation and minification...`);
-patchSourceHTML(APP_VER);
+patchSourceFiles(APP_VER);
 copyDir('.', 'www');
 copyDir('.', 'dist');
 console.log(`Build v${APP_VER} completed successfully! 🚀`);

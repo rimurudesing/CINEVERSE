@@ -111,7 +111,7 @@ export class TMDBApi {
 
   async getUpcoming(page = 1) {
     const data = await this.fetch('/movie/upcoming', { page, region: '' });
-    return data ? data : { results: [], total_results: 0, total_pages: 0 };
+    return data ? (data.results || []) : [];
   }
 
   async getMovieDetails(id) {

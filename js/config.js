@@ -1,11 +1,11 @@
-/* ═══ cineverse/js/config.js ═══ */
+/* === cineverse/js/config.js === */
 
-// Configuración de The Movie Database (TMDB)
+// Configuracion de The Movie Database (TMDB)
 export const TMDB_IMG_BASE = "https://image.tmdb.org/t/p/";
 export const TMDB_LANGUAGE = "es-ES";
 export const TMDB_REGION = "ES";
 
-// Tamaños de imágenes soportados por TMDB
+// Tamanos de imagenes soportados por TMDB
 export const TMDB_POSTER_SIZES = {
   small: "w185",
   medium: "w342",
@@ -20,10 +20,9 @@ export const TMDB_BACKDROP_SIZES = {
   original: "original"
 };
 
-// Configuración de Supabase
+// Configuracion de Supabase
 export const SUPABASE_URL = "https://oeibxtnltxxcaiwvpldi.supabase.co";
 export const SUPABASE_ANON_KEY = "sb_publishable_qlJxPHqUnCD1xhuXCJ--kg_nMg44rCn";
 
-
-// Versi�n de la app � build.js la reemplaza autom�ticamente con la versi�n de package.json
-export const APP_VERSION = '3.0.0';
+// Version de la app - build.js la reemplaza automaticamente
+export const APP_VERSION = '3.1.3';

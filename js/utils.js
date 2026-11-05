@@ -169,42 +169,14 @@ export function getYoutubeKey(videos) {
  */
 export function buildTMDBImageURL(path, size = 'original') {
   if (!path) {
-    // Si se trata de un banner ancho o fondo de pantalla
     if (size.startsWith('w300') || size.startsWith('w780') || size.startsWith('w1280')) {
       return 'assets/placeholder-backdrop.svg';
     }
-    // Si es póster vertical o tarjeta común
     return 'assets/placeholder-poster.svg';
   }
-  // #96 — Intentar servir WebP si el navegador lo soporta (detección lazy)
-  const base = `${TMDB_IMG_BASE}${size}${path}`;
-  // Usamos una señal global que se rellena la primera vez
-  if (typeof window !== 'undefined') {
-    if (window._cvWebP === true) {
-      return base.replace('image.tmdb.org', 'wsrv.nl/?url=image.tmdb.org') + '&output=webp';
-    }
-    if (window._cvWebP === undefined) {
-      // Detectar en background — primer llamado retorna JPEG, el resto ya sabrán
-      window._cvWebP = null; // 'detecting'
-      (async () => {
-        try {
-          const blob = await fetch(
-            'data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAADQAQCdASoBAAEAAUAmJZQCdAEO/gcAAADRh5eMQqsAMi3P3gAA'
-          ).then(r => r.blob());
-          window._cvWebP = blob.type === 'image/webp';
-        } catch {
-          window._cvWebP = false;
-        }
-      })();
-    }
-  }
-  return base;
+  return TMDB_IMG_BASE + size + path;
 }
 
-
-/**
- * Deduce si el elemento de datos representa una película ('movie') o serie ('tv').
- */
 export function getMediaType(item) {
   if (!item) return 'movie';
   if (item.media_type) return item.media_type;

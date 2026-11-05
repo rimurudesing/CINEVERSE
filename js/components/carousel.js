@@ -12,7 +12,7 @@ export class Carousel {
    */
   constructor(container, items, title, badgeText = '') {
     this.container = typeof container === 'string' ? document.querySelector(container) : container;
-    this.items = items;
+    this.items = Array.isArray(items) ? items : (items && Array.isArray(items.results) ? items.results : []);
     this.title = title;
     this.badgeText = badgeText;
     this.viewport = null;

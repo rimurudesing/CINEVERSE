@@ -205,6 +205,105 @@
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15) !important;
 }
 
+
+/* ── Reglas visuales de contraste alto para Tema Claro ── */
+[data-theme="light"] .navbar {
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .navbar__logo {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .navbar__link,
+[data-theme="light"] .navbar__mobile-link {
+  color: #334155 !important;
+  font-weight: 600 !important;
+}
+
+[data-theme="light"] .navbar__link:hover,
+[data-theme="light"] .navbar__link--active,
+[data-theme="light"] .navbar__mobile-link--active {
+  color: var(--accent-red) !important;
+}
+
+[data-theme="light"] .hero__overlay {
+  background: linear-gradient(
+    to right,
+    rgba(241, 243, 247, 0.95) 0%,
+    rgba(241, 243, 247, 0.75) 45%,
+    transparent 100%
+  ),
+  linear-gradient(
+    to top,
+    #f1f3f7 0%,
+    rgba(241, 243, 247, 0.5) 30%,
+    transparent 60%
+  ) !important;
+}
+
+[data-theme="light"] .hero__title {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .hero__overview {
+  color: #334155 !important;
+}
+
+[data-theme="light"] .carousel-section__title,
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4 {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .carousel-section__btn {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="light"] .carousel-section__btn:hover {
+  background: #f1f3f7 !important;
+  color: var(--accent-red) !important;
+}
+
+[data-theme="light"] .movie-card {
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .action-btn-secondary {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme="light"] .action-btn-secondary:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+
+[data-theme="light"] .action-btn-trailer {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme="light"] .action-btn-trailer:hover {
+  background: rgba(229, 9, 20, 0.08) !important;
+  border-color: var(--accent-red) !important;
+  color: var(--accent-red) !important;
+}
+
 [data-theme="amoled"] {
   --bg-void:          #000000;
   --bg-primary:       #000000;
