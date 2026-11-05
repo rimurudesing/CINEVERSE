@@ -22,60 +22,45 @@ import { detectAdBlock, showAdBlockModal } from '../adblock-detector.js';
 // ── Detección de plataforma nativa (APK Capacitor) ──────────────────────────
 const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
 
-// ── Bloqueo de popups y redirecciones no autorizadas desde reproductores ──────
+// ── Bloqueo estricto de popups, publicidad y redirecciones ───────────────────
 if (typeof window !== 'undefined') {
   const _origOpen = window.open;
   window.open = function(url, target, features) {
-    if (url && (url.includes('mediafire.com') || url.includes('paypal.me') || url.includes('github.com'))) {
+    if (url && (url.includes('paypal.me') || url.includes('github.com') || url.includes('wvc-x-callback') || url.includes('intent://'))) {
       return _origOpen ? _origOpen.call(window, url, target, features) : null;
     }
-    console.log('[CineVerse] Bloqueado popup de publicidad:', url);
+    console.warn('[CineVerse Shield] Bloqueado popup o anuncio:', url);
     return null;
   };
 
-  // Prevenir redirección del frame principal por anuncios dentro del reproductor
+  // Prevenir que anuncios en el reproductor secuestren o redirijan la ventana
   let isInternalNavigation = false;
   document.addEventListener('click', (e) => {
-    if (e.target && e.target.closest && e.target.closest('a, button, input, select, textarea, nav, header, .nav-btn')) {
+    if (e.target && e.target.closest && e.target.closest('a, button, input, select, textarea, nav, header, .nav-btn, .server-tab, .episode-card')) {
       isInternalNavigation = true;
-      setTimeout(() => { isInternalNavigation = false; }, 800);
+      setTimeout(() => { isInternalNavigation = false; }, 1200);
     }
   }, true);
 
   window.addEventListener('beforeunload', (e) => {
     if (!isInternalNavigation) {
       e.preventDefault();
-      return (e.returnValue = '');
+      return (e.returnValue = '¿Deseas salir de CineVerse?');
+    }
+  });
+
+  // Prevenir que anuncios en segundo plano roben foco
+  window.addEventListener('blur', () => {
+    if (!isInternalNavigation) {
+      setTimeout(() => {
+        window.focus();
+      }, 50);
     }
   });
 }
 
-// ── Configuración de Vimeus ──────────────────────────────────────────────────
-const VIMEUS_VIEW_KEY = '25Tqx20dkTAAEwYg-QImuDY5oIbdlxJQlOPru7Jt0ek';
-
-function getVimeusURL(mediaType, tmdbId, season, episode, isAnime) {
-  var id = String(tmdbId || '');
-  var se = season  ? String(season)  : '';
-  var ep = episode ? String(episode) : '';
-
-  if (mediaType === 'movie') {
-    return 'https://vimeus.com/e/movie?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
-  } else if (isAnime) {
-    // Endpoint dedicado para anime segun docs de Vimeus
-    var url = 'https://vimeus.com/e/anime?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
-    if (se) url += '&se=' + se;
-    if (ep) url += '&ep=' + ep;
-    return url;
-  } else {
-    var url = 'https://vimeus.com/e/serie?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
-    if (se) url += '&se=' + se;
-    if (ep) url += '&ep=' + ep;
-    return url;
-  }
-}
-
-
-
+// ── Generadores de URL para los 4 Servidores de Alta Disponibilidad ─────────
+// Servidor 1: VidLink (Principal HD / Anime / Multi-idioma)
 function getVidlinkURL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
   const se = season ? String(season) : '1';
@@ -84,6 +69,42 @@ function getVidlinkURL(mediaType, tmdbId, season, episode) {
     return 'https://vidlink.pro/movie/' + id + '?primaryColor=e50914';
   } else {
     return 'https://vidlink.pro/tv/' + id + '/' + se + '/' + ep + '?primaryColor=e50914';
+  }
+}
+
+// Servidor 2: Multiembed (Especializado en Español Latino y Castellano)
+function getMultiembedURL(mediaType, tmdbId, season, episode) {
+  const id = String(tmdbId || '');
+  if (mediaType === 'movie') {
+    return 'https://multiembed.mov/?video_id=' + id + '&tmdb=1';
+  } else {
+    const se = season ? String(season) : '1';
+    const ep = episode ? String(episode) : '1';
+    return 'https://multiembed.mov/?video_id=' + id + '&tmdb=1&s=' + se + '&e=' + ep;
+  }
+}
+
+// Servidor 3: Videasy (Rápido con audio y subtítulos)
+function getVideasyURL(mediaType, tmdbId, season, episode) {
+  const id = String(tmdbId || '');
+  if (mediaType === 'movie') {
+    return 'https://player.videasy.net/movie/' + id + '?color=e50914';
+  } else {
+    const se = season ? String(season) : '1';
+    const ep = episode ? String(episode) : '1';
+    return 'https://player.videasy.net/tv/' + id + '/' + se + '/' + ep + '?color=e50914';
+  }
+}
+
+// Servidor 4: Vidsrc (Respaldo)
+function getVidsrcURL(mediaType, tmdbId, season, episode) {
+  const id = String(tmdbId || '');
+  if (mediaType === 'movie') {
+    return 'https://vidsrc.me/embed/movie?tmdb=' + id;
+  } else {
+    const se = season ? String(season) : '1';
+    const ep = episode ? String(episode) : '1';
+    return 'https://vidsrc.me/embed/tv?tmdb=' + id + '&season=' + se + '&episode=' + ep;
   }
 }
 
@@ -106,7 +127,7 @@ class WatchPageController {
   async init() {
 
     // Preconnect a servidores de video para máxima velocidad de carga
-    ['https://vimeus.com', 'https://vidlink.pro', 'https://image.tmdb.org'].forEach(url => {
+    ['https://vidlink.pro', 'https://multiembed.mov', 'https://player.videasy.net', 'https://vidsrc.me', 'https://image.tmdb.org'].forEach(url => {
       const link = document.createElement('link');
       link.rel = 'preconnect';
       link.href = url;
@@ -167,13 +188,15 @@ class WatchPageController {
       const isAnime = this.isAnimeMode || (isAnimeGenre && isJapaneseOrigin) || (params.get('server') === 'anime');
       this.isAnime = isAnime;
 
-      // Servidor principal predeterminado: VidLink (100% online y estable para Películas, Series y Anime)
-      // Servidor secundario: Vimeus (respaldo)
+      // Selección de servidor predeterminado
       const explicitServer = params.get('server');
-      if (explicitServer === 'vimeus') {
-        this.currentServer = 'vimeus';
+      const savedServer = localStorage.getItem('cineverse_player_server') || 'server1';
+      if (explicitServer) {
+        this.currentServer = explicitServer;
+      } else if (['server1', 'server2', 'server3', 'server4'].includes(savedServer)) {
+        this.currentServer = savedServer;
       } else {
-        this.currentServer = 'vidlink';
+        this.currentServer = 'server1';
       }
 
       // 3. Actualizar título de pestaña
@@ -193,34 +216,65 @@ class WatchPageController {
     }
   }
 
-  // ── Vimeus Player ──────────────────────────────────────────────────────────
+  // ── Reproductor Multi-Servidor ───────────────────────────────────────────
   async renderPlayer() {
     const playerRoot = document.getElementById('player-area-root');
     if (!playerRoot) return;
-
-    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, this.isAnime);
-    // Reproducción directa limpia para todos los usuarios
-    this.renderActualPlayer(playerRoot, vimeusURL);
+    this.renderActualPlayer(playerRoot);
   }
 
   getServerURL(serverKey) {
-    if (serverKey === 'vidlink') {
-      return getVidlinkURL(this.mediaType, this.mediaId, this.season, this.episode);
+    const s = serverKey || this.currentServer || 'server1';
+    if (s === 'server2' || s === 'multiembed' || s === 'espanol' || s === 'vimeus') {
+      return getMultiembedURL(this.mediaType, this.mediaId, this.season, this.episode);
     }
-    return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, this.isAnime);
+    if (s === 'server3' || s === 'videasy') {
+      return getVideasyURL(this.mediaType, this.mediaId, this.season, this.episode);
+    }
+    if (s === 'server4' || s === 'vidsrc') {
+      return getVidsrcURL(this.mediaType, this.mediaId, this.season, this.episode);
+    }
+    // Predeterminado: Servidor 1 (VidLink)
+    return getVidlinkURL(this.mediaType, this.mediaId, this.season, this.episode);
   }
 
   buildServersBar() {
     const s = this.currentServer;
+    const isS1 = s === 'server1' || s === 'vidlink' || !s;
+    const isS2 = s === 'server2' || s === 'multiembed' || s === 'espanol' || s === 'vimeus';
+    const isS3 = s === 'server3' || s === 'videasy';
+    const isS4 = s === 'server4' || s === 'vidsrc';
+
     return `
       <div class="player-servers-header" id="player-servers-header">
         <div class="player-servers-list">
-          <button class="server-tab ${s === 'vidlink' ? 'active' : ''}" data-server="vidlink">
-            <span class="server-icon">⚡</span> Servidor 1 (VidLink HD / Anime) <span class="server-tab-badge">ACTIVO</span>
+          <button class="server-tab ${isS1 ? 'active' : ''}" data-server="server1" title="Servidor 1: Ultra HD y Multilenguaje">
+            <span class="server-tab__icon">⚡</span>
+            <span class="server-tab__name">Servidor 1</span>
+            <span class="server-tab__badge">Principal</span>
           </button>
-          <button class="server-tab ${s === 'vimeus' ? 'active' : ''}" data-server="vimeus">
-            <span class="server-icon">🎬</span> Servidor 2 (Vimeus)
+          <button class="server-tab ${isS2 ? 'active' : ''}" data-server="server2" title="Servidor 2: Audio en Español Latino y Castellano">
+            <span class="server-tab__icon">🇪🇸</span>
+            <span class="server-tab__name">Servidor 2</span>
+            <span class="server-tab__badge server-tab__badge--es">Español</span>
           </button>
+          <button class="server-tab ${isS3 ? 'active' : ''}" data-server="server3" title="Servidor 3: Rápido con múltiples audios y subtítulos">
+            <span class="server-tab__icon">🎬</span>
+            <span class="server-tab__name">Servidor 3</span>
+            <span class="server-tab__badge">Multi-Audio</span>
+          </button>
+          <button class="server-tab ${isS4 ? 'active' : ''}" data-server="server4" title="Servidor 4: Alternativa de respaldo">
+            <span class="server-tab__icon">🛡️</span>
+            <span class="server-tab__name">Servidor 4</span>
+            <span class="server-tab__badge">Respaldo</span>
+          </button>
+        </div>
+
+        <div class="player-servers-actions">
+          <span class="player-adshield-pill" title="Protección activa contra redirecciones y anuncios">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 16l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9l-8 8z"/></svg>
+            <span>Sin Anuncios</span>
+          </span>
         </div>
       </div>
     `;
@@ -241,8 +295,13 @@ class WatchPageController {
         const newUrl = this.getServerURL(serverKey);
         if (iframe) {
           iframe.src = newUrl;
-          const serverName = serverKey === 'vidlink' ? 'VidLink HD' : 'Vimeus';
-          showToast(`Cambiando a ${serverName}... 🔄`, 'info');
+          const serverLabels = {
+            server1: 'Servidor 1 (Principal HD)',
+            server2: 'Servidor 2 (Español Latino / Castellano)',
+            server3: 'Servidor 3 (Multi-Audio)',
+            server4: 'Servidor 4 (Respaldo)'
+          };
+          showToast(`Cambiando a ${serverLabels[serverKey] || 'Servidor'}... 🔄`, 'info');
         }
       });
     });
@@ -400,7 +459,7 @@ class WatchPageController {
   }
 
   castToTV() {
-    const vimeusURL = getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode);
+    const streamURL = this.getServerURL(this.currentServer);
     const title   = this.mediaDetails?.title || this.mediaDetails?.name || 'CineVerse';
     const poster  = this.mediaDetails?.poster_path
       ? buildTMDBImageURL(this.mediaDetails.poster_path, 'w500')
@@ -412,13 +471,13 @@ class WatchPageController {
       displayTitle = `${title} — T${this.season} E${this.episode}`;
     }
 
-    const encodedURL    = encodeURIComponent(vimeusURL);
+    const encodedURL    = encodeURIComponent(streamURL);
     const encodedTitle  = encodeURIComponent(displayTitle);
     const encodedPoster = encodeURIComponent(poster);
 
     // Siempre mostrar el modal con instrucciones claras (tanto en web como en APK)
     // En APK el botón principal usará el Intent de Android
-    this.showCastModal(vimeusURL, displayTitle, encodedURL, encodedTitle, encodedPoster);
+    this.showCastModal(streamURL, displayTitle, encodedURL, encodedTitle, encodedPoster);
   }
 
   showCastModal(vimeusURL, title, encodedURL, encodedTitle, encodedPoster) {
@@ -907,18 +966,23 @@ class WatchPageController {
 
     // Inyectar botón de modo cine en la barra de servidores si existe
     const serversHeader = document.querySelector('.player-servers-header');
-    if (serversHeader && !serversHeader.querySelector('.theater-toggle-btn')) {
+    const serversActions = serversHeader ? serversHeader.querySelector('.player-servers-actions') : null;
+    const mountTarget = serversActions || serversHeader;
+    if (mountTarget && !mountTarget.querySelector('.theater-toggle-btn')) {
       const toggleBtn = document.createElement('button');
-      toggleBtn.className = 'theater-toggle-btn';
+      toggleBtn.className = 'theater-toggle-btn active-press';
+      toggleBtn.title = 'Alternar Modo Cine';
       toggleBtn.innerHTML = `
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="4" width="20" height="16" rx="2"></rect>
           <path d="M7 15h10M7 9h10"></path>
         </svg>
         <span>Modo Cine</span>
       `;
-      toggleBtn.style.marginLeft = 'auto';
-      toggleBtn.style.marginRight = '0.75rem';
+      if (!serversActions) {
+        toggleBtn.style.marginLeft = 'auto';
+        toggleBtn.style.marginRight = '0.75rem';
+      }
 
       const toggleAction = () => {
         const isTheater = document.body.classList.toggle('theater-mode');
@@ -947,7 +1011,7 @@ class WatchPageController {
         }
       });
 
-      serversHeader.appendChild(toggleBtn);
+      mountTarget.appendChild(toggleBtn);
     }
   }
 
