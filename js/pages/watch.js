@@ -248,6 +248,7 @@ class WatchPageController {
     return `
       <div class="player-servers-header" id="player-servers-header">
         <div class="player-servers-list">
+          <span class="servers-label">Servidor:</span>
           <button class="server-tab ${isS1 ? 'active' : ''}" data-server="server1" title="Servidor 1: Ultra HD y Multilenguaje">
             <span class="server-tab__icon">⚡</span>
             <span class="server-tab__name">Servidor 1</span>
