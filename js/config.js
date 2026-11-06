@@ -25,4 +25,4 @@ export const SUPABASE_URL = "https://oeibxtnltxxcaiwvpldi.supabase.co";
 export const SUPABASE_ANON_KEY = "sb_publishable_qlJxPHqUnCD1xhuXCJ--kg_nMg44rCn";
 
 // Version de la app - build.js la reemplaza automaticamente
-export const APP_VERSION = '3.1.8';
+export const APP_VERSION = '3.1.9';
