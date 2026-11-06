@@ -91,8 +91,8 @@ if (typeof window !== 'undefined') {
 }
 
 // ── Generadores de URL para los 4 Servidores de Alta Disponibilidad ─────────
-// Servidor 1: VidLink (Principal HD / Anime / Multi-idioma)
-function getVidlinkURL(mediaType, tmdbId, season, episode) {
+// Servidor 1: VidLink (Principal HD / Anime / Multi-sub con botón CC)
+function getServer1URL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
   const se = season ? String(season) : '1';
   const ep = episode ? String(episode) : '1';
@@ -103,41 +103,47 @@ function getVidlinkURL(mediaType, tmdbId, season, episode) {
   }
 }
 
-// Servidor 2: VidSrc.to (HD, Multi-idioma, Sin publicidad)
-function getVimeusURL(mediaType, tmdbId, season, episode, isAnime) {
+// Servidor 2: SmashyStream (Multi-fuentes con selector de idiomas y Sub Español)
+function getServer2URL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
-  const se = season  ? String(season)  : '1';
+  const se = season ? String(season) : '1';
   const ep = episode ? String(episode) : '1';
   if (mediaType === 'movie') {
-    return 'https://vidsrc.to/embed/movie/' + id;
+    return 'https://embed.smashystream.com/playere.php?tmdb=' + id;
   } else {
-    return 'https://vidsrc.to/embed/tv/' + id + '/' + se + '/' + ep;
+    return 'https://embed.smashystream.com/playere.php?tmdb=' + id + '&season=' + se + '&episode=' + ep;
   }
 }
 
-// Servidor 3: Multiembed (Servidor en Español Latino y Castellano)
-function getMultiembedURL(mediaType, tmdbId, season, episode) {
+// Servidor 3: 2Embed (Alta estabilidad con subtítulos CC en Español)
+function getServer3URL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
+  const se = season ? String(season) : '1';
+  const ep = episode ? String(episode) : '1';
   if (mediaType === 'movie') {
-    return 'https://multiembed.mov/?video_id=' + id + '&tmdb=1';
+    return 'https://www.2embed.cc/embed/' + id;
   } else {
-    const se = season ? String(season) : '1';
-    const ep = episode ? String(episode) : '1';
-    return 'https://multiembed.mov/?video_id=' + id + '&tmdb=1&s=' + se + '&e=' + ep;
+    return 'https://www.2embed.cc/embedtv/' + id + '&s=' + se + '&e=' + ep;
   }
 }
 
-// Servidor 4: Videasy (Multi-Audio y subtítulos)
-function getVideasyURL(mediaType, tmdbId, season, episode) {
+// Servidor 4: Vidsrc.cc v2 (HD Multi-idioma, Sub Español y Anime)
+function getServer4URL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
+  const se = season ? String(season) : '1';
+  const ep = episode ? String(episode) : '1';
   if (mediaType === 'movie') {
-    return 'https://player.videasy.net/movie/' + id + '?color=e50914';
+    return 'https://vidsrc.cc/v2/embed/movie/' + id;
   } else {
-    const se = season ? String(season) : '1';
-    const ep = episode ? String(episode) : '1';
-    return 'https://player.videasy.net/tv/' + id + '/' + se + '/' + ep + '?color=e50914';
+    return 'https://vidsrc.cc/v2/embed/tv/' + id + '/' + se + '/' + ep;
   }
 }
+
+// Aliases de retrocompatibilidad
+function getVidlinkURL(m, id, s, e) { return getServer1URL(m, id, s, e); }
+function getVimeusURL(m, id, s, e) { return getServer2URL(m, id, s, e); }
+function getMultiembedURL(m, id, s, e) { return getServer3URL(m, id, s, e); }
+function getVideasyURL(m, id, s, e) { return getServer4URL(m, id, s, e); }
 
 
 // ── Controlador Principal ────────────────────────────────────────────────────
@@ -157,7 +163,7 @@ class WatchPageController {
   async init() {
 
     // Preconnect a servidores de video para máxima velocidad de carga
-    ['https://vidlink.pro', 'https://multiembed.mov', 'https://player.videasy.net', 'https://vidsrc.to', 'https://image.tmdb.org'].forEach(url => {
+    ['https://vidlink.pro', 'https://embed.smashystream.com', 'https://www.2embed.cc', 'https://vidsrc.cc', 'https://image.tmdb.org'].forEach(url => {
       const link = document.createElement('link');
       link.rel = 'preconnect';
       link.href = url;
@@ -263,25 +269,25 @@ class WatchPageController {
 
   getServerURL(serverKey) {
     const s = serverKey || this.currentServer || 'server1';
-    if (s === 'server2' || s === 'vimeus') {
-      return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, this.isAnime);
+    if (s === 'server2' || s === 'vimeus' || s === 'smashy') {
+      return getServer2URL(this.mediaType, this.mediaId, this.season, this.episode);
     }
-    if (s === 'server3' || s === 'multiembed' || s === 'espanol') {
-      return getMultiembedURL(this.mediaType, this.mediaId, this.season, this.episode);
+    if (s === 'server3' || s === 'multiembed' || s === 'espanol' || s === '2embed') {
+      return getServer3URL(this.mediaType, this.mediaId, this.season, this.episode);
     }
-    if (s === 'server4' || s === 'videasy') {
-      return getVideasyURL(this.mediaType, this.mediaId, this.season, this.episode);
+    if (s === 'server4' || s === 'videasy' || s === 'vidsrc') {
+      return getServer4URL(this.mediaType, this.mediaId, this.season, this.episode);
     }
     // Predeterminado: Servidor 1 (VidLink)
-    return getVidlinkURL(this.mediaType, this.mediaId, this.season, this.episode);
+    return getServer1URL(this.mediaType, this.mediaId, this.season, this.episode);
   }
 
   buildServersBar() {
     const s = this.currentServer;
     const isS1 = s === 'server1' || s === 'vidlink' || !s;
-    const isS2 = s === 'server2' || s === 'vimeus';
-    const isS3 = s === 'server3' || s === 'multiembed' || s === 'espanol';
-    const isS4 = s === 'server4' || s === 'videasy';
+    const isS2 = s === 'server2' || s === 'vimeus' || s === 'smashy';
+    const isS3 = s === 'server3' || s === 'multiembed' || s === 'espanol' || s === '2embed';
+    const isS4 = s === 'server4' || s === 'videasy' || s === 'vidsrc';
 
     return `
       <div class="player-servers-header" id="player-servers-header">
@@ -295,16 +301,19 @@ class WatchPageController {
             <span class="server-tab__icon">🎬</span>
             <span class="server-tab__name">Servidor 2</span>
           </button>
-          <button class="server-tab ${isS3 ? 'active' : ''}" data-server="server3" title="Servidor 3 (Español)">
-            <span class="server-tab__icon">🇪🇸</span>
+          <button class="server-tab ${isS3 ? 'active' : ''}" data-server="server3" title="Servidor 3">
+            <span class="server-tab__icon">🌐</span>
             <span class="server-tab__name">Servidor 3</span>
-            <span class="server-tab__badge server-tab__badge--es">Español</span>
           </button>
           <button class="server-tab ${isS4 ? 'active' : ''}" data-server="server4" title="Servidor 4">
             <span class="server-tab__icon">🛡️</span>
             <span class="server-tab__name">Servidor 4</span>
           </button>
         </div>
+      </div>
+      <div class="player-lang-tip">
+        <span class="player-lang-tip__icon">💡</span>
+        <span><strong>Tip:</strong> Si el audio inicia en otro idioma o anime en japonés, pulsa el botón <strong>CC</strong> dentro del reproductor para activar subtítulos en <strong>Español</strong>. Si un servidor tarda, cambia a otro servidor arriba.</span>
       </div>
     `;
   }
@@ -327,7 +336,7 @@ class WatchPageController {
           const serverLabels = {
             server1: 'Servidor 1',
             server2: 'Servidor 2',
-            server3: 'Servidor 3 (Español)',
+            server3: 'Servidor 3',
             server4: 'Servidor 4'
           };
           showToast(`Cambiando a ${serverLabels[serverKey] || 'Servidor'}... 🔄`, 'info');

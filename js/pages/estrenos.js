@@ -124,11 +124,12 @@ class EstrenosPageController {
     if (this.page < this.totalPages && this.page < 5) {
       try {
         this.loading = true;
-        const data = await api.getUpcoming(this.page + 1);
+        const rawData = await api.getUpcoming(this.page + 1);
         this.loading = false;
-        if (data && data.results) {
+        const newResults = Array.isArray(rawData) ? rawData : (rawData?.results || []);
+        if (newResults.length > 0) {
           this.page++;
-          this.results = [...this.results, ...data.results];
+          this.results = [...this.results, ...newResults];
           if (this.viewMode === 'calendar') {
             this.renderCalendar();
           }
@@ -152,10 +153,11 @@ class EstrenosPageController {
 
     try {
       // Obtener próximos lanzamientos desde la API de TMDB
-      const data = await api.getUpcoming(this.page);
+      const rawData = await api.getUpcoming(this.page);
       this.loading = false;
+      const results = Array.isArray(rawData) ? rawData : (rawData?.results || []);
 
-      if (!data || !data.results || data.results.length === 0) {
+      if (!results || results.length === 0) {
         if (reset) {
           this.resultsGrid.innerHTML = '';
           this.resultsCounter.textContent = 'No hay próximos lanzamientos para mostrar';
@@ -164,15 +166,15 @@ class EstrenosPageController {
         return;
       }
 
-      this.totalPages = data.total_pages || 1;
-      const newItems = data.results;
+      this.totalPages = rawData?.total_pages || (results.length > 0 ? 5 : 1);
+      const newItems = results;
 
       if (reset) {
         this.resultsGrid.innerHTML = '';
       }
 
       this.results = [...this.results, ...newItems];
-      this.resultsCounter.textContent = `Descubre ${data.total_results || this.results.length} próximos estrenos de cine y series`;
+      this.resultsCounter.textContent = `Descubre ${rawData?.total_results || this.results.length} próximos estrenos de cine y series`;
 
       if (this.viewMode !== 'calendar') {
         this.renderResults(newItems);
