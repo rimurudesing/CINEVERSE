@@ -145,32 +145,86 @@ export async function signInWithGoogle() {
   return data;
 }
 
+// ─── Gestión de Sesiones Seguras y Detección de Inactividad ────────────────
+const MAX_SESSION_INACTIVITY_MS = 14 * 24 * 60 * 60 * 1000; // 14 días
+
+export function recordUserActivity() {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('cineverse_last_activity', String(Date.now()));
+  } catch (e) {}
+}
+
+// Registrar eventos de interacción para actualizar timestamp de sesión activa
+if (typeof window !== 'undefined') {
+  let activityThrottled = false;
+  const updateActivity = () => {
+    if (!activityThrottled) {
+      activityThrottled = true;
+      recordUserActivity();
+      setTimeout(() => { activityThrottled = false; }, 30000); // Throttling a 30s
+    }
+  };
+  ['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
+    window.addEventListener(evt, updateActivity, { passive: true });
+  });
+}
+
 /**
- * Cerrar sesión.
+ * Cerrar sesión de manera limpia y exhaustiva.
+ * Elimina tokens, perfiles, preferencias y previene suplantaciones residuales.
  */
 export async function signOut() {
   if (!isSupabaseConfigured) return;
-  localStorage.removeItem('cineverse_profile');
-  localStorage.removeItem('cineverse_theme_color');
+
+  // 1. Limpieza de almacenamiento local y de sesión
+  try {
+    localStorage.removeItem('cineverse_profile');
+    localStorage.removeItem('cineverse_theme_color');
+    localStorage.removeItem('cineverse_last_activity');
+    localStorage.removeItem('cineverse_player_server');
+    sessionStorage.clear();
+  } catch (e) {}
+
   applyUserTheme('red');
+
   const client = await getClient();
   if (!client) return;
-  const { error } = await client.auth.signOut();
-  if (error) throw error;
+
+  try {
+    // 2. Invalidar sesión en Supabase a nivel local/global
+    await client.auth.signOut({ scope: 'local' });
+  } catch (err) {
+    console.warn('[CineVerse Auth] Error al revocar sesión en servidor:', err);
+  }
 }
 
 /**
  * Obtener usuario actual y combinarlo con su perfil de la base de datos.
+ * Incluye validación de inactividad, verificación anti-suplantación y control de baneo.
  */
 export async function getCurrentUser() {
   if (!isSupabaseConfigured) return null;
   
   try {
+    // Verificar inactividad prolongada de sesión
+    const lastActivity = parseInt(localStorage.getItem('cineverse_last_activity') || '0', 10);
+    const now = Date.now();
+    if (lastActivity && (now - lastActivity > MAX_SESSION_INACTIVITY_MS)) {
+      console.warn('[CineVerse Security] Sesión expirada por inactividad.');
+      await signOut();
+      return null;
+    }
+
     const client = await getClient();
     if (!client) return null;
     
     const { data: { user }, error: userError } = await client.auth.getUser();
-    if (userError || !user) return null;
+    if (userError || !user) {
+      // Si la sesión no es válida o fue revocada, limpiar datos locales residuales
+      localStorage.removeItem('cineverse_profile');
+      return null;
+    }
     
     // Obtener datos del perfil extendido
     let { data: profile, error: profileError } = await client
@@ -181,6 +235,13 @@ export async function getCurrentUser() {
       
     if (profileError) {
       console.error("Error al obtener perfil extendido:", profileError);
+    }
+
+    // Si el usuario está baneado, forzar cierre de sesión inmediato
+    if (profile && profile.banned) {
+      console.warn('[CineVerse Security] Usuario bloqueado/baneado. Cerrando sesión...');
+      await signOut();
+      return null;
     }
     
     if (!profile) {

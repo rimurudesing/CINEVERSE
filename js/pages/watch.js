@@ -178,13 +178,21 @@ class WatchPageController {
     initCustomCursor();
 
     const params = new URLSearchParams(window.location.search);
-    this.mediaId   = parseInt(params.get('id'));
-    this.mediaType = (params.get('type') || 'movie').toLowerCase();
-    this.season    = params.get('season')  ? parseInt(params.get('season'))  : null;
-    this.episode   = params.get('episode') ? parseInt(params.get('episode')) : null;
+    const rawId = parseInt(params.get('id'), 10);
+    this.mediaId = (!isNaN(rawId) && rawId > 0) ? rawId : null;
+
+    const rawType = (params.get('type') || 'movie').toLowerCase().trim();
+    this.mediaType = (rawType === 'tv') ? 'tv' : 'movie';
+
+    const rawSeason = parseInt(params.get('season'), 10);
+    this.season = (!isNaN(rawSeason) && rawSeason > 0) ? rawSeason : null;
+
+    const rawEpisode = parseInt(params.get('episode'), 10);
+    this.episode = (!isNaN(rawEpisode) && rawEpisode > 0) ? rawEpisode : null;
     this.isAnimeMode = params.get('server') === 'anime';
 
     if (!this.mediaId) {
+      console.warn('[CineVerse Security] ID de contenido inválido o ausente.');
       navigateTo('index.html');
       return;
     }

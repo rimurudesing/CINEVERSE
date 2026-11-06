@@ -40,9 +40,11 @@ class TVPageController {
     initCustomCursor();
 
     const params = new URLSearchParams(window.location.search);
-    this.serieId = parseInt(params.get('id'));
+    const rawId = parseInt(params.get('id'), 10);
+    this.serieId = (!isNaN(rawId) && rawId > 0) ? rawId : null;
 
     if (!this.serieId) {
+      console.warn('[CineVerse Security] ID de serie no válido.');
       navigateTo('index.html');
       return;
     }

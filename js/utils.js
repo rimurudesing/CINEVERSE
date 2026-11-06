@@ -43,6 +43,39 @@ export function isValidInt(val, min = 0, max = Number.MAX_SAFE_INTEGER) {
   return Number.isInteger(n) && n >= min && n <= max;
 }
 
+/**
+ * Valida y restringe el tipo de medio exclusivamente a 'movie' o 'tv'.
+ */
+export function validateMediaType(type = 'movie') {
+  const clean = String(type).trim().toLowerCase();
+  return clean === 'tv' ? 'tv' : 'movie';
+}
+
+/**
+ * Sanitiza URLs externas para prevenir inyecciones javascript:, vbscript: o data: maliciosas.
+ */
+export function sanitizeURL(url = '') {
+  if (!url) return '';
+  const str = String(url).trim();
+  if (/^(javascript|vbscript|data):/i.test(str)) {
+    console.warn('[CineVerse Security] URL sospechosa neutralizada:', str);
+    return '#';
+  }
+  return str;
+}
+
+/**
+ * Obtiene y valida un parámetro numérico seguro desde la URL.
+ */
+export function safeIntQueryParam(paramName, defaultVal = null, min = 1) {
+  if (typeof window === 'undefined') return defaultVal;
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get(paramName);
+  if (!raw) return defaultVal;
+  const num = parseInt(raw, 10);
+  return isValidInt(num, min) ? num : defaultVal;
+}
+
 /* ═══ cineverse/js/utils.js ═══ */
 
 import { TMDB_IMG_BASE } from './config.js';

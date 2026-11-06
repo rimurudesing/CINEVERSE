@@ -1,6 +1,6 @@
 {
   "name": "cineverse",
-  "version": "3.1.5",
+  "version": "3.1.6",
   "description": "CineVerse — Streaming Discovery App",
   "main": "desktop/main.cjs",
   "scripts": {

@@ -37,11 +37,17 @@ class AdminDashboardController {
       return;
     }
 
-    // 2. Validar que sea administrador
+    // 2. Validar que sea administrador (Protección estricta de ruta)
     const profile = this.currentUser.profile || {};
     if (!profile.is_admin) {
+      // Destruir contenedor administrativo del DOM para evitar inspección por DevTools
+      document.getElementById('admin-main-container')?.remove();
+      const authGuard = document.getElementById('admin-auth-guard');
+      if (authGuard) {
+        authGuard.innerHTML = '<div style="color:var(--accent-red);font-weight:700;font-size:1.2rem;">⛔ Acceso denegado: Se requieren permisos de administrador.</div>';
+      }
       showToast('Acceso denegado. Se requieren permisos de administrador.', 'error');
-      setTimeout(() => navigateTo('index.html'), 1500);
+      setTimeout(() => navigateTo('index.html'), 1200);
       return;
     }
 

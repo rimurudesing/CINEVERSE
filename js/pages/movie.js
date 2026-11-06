@@ -41,9 +41,11 @@ class MoviePageController {
     initCustomCursor();
 
     const params = new URLSearchParams(window.location.search);
-    this.movieId = parseInt(params.get('id'));
+    const rawId = parseInt(params.get('id'), 10);
+    this.movieId = (!isNaN(rawId) && rawId > 0) ? rawId : null;
 
     if (!this.movieId) {
+      console.warn('[CineVerse Security] ID de película no válido.');
       navigateTo('index.html');
       return;
     }

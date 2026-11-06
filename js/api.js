@@ -52,6 +52,11 @@ export class TMDBApi {
       const response = await window.fetch(url, abortCtrl ? { signal: abortCtrl.signal } : undefined);
       if (timeoutId) clearTimeout(timeoutId);
       if (!response.ok) {
+        if (response.status === 429) {
+          console.warn('[TMDBApi Security] Rate limit alcanzado en Edge Proxy. Usando respuesta en caché si está disponible.');
+          const stale = this.cache.get(url);
+          if (stale) return stale.data;
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
