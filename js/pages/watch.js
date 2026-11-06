@@ -103,24 +103,15 @@ function getVidlinkURL(mediaType, tmdbId, season, episode) {
   }
 }
 
-// Servidor 2: Vimeus (Oficial CineVerse)
-const VIMEUS_VIEW_KEY = '25Tqx20dkTAAEwYg-QImuDY5oIbdlxJQlOPru7Jt0ek';
+// Servidor 2: VidSrc.to (HD, Multi-idioma, Sin publicidad)
 function getVimeusURL(mediaType, tmdbId, season, episode, isAnime) {
   const id = String(tmdbId || '');
-  const se = season  ? String(season)  : '';
-  const ep = episode ? String(episode) : '';
+  const se = season  ? String(season)  : '1';
+  const ep = episode ? String(episode) : '1';
   if (mediaType === 'movie') {
-    return 'https://vimeus.com/e/movie?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
-  } else if (isAnime) {
-    let url = 'https://vimeus.com/e/anime?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
-    if (se) url += '&se=' + se;
-    if (ep) url += '&ep=' + ep;
-    return url;
+    return 'https://vidsrc.to/embed/movie/' + id;
   } else {
-    let url = 'https://vimeus.com/e/serie?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
-    if (se) url += '&se=' + se;
-    if (ep) url += '&ep=' + ep;
-    return url;
+    return 'https://vidsrc.to/embed/tv/' + id + '/' + se + '/' + ep;
   }
 }
 
@@ -166,7 +157,7 @@ class WatchPageController {
   async init() {
 
     // Preconnect a servidores de video para máxima velocidad de carga
-    ['https://vidlink.pro', 'https://multiembed.mov', 'https://player.videasy.net', 'https://vidsrc.me', 'https://image.tmdb.org'].forEach(url => {
+    ['https://vidlink.pro', 'https://multiembed.mov', 'https://player.videasy.net', 'https://vidsrc.to', 'https://image.tmdb.org'].forEach(url => {
       const link = document.createElement('link');
       link.rel = 'preconnect';
       link.href = url;
@@ -616,8 +607,7 @@ class WatchPageController {
           <div style="display:flex;gap:0.8rem;align-items:flex-start;margin-bottom:1.1rem;">
             <span style="width:24px;height:24px;border-radius:50%;background:#039BE5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;font-weight:900;color:white;margin-top:1px;">2</span>
             <p style="font-size:0.83rem;color:var(--text-secondary);margin:0;line-height:1.4;">
-              <strong style="color:#FFC107;">⚠️ ESPERA EL ANUNCIO EN TU CELULAR:</strong> Si aparece un anuncio de Vimeus en tu celular, **no intentes transmitir todavía**. Espera a que termine por completo en tu pantalla y comience la película/serie.
-            </p>
+              <strong style="color:#FFC107;">⚠️ ESPERA EL ANUNCIO EN TU CELULAR:</strong> Si aparece un anuncio, espera a que el reproductor cargue. </p>
           </div>
 
           <!-- Paso 3 — PROBLEMA DE DESCONEXIÓN EXPLICADO -->
@@ -1224,7 +1214,7 @@ class WatchPageController {
 
   // ── Sidebar ────────────────────────────────────────────────────────────────
   renderSidebar() {
-    // Eliminar el panel de "Clips y Trailers" ya que ahora Vimeus los gestiona
+    // Eliminar el panel de "Clips y Trailers"
     const videosPanel = document.getElementById('watch-videos-list');
     if (videosPanel) {
       const parentCard = videosPanel.closest('div[style]');
