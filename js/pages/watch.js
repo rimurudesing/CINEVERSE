@@ -25,29 +25,60 @@ const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePla
 // ── Bloqueo estricto de popups, publicidad y redirecciones ───────────────────
 if (typeof window !== 'undefined') {
   const _origOpen = window.open;
-  window.open = function(url, target, features) {
-    if (url && (url.includes('paypal.me') || url.includes('github.com') || url.includes('wvc-x-callback') || url.includes('intent://'))) {
-      return _origOpen ? _origOpen.call(window, url, target, features) : null;
-    }
-    console.warn('[CineVerse Shield] Bloqueado popup o anuncio:', url);
-    return null;
-  };
+  try {
+    Object.defineProperty(window, 'open', {
+      configurable: false,
+      writable: false,
+      value: function(url, target, features) {
+        if (url && (url.includes('paypal.me') || url.includes('github.com') || url.includes('wvc-x-callback') || url.includes('intent://'))) {
+          return _origOpen ? _origOpen.call(window, url, target, features) : null;
+        }
+        console.warn('[CineVerse Shield] Popup o anuncio bloqueado:', url);
+        return null;
+      }
+    });
+  } catch(e) {
+    window.open = function() { return null; };
+  }
 
   // Prevenir que anuncios en el reproductor secuestren o redirijan la ventana
   let isInternalNavigation = false;
   document.addEventListener('click', (e) => {
-    if (e.target && e.target.closest && e.target.closest('a, button, input, select, textarea, nav, header, .nav-btn, .server-tab, .episode-card')) {
+    if (e.target && e.target.closest && e.target.closest('a, button, input, select, textarea, nav, header, .nav-btn, .server-tab, .episode-card, .btn')) {
       isInternalNavigation = true;
       setTimeout(() => { isInternalNavigation = false; }, 1200);
+    }
+
+    // Bloquear links externos que no sean permitidos
+    const a = e.target && e.target.closest ? e.target.closest('a') : null;
+    if (a && a.href) {
+      try {
+        const url = new URL(a.href, window.location.href);
+        const isInternal = url.origin === window.location.origin || 
+                           a.getAttribute('href')?.startsWith('#') || 
+                           a.getAttribute('href')?.startsWith('javascript:');
+        const isAllowed = url.hostname.includes('paypal.me') || 
+                          url.hostname.includes('github.com') ||
+                          url.protocol === 'intent:' || 
+                          url.protocol.includes('wvc-x-callback');
+        if (!isInternal && !isAllowed) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          console.warn('[CineVerse Shield] Enlace externo/anuncio bloqueado:', url.href);
+          return false;
+        }
+      } catch (err) {}
     }
   }, true);
 
   window.addEventListener('beforeunload', (e) => {
     if (!isInternalNavigation) {
       e.preventDefault();
+      e.stopImmediatePropagation();
       return (e.returnValue = '¿Deseas salir de CineVerse?');
     }
-  });
+  }, true);
 
   // Prevenir que anuncios en segundo plano roben foco
   window.addEventListener('blur', () => {
@@ -72,7 +103,28 @@ function getVidlinkURL(mediaType, tmdbId, season, episode) {
   }
 }
 
-// Servidor 2: Multiembed (Especializado en Español Latino y Castellano)
+// Servidor 2: Vimeus (Oficial CineVerse)
+const VIMEUS_VIEW_KEY = '25Tqx20dkTAAEwYg-QImuDY5oIbdlxJQlOPru7Jt0ek';
+function getVimeusURL(mediaType, tmdbId, season, episode, isAnime) {
+  const id = String(tmdbId || '');
+  const se = season  ? String(season)  : '';
+  const ep = episode ? String(episode) : '';
+  if (mediaType === 'movie') {
+    return 'https://vimeus.com/e/movie?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
+  } else if (isAnime) {
+    let url = 'https://vimeus.com/e/anime?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
+    if (se) url += '&se=' + se;
+    if (ep) url += '&ep=' + ep;
+    return url;
+  } else {
+    let url = 'https://vimeus.com/e/serie?tmdb=' + id + '&view_key=' + VIMEUS_VIEW_KEY;
+    if (se) url += '&se=' + se;
+    if (ep) url += '&ep=' + ep;
+    return url;
+  }
+}
+
+// Servidor 3: Multiembed (Servidor en Español Latino y Castellano)
 function getMultiembedURL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
   if (mediaType === 'movie') {
@@ -84,7 +136,7 @@ function getMultiembedURL(mediaType, tmdbId, season, episode) {
   }
 }
 
-// Servidor 3: Videasy (Rápido con audio y subtítulos)
+// Servidor 4: Videasy (Multi-Audio y subtítulos)
 function getVideasyURL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
   if (mediaType === 'movie') {
@@ -95,19 +147,6 @@ function getVideasyURL(mediaType, tmdbId, season, episode) {
     return 'https://player.videasy.net/tv/' + id + '/' + se + '/' + ep + '?color=e50914';
   }
 }
-
-// Servidor 4: Vidsrc (Respaldo)
-function getVidsrcURL(mediaType, tmdbId, season, episode) {
-  const id = String(tmdbId || '');
-  if (mediaType === 'movie') {
-    return 'https://vidsrc.me/embed/movie?tmdb=' + id;
-  } else {
-    const se = season ? String(season) : '1';
-    const ep = episode ? String(episode) : '1';
-    return 'https://vidsrc.me/embed/tv?tmdb=' + id + '&season=' + se + '&episode=' + ep;
-  }
-}
-
 
 
 // ── Controlador Principal ────────────────────────────────────────────────────
@@ -225,14 +264,14 @@ class WatchPageController {
 
   getServerURL(serverKey) {
     const s = serverKey || this.currentServer || 'server1';
-    if (s === 'server2' || s === 'multiembed' || s === 'espanol' || s === 'vimeus') {
+    if (s === 'server2' || s === 'vimeus') {
+      return getVimeusURL(this.mediaType, this.mediaId, this.season, this.episode, this.isAnime);
+    }
+    if (s === 'server3' || s === 'multiembed' || s === 'espanol') {
       return getMultiembedURL(this.mediaType, this.mediaId, this.season, this.episode);
     }
-    if (s === 'server3' || s === 'videasy') {
+    if (s === 'server4' || s === 'videasy') {
       return getVideasyURL(this.mediaType, this.mediaId, this.season, this.episode);
-    }
-    if (s === 'server4' || s === 'vidsrc') {
-      return getVidsrcURL(this.mediaType, this.mediaId, this.season, this.episode);
     }
     // Predeterminado: Servidor 1 (VidLink)
     return getVidlinkURL(this.mediaType, this.mediaId, this.season, this.episode);
@@ -241,41 +280,31 @@ class WatchPageController {
   buildServersBar() {
     const s = this.currentServer;
     const isS1 = s === 'server1' || s === 'vidlink' || !s;
-    const isS2 = s === 'server2' || s === 'multiembed' || s === 'espanol' || s === 'vimeus';
-    const isS3 = s === 'server3' || s === 'videasy';
-    const isS4 = s === 'server4' || s === 'vidsrc';
+    const isS2 = s === 'server2' || s === 'vimeus';
+    const isS3 = s === 'server3' || s === 'multiembed' || s === 'espanol';
+    const isS4 = s === 'server4' || s === 'videasy';
 
     return `
       <div class="player-servers-header" id="player-servers-header">
         <div class="player-servers-list">
           <span class="servers-label">Servidor:</span>
-          <button class="server-tab ${isS1 ? 'active' : ''}" data-server="server1" title="Servidor 1: Ultra HD y Multilenguaje">
+          <button class="server-tab ${isS1 ? 'active' : ''}" data-server="server1" title="Servidor 1">
             <span class="server-tab__icon">⚡</span>
             <span class="server-tab__name">Servidor 1</span>
-            <span class="server-tab__badge">Principal</span>
           </button>
-          <button class="server-tab ${isS2 ? 'active' : ''}" data-server="server2" title="Servidor 2: Audio en Español Latino y Castellano">
-            <span class="server-tab__icon">🇪🇸</span>
+          <button class="server-tab ${isS2 ? 'active' : ''}" data-server="server2" title="Servidor 2">
+            <span class="server-tab__icon">🎬</span>
             <span class="server-tab__name">Servidor 2</span>
+          </button>
+          <button class="server-tab ${isS3 ? 'active' : ''}" data-server="server3" title="Servidor 3 (Español)">
+            <span class="server-tab__icon">🇪🇸</span>
+            <span class="server-tab__name">Servidor 3</span>
             <span class="server-tab__badge server-tab__badge--es">Español</span>
           </button>
-          <button class="server-tab ${isS3 ? 'active' : ''}" data-server="server3" title="Servidor 3: Rápido con múltiples audios y subtítulos">
-            <span class="server-tab__icon">🎬</span>
-            <span class="server-tab__name">Servidor 3</span>
-            <span class="server-tab__badge">Multi-Audio</span>
-          </button>
-          <button class="server-tab ${isS4 ? 'active' : ''}" data-server="server4" title="Servidor 4: Alternativa de respaldo">
+          <button class="server-tab ${isS4 ? 'active' : ''}" data-server="server4" title="Servidor 4">
             <span class="server-tab__icon">🛡️</span>
             <span class="server-tab__name">Servidor 4</span>
-            <span class="server-tab__badge">Respaldo</span>
           </button>
-        </div>
-
-        <div class="player-servers-actions">
-          <span class="player-adshield-pill" title="Protección activa contra redirecciones y anuncios">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 16l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9l-8 8z"/></svg>
-            <span>Sin Anuncios</span>
-          </span>
         </div>
       </div>
     `;
@@ -297,10 +326,10 @@ class WatchPageController {
         if (iframe) {
           iframe.src = newUrl;
           const serverLabels = {
-            server1: 'Servidor 1 (Principal HD)',
-            server2: 'Servidor 2 (Español Latino / Castellano)',
-            server3: 'Servidor 3 (Multi-Audio)',
-            server4: 'Servidor 4 (Respaldo)'
+            server1: 'Servidor 1',
+            server2: 'Servidor 2',
+            server3: 'Servidor 3 (Español)',
+            server4: 'Servidor 4'
           };
           showToast(`Cambiando a ${serverLabels[serverKey] || 'Servidor'}... 🔄`, 'info');
         }
@@ -403,9 +432,6 @@ class WatchPageController {
     this.bindServerTabs();
     this.bindCastButton();
     this.bindPiPAndGestures();
-
-    // ── MEJORA 12: Inicializar Modo Cine ─────────────────────────────────────
-    this.initTheaterMode();
 
     // Vincular eventos del selector de episodios (series)
     if (this.mediaType === 'tv') {
@@ -944,78 +970,6 @@ class WatchPageController {
   }
 
   
-  /**
-   * ── MEJORA 12: Modo Cine (Theater Mode) ────────────────────────────────────
-   */
-  initTheaterMode() {
-    let overlay = document.querySelector('.theater-overlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.className = 'theater-overlay';
-      document.body.appendChild(overlay);
-    }
-
-    let exitBtn = document.querySelector('.theater-exit-btn');
-    if (!exitBtn) {
-      exitBtn = document.createElement('button');
-      exitBtn.className = 'theater-exit-btn';
-      exitBtn.innerHTML = '✕';
-      exitBtn.title = 'Salir del Modo Cine (ESC)';
-      exitBtn.setAttribute('aria-label', 'Salir del Modo Cine');
-      document.body.appendChild(exitBtn);
-    }
-
-    // Inyectar botón de modo cine en la barra de servidores si existe
-    const serversHeader = document.querySelector('.player-servers-header');
-    const serversActions = serversHeader ? serversHeader.querySelector('.player-servers-actions') : null;
-    const mountTarget = serversActions || serversHeader;
-    if (mountTarget && !mountTarget.querySelector('.theater-toggle-btn')) {
-      const toggleBtn = document.createElement('button');
-      toggleBtn.className = 'theater-toggle-btn active-press';
-      toggleBtn.title = 'Alternar Modo Cine';
-      toggleBtn.innerHTML = `
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-          <path d="M7 15h10M7 9h10"></path>
-        </svg>
-        <span>Modo Cine</span>
-      `;
-      if (!serversActions) {
-        toggleBtn.style.marginLeft = 'auto';
-        toggleBtn.style.marginRight = '0.75rem';
-      }
-
-      const toggleAction = () => {
-        const isTheater = document.body.classList.toggle('theater-mode');
-        overlay.classList.toggle('active', isTheater);
-        toggleBtn.classList.toggle('active', isTheater);
-      };
-
-      toggleBtn.addEventListener('click', toggleAction);
-      exitBtn.addEventListener('click', () => {
-        document.body.classList.remove('theater-mode');
-        overlay.classList.remove('active');
-        toggleBtn.classList.remove('active');
-      });
-      overlay.addEventListener('click', () => {
-        document.body.classList.remove('theater-mode');
-        overlay.classList.remove('active');
-        toggleBtn.classList.remove('active');
-      });
-
-      // Tecla ESC para salir
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && document.body.classList.contains('theater-mode')) {
-          document.body.classList.remove('theater-mode');
-          overlay.classList.remove('active');
-          toggleBtn.classList.remove('active');
-        }
-      });
-
-      mountTarget.appendChild(toggleBtn);
-    }
-  }
-
   bindEpisodeBarEvents() {
     const seasonDrop   = document.getElementById('season-dropdown');
     const seasonTrig   = document.getElementById('season-trigger');

@@ -27,19 +27,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Hojas de Estilo -->
-  <link rel="stylesheet" href="css/variables.css?v=3.1.4">
-  <link rel="stylesheet" href="css/reset.css?v=3.1.4">
-  <link rel="stylesheet" href="css/layout.css?v=3.1.4">
-  <link rel="stylesheet" href="css/components.css?v=3.1.4">
-  <link rel="stylesheet" href="css/navbar.css?v=3.1.4">
-  <link rel="stylesheet" href="css/hero.css?v=3.1.4">
-  <link rel="stylesheet" href="css/carousel.css?v=3.1.4">
-  <link rel="stylesheet" href="css/modal.css?v=3.1.4">
-  <link rel="stylesheet" href="css/skeleton.css?v=3.1.4">
-  <link rel="stylesheet" href="css/forms.css?v=3.1.4">
-  <link rel="stylesheet" href="css/animations.css?v=3.1.4">
-  <link rel="stylesheet" href="css/responsive.css?v=3.1.4">
-  <link rel="stylesheet" href="css/ads.css?v=3.1.4">
+  <link rel="stylesheet" href="css/variables.css?v=3.1.5">
+  <link rel="stylesheet" href="css/reset.css?v=3.1.5">
+  <link rel="stylesheet" href="css/layout.css?v=3.1.5">
+  <link rel="stylesheet" href="css/components.css?v=3.1.5">
+  <link rel="stylesheet" href="css/navbar.css?v=3.1.5">
+  <link rel="stylesheet" href="css/hero.css?v=3.1.5">
+  <link rel="stylesheet" href="css/carousel.css?v=3.1.5">
+  <link rel="stylesheet" href="css/modal.css?v=3.1.5">
+  <link rel="stylesheet" href="css/skeleton.css?v=3.1.5">
+  <link rel="stylesheet" href="css/forms.css?v=3.1.5">
+  <link rel="stylesheet" href="css/animations.css?v=3.1.5">
+  <link rel="stylesheet" href="css/responsive.css?v=3.1.5">
+  <link rel="stylesheet" href="css/ads.css?v=3.1.5">
 
   <style>
     /* ── Watch Page Layout ─────────────────────────────────────────────────── */
@@ -326,55 +326,6 @@
       border: 1.5px solid #0d0e10;
       box-shadow: 0 0 6px rgba(34,197,94,0.7);
     }
-    .player-servers-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.45rem;
-      margin-left: auto;
-      flex-shrink: 0;
-      padding-left: 0.5rem;
-      border-left: 1px solid rgba(255, 255, 255, 0.07);
-    }
-    .player-adshield-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      font-size: 0.68rem;
-      font-weight: 700;
-      color: #4ade80;
-      background: rgba(34, 197, 94, 0.08);
-      border: 1px solid rgba(34, 197, 94, 0.2);
-      padding: 0.3rem 0.6rem;
-      border-radius: 999px;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-    }
-    .theater-toggle-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.42rem 0.75rem;
-      background: rgba(255, 255, 255, 0.04);
-      color: #94a3b8;
-      font-family: var(--font-ui);
-      font-size: 0.75rem;
-      font-weight: 600;
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      border-radius: 999px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .theater-toggle-btn:hover {
-      background: rgba(255, 255, 255, 0.09);
-      color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.18);
-    }
-    .theater-toggle-btn.active {
-      background: rgba(229, 9, 20, 0.15);
-      color: #ff6b6b;
-      border-color: rgba(229, 9, 20, 0.4);
-    }
 
     /* ── Modo claro ── */
     [data-theme="light"] .player-servers-header {
@@ -405,18 +356,6 @@
     }
     [data-theme="light"] .server-tab.active::after {
       border-color: #f8fafc;
-    }
-    [data-theme="light"] .player-servers-actions {
-      border-left-color: rgba(0, 0, 0, 0.08);
-    }
-    [data-theme="light"] .theater-toggle-btn {
-      background: #f1f5f9;
-      color: #64748b;
-      border-color: rgba(0, 0, 0, 0.08);
-    }
-    [data-theme="light"] .theater-toggle-btn:hover {
-      background: #e2e8f0;
-      color: #1e293b;
     }
 
     /* ── Selectores Estilizados de Alta Gama (Temporadas & Episodios) ── */
@@ -752,10 +691,6 @@
   <!-- Contenido Principal -->
   <main class="watch-container">
 
-    <!-- Anuncio Superior -->
-    <div class="adsterra-banner adsterra-banner--desktop"></div>
-    <div class="adsterra-banner adsterra-banner--mobile"></div>
-
     <div class="watch-layout">
 
       <!-- ══ Columna Principal: Player ══ -->
@@ -832,14 +767,10 @@
 
     </div>
 
-    <!-- Anuncio Inferior -->
-    <div class="adsterra-banner adsterra-banner--desktop" style="margin-top:1.5rem;"></div>
-    <div class="adsterra-banner adsterra-banner--mobile" style="margin-top:1.5rem;"></div>
-
   </main>
 
-  <script type="module" src="js/pages/watch.js?v=3.1.4"></script>
-  <script type="module" src="js/ads-helper.js?v=3.1.4"></script>
+  <script type="module" src="js/pages/watch.js?v=3.1.5"></script>
+  <script type="module" src="js/ads-helper.js?v=3.1.5"></script>
   <script src="js/pwa-extras.js"></script>
 
   <!-- Modal / Drawer Selector de Episodios Cinemático -->
