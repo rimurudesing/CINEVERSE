@@ -583,7 +583,7 @@ if (typeof window !== 'undefined') {
       if (userObj && userObj.profile) {
         const isPremiumNow = !!userObj.profile.is_premium;
         // Si el estado premium ha cambiado (ej. revocado por admin), forzar recarga de página
-        if (wasPremium !== isPremiumNow) {
+        if (hadProfile && wasPremium !== isPremiumNow) {
           console.log(`[Auth System] Estado Premium cambió de ${wasPremium} a ${isPremiumNow}. Recargando...`);
           window.location.reload();
         }
