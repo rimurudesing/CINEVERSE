@@ -41,11 +41,6 @@ if (typeof window !== 'undefined') {
   // Prevenir que anuncios en el reproductor secuestren o redirijan la ventana
   let isInternalNavigation = false;
   document.addEventListener('click', (e) => {
-    if (e.target && e.target.closest && e.target.closest('a, button, input, select, textarea, nav, header, .nav-btn, .server-tab, .episode-card, .btn')) {
-      isInternalNavigation = true;
-      setTimeout(() => { isInternalNavigation = false; }, 1200);
-    }
-
     // Bloquear links externos que no sean permitidos
     const a = e.target && e.target.closest ? e.target.closest('a') : null;
     if (a && a.href) {
@@ -58,11 +53,14 @@ if (typeof window !== 'undefined') {
                           url.hostname.includes('github.com') ||
                           url.protocol === 'intent:' || 
                           url.protocol.includes('wvc-x-callback');
-        if (!isInternal && !isAllowed) {
+        if (isInternal || isAllowed) {
+          isInternalNavigation = true;
+          setTimeout(() => { isInternalNavigation = false; }, 1500);
+        } else {
           e.preventDefault();
           e.stopPropagation();
           e.stopImmediatePropagation();
-          console.warn('[CineVerse Shield] Enlace externo/anuncio bloqueado:', url.href);
+          console.warn('[CineVerse Shield] Redirección/enlace no autorizado bloqueado:', url.href);
           return false;
         }
       } catch (err) {}
@@ -88,59 +86,59 @@ if (typeof window !== 'undefined') {
 }
 
 // 🎬🎬 Generadores de URL para los 4 Servidores de Alta Disponibilidad 🎬🎬🎬🎬🎬🎬🎬🎬🎬
-// Servidor 1: VidLink (Principal HD / Anime / Multi-sub)
+// Servidor 1: VidLink (Principal Ultra HD / Anime / Multi-subtítulos en Español)
 function getServer1URL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
   const se = season ? String(season) : '1';
   const ep = episode ? String(episode) : '1';
   if (mediaType === 'movie') {
-    return 'https://vidlink.pro/movie/' + id + '?primaryColor=e50914&secondaryColor=ffffff&autoplay=true&title=true&poster=true&nextbutton=true';
+    return 'https://vidlink.pro/movie/' + id + '?primaryColor=e50914&secondaryColor=ffffff&autoplay=false&title=true&poster=true&nextbutton=true';
   } else {
-    return 'https://vidlink.pro/tv/' + id + '/' + se + '/' + ep + '?primaryColor=e50914&secondaryColor=ffffff&autoplay=true&title=true&poster=true&nextbutton=true';
+    return 'https://vidlink.pro/tv/' + id + '/' + se + '/' + ep + '?primaryColor=e50914&secondaryColor=ffffff&autoplay=false&title=true&poster=true&nextbutton=true';
   }
 }
 
-// Servidor 2: Videasy (Multi-Audio y subtítulos en español)
+// Servidor 2: Multiembed (Audio Español Latino, Castellano y Multi-subtítulos)
 function getServer2URL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
   const se = season ? String(season) : '1';
   const ep = episode ? String(episode) : '1';
   if (mediaType === 'movie') {
-    return 'https://player.videasy.net/movie/' + id + '?color=e50914&language=es&autoPlay=1';
+    return 'https://multiembed.mov/?video_id=' + id + '&tmdb=1';
   } else {
-    return 'https://player.videasy.net/tv/' + id + '/' + se + '/' + ep + '?color=e50914&language=es&autoPlay=1';
+    return 'https://multiembed.mov/?video_id=' + id + '&tmdb=1&s=' + se + '&e=' + ep;
   }
 }
 
-// Servidor 3: vidsrc.to (Multi-idioma, subtítulos en español)
+// Servidor 3: 2Embed (Multi-Servidor / Anime / Películas y Series)
 function getServer3URL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
   const se = season ? String(season) : '1';
   const ep = episode ? String(episode) : '1';
   if (mediaType === 'movie') {
-    return 'https://vidsrc.to/embed/movie/' + id;
+    return 'https://www.2embed.cc/embed/' + id;
   } else {
-    return 'https://vidsrc.to/embed/tv/' + id + '/' + se + '/' + ep;
+    return 'https://www.2embed.cc/embedtv/' + id + '&s=' + se + '&e=' + ep;
   }
 }
 
-// Servidor 4: embed.su (Multi-audio, subtítulos en español)
+// Servidor 4: Vidsrc.pm (Alta Velocidad / Multi-idioma / Anime sin popups)
 function getServer4URL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
   const se = season ? String(season) : '1';
   const ep = episode ? String(episode) : '1';
   if (mediaType === 'movie') {
-    return 'https://embed.su/embed/movie/' + id;
+    return 'https://vidsrc.pm/embed/movie/' + id;
   } else {
-    return 'https://embed.su/embed/tv/' + id + '/' + se + '/' + ep;
+    return 'https://vidsrc.pm/embed/tv/' + id + '/' + se + '/' + ep;
   }
 }
 
 // Aliases de retrocompatibilidad
 function getVidlinkURL(m, id, s, e) { return getServer1URL(m, id, s, e); }
 function getVimeusURL(m, id, s, e) { return getServer2URL(m, id, s, e); }
-function getMultiembedURL(m, id, s, e) { return getServer3URL(m, id, s, e); }
-function getVideasyURL(m, id, s, e) { return getServer4URL(m, id, s, e); }
+function getMultiembedURL(m, id, s, e) { return getServer2URL(m, id, s, e); }
+function getVideasyURL(m, id, s, e) { return getServer3URL(m, id, s, e); }
 
 class WatchPageController {
   constructor() {
@@ -158,7 +156,7 @@ class WatchPageController {
   async init() {
 
     // Preconnect a servidores de video para máxima velocidad de carga
-    ['https://vidlink.pro', 'https://player.videasy.net', 'https://vidsrc.to', 'https://embed.su'].forEach(url => {
+    ['https://vidlink.pro', 'https://multiembed.mov', 'https://www.2embed.cc', 'https://vidsrc.pm'].forEach(url => {
       const link = document.createElement('link');
       link.rel = 'preconnect';
       link.href = url;
@@ -264,13 +262,16 @@ class WatchPageController {
 
   getServerURL(serverKey) {
     const s = serverKey || this.currentServer || 'server1';
-    if (s === 'server2' || s === 'videasy' || s === 'vimeus' || s === 'smashy') {
+    // Servidor 2: Multiembed (audio español latino/castellano)
+    if (s === 'server2' || s === 'multiembed' || s === 'vimeus' || s === 'smashy') {
       return getServer2URL(this.mediaType, this.mediaId, this.season, this.episode);
     }
-    if (s === 'server3' || s === 'autoembed' || s === 'multiembed' || s === 'espanol') {
+    // Servidor 3: 2Embed (multi-servidor / anime)
+    if (s === 'server3' || s === 'autoembed' || s === '2embed' || s === 'espanol' || s === 'videasy') {
       return getServer3URL(this.mediaType, this.mediaId, this.season, this.episode);
     }
-    if (s === 'server4' || s === '2embed' || s === 'vidsrc') {
+    // Servidor 4: Vidsrc.pm (alta velocidad sin popups)
+    if (s === 'server4' || s === 'vidsrc' || s === 'vidsrcpm') {
       return getServer4URL(this.mediaType, this.mediaId, this.season, this.episode);
     }
     // Predeterminado: Servidor 1 (VidLink)
@@ -280,29 +281,33 @@ class WatchPageController {
   buildServersBar() {
     const s = this.currentServer;
     const isS1 = s === 'server1' || s === 'vidlink' || !s;
-    const isS2 = s === 'server2' || s === 'videasy' || s === 'vimeus' || s === 'smashy';
-    const isS3 = s === 'server3' || s === 'autoembed' || s === 'multiembed' || s === 'espanol';
-    const isS4 = s === 'server4' || s === '2embed' || s === 'vidsrc';
+    const isS2 = s === 'server2' || s === 'multiembed' || s === 'vimeus' || s === 'smashy';
+    const isS3 = s === 'server3' || s === 'autoembed' || s === '2embed' || s === 'espanol' || s === 'videasy';
+    const isS4 = s === 'server4' || s === 'vidsrc' || s === 'vidsrcpm';
 
     return `
       <div class="player-servers-header" id="player-servers-header">
         <div class="player-servers-list">
           <span class="servers-label">Servidor:</span>
-          <button class="server-tab ${isS1 ? 'active' : ''}" data-server="server1" title="Servidor 1">
+          <button class="server-tab ${isS1 ? 'active' : ''}" data-server="server1" title="VidLink HD — Multi-sub">
             <span class="server-tab__icon">⚡</span>
             <span class="server-tab__name">Servidor 1</span>
+            <span class="server-tab__badge">HD</span>
           </button>
-          <button class="server-tab ${isS2 ? 'active' : ''}" data-server="server2" title="Servidor 2">
-            <span class="server-tab__icon">🎬</span>
+          <button class="server-tab ${isS2 ? 'active' : ''}" data-server="server2" title="Multiembed — Audio Español/Latino">
+            <span class="server-tab__icon">🌍</span>
             <span class="server-tab__name">Servidor 2</span>
+            <span class="server-tab__badge server-tab__badge--es">ESP</span>
           </button>
-          <button class="server-tab ${isS3 ? 'active' : ''}" data-server="server3" title="Servidor 3">
-            <span class="server-tab__icon">🌐</span>
+          <button class="server-tab ${isS3 ? 'active' : ''}" data-server="server3" title="2Embed — Multi-servidor / Anime">
+            <span class="server-tab__icon">🎌</span>
             <span class="server-tab__name">Servidor 3</span>
+            <span class="server-tab__badge">Anime</span>
           </button>
-          <button class="server-tab ${isS4 ? 'active' : ''}" data-server="server4" title="Servidor 4">
+          <button class="server-tab ${isS4 ? 'active' : ''}" data-server="server4" title="Vidsrc.pm — Sin popups / Rápido">
             <span class="server-tab__icon">🛡️</span>
             <span class="server-tab__name">Servidor 4</span>
+            <span class="server-tab__badge">Fast</span>
           </button>
         </div>
       </div>
@@ -313,7 +318,8 @@ class WatchPageController {
     const tabs = document.querySelectorAll('.server-tab');
     const iframe = document.getElementById('vimeus-iframe');
     tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
+      tab.addEventListener('click', (e) => {
+        e.stopPropagation();
         const serverKey = tab.dataset.server;
         if (!serverKey || serverKey === this.currentServer) return;
         tabs.forEach(t => t.classList.remove('active'));
@@ -325,10 +331,10 @@ class WatchPageController {
         if (iframe) {
           iframe.src = newUrl;
           const serverLabels = {
-            server1: 'Servidor 1',
-            server2: 'Servidor 2',
-            server3: 'Servidor 3',
-            server4: 'Servidor 4'
+            server1: 'VidLink HD',
+            server2: 'Multiembed (Español)',
+            server3: '2Embed (Anime)',
+            server4: 'Vidsrc.pm'
           };
           showToast(`Cambiando a ${serverLabels[serverKey] || 'Servidor'}... 🔄`, 'info');
         }
@@ -376,6 +382,7 @@ class WatchPageController {
           allowfullscreen
           referrerpolicy="no-referrer-when-downgrade"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope; clipboard-write; web-share"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-popups-to-escape-sandbox"
         ></iframe>
 
 
