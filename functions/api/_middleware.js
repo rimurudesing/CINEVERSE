@@ -86,7 +86,7 @@ export async function onRequest(context) {
   const userAgent = (request.headers.get('User-Agent') || '').trim();
 
   // 1. FILTRO ANTI-BOT Y SCRAPERS MALICIOSOS (Solo en endpoints que no sean webhooks)
-  const isWebhook = url.pathname.includes('/kofi-webhook');
+  const isWebhook = url.pathname.includes('/kofi-webhook') || url.pathname.includes('/stripe-webhook');
   if (!isWebhook && userAgent) {
     const uaLower = userAgent.toLowerCase();
     const isBot = BLOCKED_BOT_KEYWORDS.some(kw => uaLower.includes(kw));

@@ -45,6 +45,9 @@ class ProfilePageController {
     // 5. Configurar Pestañas
     this.setupTabs();
 
+    // Verificar retorno de pago con Stripe (?session_id=...)
+    await this.checkStripePaymentReturn();
+
     // 6. Cargar pestaña por defecto
     const params = new URLSearchParams(window.location.search);
     const initialTab = params.get('tab') || 'favorites';
@@ -850,6 +853,9 @@ class ProfilePageController {
         }
       });
     }
+
+    // Vincular botones de Stripe Checkout
+    this.setupStripeButtons();
 
     // Plan Familiar (#63)
     await this.setupFamilyPlan();
