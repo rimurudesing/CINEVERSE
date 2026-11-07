@@ -13,7 +13,7 @@
 // ── Rate Limiter en Memoria (Por instancia de Edge Worker) ──────────────────
 const ipRateLimits = new Map();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minuto
-const MAX_REQUESTS_PER_WINDOW = 80;     // Máximo 80 peticiones por minuto por IP
+const MAX_REQUESTS_PER_WINDOW = 180;     // Máximo 80 peticiones por minuto por IP
 
 function checkIpRateLimit(ip) {
   const now = Date.now();

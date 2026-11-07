@@ -1,13 +1,9 @@
 /**
  * ══════════════════════════════════════════════════════════════════════════════
- * CineVerse: Cloudflare Pages Edge Security Firewall (_middleware.js)
+ * CineVerse: Cloudflare Pages API Edge Security Middleware (/api/_middleware.js)
  * ══════════════════════════════════════════════════════════════════════════════
- * Protege todas las rutas de API (/api/*) con defensa en profundidad:
- * 1. Anti-Bot / Anti-Scraper / Anti-Scanner (User-Agent Detection)
- * 2. Anti-Exploit / Anti-Path-Traversal / Anti-SQLi / Anti-SSRF
- * 3. Rate Limiting en el Edge por IP (Ventana deslizante anti-fuerza bruta y DDoS)
- * 4. Validación de Origen estricta (CORS Shield)
- * 5. Inyección de Cabeceras de Seguridad y Anti-Indexación
+ * Protege EXCLUSIVAMENTE los endpoints bajo /api/* (TMDB proxy, etc.)
+ * Los archivos estáticos (.html, .css, .js, imágenes) NO son interceptados.
  */
 
 // ── Lista Negra de User-Agents Maliciosos / Bots / Escáneres ────────────────
@@ -34,15 +30,13 @@ const EXPLOIT_PATTERNS = [
   /union(\s+|\/\*.*\*\/)select/i, // SQL Injection
   /waitfor(\s+)delay/i,      // Blind SQL Injection
   /pg_sleep/i,               // PostgreSQL Blind SQLi
-  /\$\{jndi:/i,              // Log4Shell RCE
-  /<script/i,                // Basic XSS
-  /javascript:/i             // JS protocol injection
+  /\$\{jndi:/i               // Log4Shell RCE
 ];
 
-// ── Rate Limiter en Memoria (Por instancia de Edge Worker) ──────────────────
+// ── Rate Limiter en Memoria para APIs (Ventana deslizante de 1 minuto) ──────
 const ipLimitStore = new Map();
 const RATE_WINDOW_MS = 60 * 1000; // 1 minuto
-const MAX_REQUESTS = 60;          // Máximo 60 peticiones/minuto por IP
+const MAX_API_REQUESTS = 180;     // 180 llamadas por minuto (amplio para carruseles y navegación rápida)
 
 function isRateLimited(ip) {
   const now = Date.now();
@@ -57,79 +51,49 @@ function isRateLimited(ip) {
 
   ipLimitStore.set(ip, entry);
 
-  // Limpieza periódica de memoria para evitar saturación
-  if (ipLimitStore.size > 2500) {
+  // Limpieza periódica de memoria
+  if (ipLimitStore.size > 3000) {
     for (const [key, val] of ipLimitStore.entries()) {
       if (now > val.resetTime) ipLimitStore.delete(key);
     }
   }
 
-  if (entry.count > MAX_REQUESTS) {
+  if (entry.count > MAX_API_REQUESTS) {
     const retrySec = Math.max(1, Math.ceil((entry.resetTime - now) / 1000));
     return { limited: true, retrySec };
   }
 
-  return { limited: false, remaining: MAX_REQUESTS - entry.count };
-}
-
-// ── Orígenes Autorizados ────────────────────────────────────────────────────
-function isAllowedClient(origin, referer) {
-  const allowedHosts = [
-    'cineverse-7u5.pages.dev',
-    'cineverse.pages.dev',
-    'localhost',
-    '127.0.0.1'
-  ];
-
-  const check = (val) => {
-    if (!val) return false;
-    try {
-      const u = new URL(val);
-      if (u.protocol === 'capacitor:' || u.protocol === 'ionic:' || u.protocol === 'file:') return true;
-      return allowedHosts.some(h => u.hostname === h || u.hostname.endsWith('.pages.dev'));
-    } catch {
-      return false;
-    }
-  };
-
-  return check(origin) || check(referer);
+  return { limited: false, remaining: MAX_API_REQUESTS - entry.count };
 }
 
 export async function onRequest(context) {
   const { request, next } = context;
   const url = new URL(request.url);
-  const clientIp = request.headers.get('CF-Connecting-IP') || 
-                   request.headers.get('X-Forwarded-For') || 
-                   'unknown-ip';
-  const userAgent = (request.headers.get('User-Agent') || '').trim();
-  const origin = request.headers.get('Origin');
-  const referer = request.headers.get('Referer');
+
+  // Solo actuar en rutas de API
+  if (!url.pathname.startsWith('/api/')) {
+    return next();
+  }
 
   // Permitir preflight OPTIONS libremente para CORS
   if (request.method === 'OPTIONS') {
     return next();
   }
 
-  // 1. FILTRO ANTI-BOT Y SCRAPERS MALICIOSOS
-  // Bloquear clientes sin User-Agent en endpoints de API (excepto webhooks externos autorizados)
-  const isWebhook = url.pathname.includes('/kofi-webhook');
-  if (!isWebhook) {
-    if (!userAgent) {
-      return new Response(JSON.stringify({ 
-        error: 'Forbidden: User-Agent requerido para acceder al servicio.',
-        code: 'BOT_UA_EMPTY'
-      }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json', 'X-Robots-Tag': 'noindex, nofollow' }
-      });
-    }
+  const clientIp = request.headers.get('CF-Connecting-IP') || 
+                   request.headers.get('X-Forwarded-For') || 
+                   'unknown-ip';
+  const userAgent = (request.headers.get('User-Agent') || '').trim();
 
+  // 1. FILTRO ANTI-BOT Y SCRAPERS MALICIOSOS (Solo en endpoints que no sean webhooks)
+  const isWebhook = url.pathname.includes('/kofi-webhook');
+  if (!isWebhook && userAgent) {
     const uaLower = userAgent.toLowerCase();
     const isBot = BLOCKED_BOT_KEYWORDS.some(kw => uaLower.includes(kw));
     if (isBot) {
       console.warn(`[Shield Block] Bot detectado: IP=${clientIp}, UA=${userAgent}`);
       return new Response(JSON.stringify({ 
-        error: 'Forbidden: Agente de escaneo o bot automatizado denegado.',
+        error: 'Forbidden: Agente de escaneo o bot denegado.',
         code: 'BOT_BLOCKED'
       }), {
         status: 403,
@@ -144,7 +108,7 @@ export async function onRequest(context) {
   if (isExploit) {
     console.warn(`[Shield Exploit Block] Sondeo bloqueado: IP=${clientIp}, URI=${fullTarget}`);
     return new Response(JSON.stringify({ 
-      error: 'Bad Request: Patrón de sondeo no permitido detectado por el firewall.',
+      error: 'Bad Request: Patrón no permitido.',
       code: 'EXPLOIT_BLOCKED'
     }), {
       status: 400,
@@ -152,13 +116,13 @@ export async function onRequest(context) {
     });
   }
 
-  // 3. RATE LIMITING EN EL EDGE (ANTI-DDOS Y ANTI-FUERZA BRUTA)
+  // 3. RATE LIMITING EN EL EDGE PARA APIS (180 req/min)
   if (!isWebhook) {
     const rateCheck = isRateLimited(clientIp);
     if (rateCheck.limited) {
       console.warn(`[Shield Rate Limit] IP excedida: ${clientIp}`);
       return new Response(JSON.stringify({ 
-        error: 'Demasiadas solicitudes. Por favor espera unos momentos.',
+        error: 'Demasiadas solicitudes a la API. Espera unos momentos.',
         retryAfter: rateCheck.retrySec,
         code: 'RATE_LIMITED'
       }), {
@@ -172,14 +136,13 @@ export async function onRequest(context) {
     }
   }
 
-  // Ejecutar el handler correspondiente (API endpoint)
+  // Ejecutar endpoint de API
   const response = await next();
 
-  // 4. INYECCIÓN DE CABECERAS DE SEGURIDAD EN LA RESPUESTA
+  // 4. CABECERAS DE SEGURIDAD EN RESPUESTAS DE API
   const secureHeaders = new Headers(response.headers);
   secureHeaders.set('X-Content-Type-Options', 'nosniff');
   secureHeaders.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
-  secureHeaders.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate');
 
   return new Response(response.body, {
     status: response.status,
