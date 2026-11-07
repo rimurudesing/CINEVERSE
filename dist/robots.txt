@@ -8,7 +8,7 @@ Allow: /buscar.html
 Allow: /descargar.html
 Allow: /login.html
 
-# No indexar páginas privadas
+# No indexar páginas privadas ni paneles
 Disallow: /admin.html
 Disallow: /perfil.html
 Disallow: /watch.html
@@ -17,9 +17,46 @@ Disallow: /serie.html
 Disallow: /publico.html
 Disallow: /info.html
 
-# No indexar directorios de build/assets internos
+# No indexar directorios internos ni APIs
+Disallow: /api/
 Disallow: /dist/
 Disallow: /android/
 Disallow: /scratch/
+Disallow: /functions/
+Disallow: /supabase/
+
+# ── Bloqueo de Scrapers Automatizados y Bots de Escaneo ──
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Scrapy
+Disallow: /
+
+User-agent: sqlmap
+Disallow: /
+
+User-agent: Nikto
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
 
 Sitemap: https://cineverse-7u5.pages.dev/sitemap.xml

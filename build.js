@@ -8,7 +8,12 @@ const pkg      = require('./package.json');
 const APP_VER  = pkg.version;
 
 const excludeDirs  = ['.git', 'node_modules', 'android', 'www', 'dist', 'build', 'supabase', 'functions', 'scratch', 'dist-desktop', 'desktop'];
-const excludeFiles = ['package.json', 'package-lock.json', 'electron-builder.json', 'Cineverse.apk', 'CineVerse-Setup.exe', 'bump-version.cjs'];
+const excludeFiles = [
+  'package.json', 'package-lock.json', 'electron-builder.json',
+  'Cineverse.apk', 'CineVerse-Setup.exe', 'bump-version.cjs',
+  'build.js', 'wrangler.toml', 'capacitor.config.json',
+  '.gitignore', '.node-version', 'version.json'
+];
 
 // Minificador nativo ultra rápido usando regex
 function minifyJS(content) {
@@ -90,7 +95,10 @@ function copyDir(src, dest) {
       entry.name.endsWith('.apk')       ||
       entry.name.endsWith('.exe')       ||
       entry.name.endsWith('.tar.gz')    ||
-      entry.name.endsWith('.zip')
+      entry.name.endsWith('.zip')       ||
+      entry.name.endsWith('.sql')       ||
+      entry.name.endsWith('.md')        ||
+      entry.name.startsWith('.env')
     ) continue;
 
     if (entry.isDirectory()) {

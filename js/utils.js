@@ -1,3 +1,4 @@
+import './security.js';
 
 // ─── Seguridad: Sanitización y validación de entradas ────────────────────────
 
