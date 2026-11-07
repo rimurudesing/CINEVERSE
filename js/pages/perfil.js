@@ -497,6 +497,7 @@ class ProfilePageController {
      TABS
   ───────────────────────────────────────────────────────── */
   setupTabs() {
+    this.setupStripeButtons();
     document.querySelectorAll('.profile-tabs__btn').forEach(btn => {
       btn.addEventListener('click', () => this.switchTab(btn.getAttribute('data-tab')));
     });
@@ -1963,6 +1964,105 @@ class ProfilePageController {
       });
     }
   }
+
+
+  // ── STRIPE CHECKOUT INTEGRATION ──────────────────────────────────────────
+  setupStripeButtons() {
+    if (this._stripeButtonsBound) return;
+    this._stripeButtonsBound = true;
+
+    document.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.stripe-checkout-btn');
+      if (!btn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const plan = btn.getAttribute('data-plan');
+      console.log('[Stripe Click] Plan seleccionado:', plan);
+      if (!plan) return;
+
+      if (!this.currentUser) {
+        showToast('Debes iniciar sesión para suscribirte.', 'error');
+        return;
+      }
+
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> Conectando con Stripe...';
+      showToast('Abriendo pasarela de pago segura de Stripe...', 'info');
+
+      try {
+        const res = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            plan: plan,
+            userId: this.currentUser.id,
+            userEmail: this.currentUser.email
+          })
+        });
+
+        const data = await res.json();
+        console.log('[Stripe Response]', res.status, data);
+
+        if (!res.ok || !data.url) {
+          throw new Error(data.error || 'No se pudo iniciar el checkout.');
+        }
+
+        // Redirigir al Checkout seguro de Stripe
+        window.location.href = data.url;
+      } catch (err) {
+        console.error('[Stripe Error]:', err);
+        showToast(err.message || 'Error al conectar con Stripe.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    });
+  }
+
+  async checkStripePaymentReturn() {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+
+    if (!sessionId || !this.currentUser) return;
+
+    showToast('⏳ Verificando tu suscripción con Stripe...', 'info');
+
+    try {
+      const res = await fetch('/api/verify-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          userId: this.currentUser.id
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast('🎉 ¡Pago exitoso! Tu membresía CineVerse Premium ha sido activada.', 'success');
+        
+        // Limpiar parámetros de URL sin recargar
+        const cleanUrl = window.location.pathname + '?tab=premium';
+        window.history.replaceState({}, '', cleanUrl);
+
+        if (this.currentUser.profile) {
+          this.currentUser.profile.is_premium = true;
+          this.currentUser.profile.premium_until = data.premium_until;
+          this.currentUser.profile.premium_tier = 'pro';
+        }
+
+        await this.loadPremium();
+        this.renderProfileHero();
+      } else {
+        showToast(data.error || 'No se pudo verificar el pago.', 'error');
+      }
+    } catch (err) {
+      console.error('[Stripe Verification Error]:', err);
+    }
+  }
+
 }
 
 // Inicializar
