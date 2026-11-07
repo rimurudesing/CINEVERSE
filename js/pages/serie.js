@@ -110,13 +110,7 @@ class TVPageController {
       this.isWatchlist = !!watch;
 
       // 3. Rating
-      const { data: ratingObj } = await supabase
-        .from('user_ratings')
-        .select('rating')
-        .eq('user_id', userId)
-        .eq('tmdb_id', this.serieId)
-        .eq('media_type', 'tv')
-        .maybeSingle();
+      const { data: ratingObj } = Promise.resolve({ data: null });
       this.userRating = ratingObj ? ratingObj.rating : 0;
 
       // 4. Historial (Episodios ya vistos)

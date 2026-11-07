@@ -246,8 +246,8 @@ class PublicProfileController {
       // Cargar contadores y seguidores
       const [favsRes, historyRes, reviewsRes, followersRes, followingRes] = await Promise.all([
         supabase.from('favorites').select('*').eq('user_id', uid),
-        supabase.from('watch_history').select('*').eq('user_id', uid).order('watched_at', { ascending: false }),
-        supabase.from('reviews').select('*').eq('user_id', uid),
+        Promise.resolve({ data: [] }),
+        Promise.resolve({ data: [] }),
         supabase.from('followers').select('*', { count: 'exact', head: true }).eq('following_id', uid),
         supabase.from('followers').select('*', { count: 'exact', head: true }).eq('follower_id', uid)
       ]);

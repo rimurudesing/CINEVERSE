@@ -111,23 +111,11 @@ class MoviePageController {
       this.isWatchlist = !!watch;
 
       // 3. Historial (Ya vi)
-      const { data: history } = await supabase
-        .from('watch_history')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('tmdb_id', this.movieId)
-        .eq('media_type', 'movie')
-        .maybeSingle();
+      const { data: history } = Promise.resolve({ data: null });
       this.isWatched = !!history;
 
       // 4. Rating
-      const { data: ratingObj } = await supabase
-        .from('user_ratings')
-        .select('rating')
-        .eq('user_id', userId)
-        .eq('tmdb_id', this.movieId)
-        .eq('media_type', 'movie')
-        .maybeSingle();
+      const { data: ratingObj } = Promise.resolve({ data: null });
       this.userRating = ratingObj ? ratingObj.rating : 0;
 
     } catch (err) {

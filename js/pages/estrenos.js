@@ -153,9 +153,21 @@ class EstrenosPageController {
 
     try {
       // Obtener próximos lanzamientos desde la API de TMDB
-      const rawData = await api.getUpcoming(this.page);
+      // Cargar películas próximas + ahora en cartelera para más contenido
+      const [rawData, nowData] = await Promise.allSettled([
+        api.getUpcoming(this.page),
+        this.page === 1 ? api.getNowPlaying(1) : Promise.resolve({ results: [] })
+      ]);
+      const rawDataVal = rawData.status === 'fulfilled' ? rawData.value : { results: [], total_pages: 1, total_results: 0 };
+      const nowDataVal = nowData.status === 'fulfilled' ? (nowData.value?.results || []) : [];
+      // Mezclar resultados: próximos primero, luego en cartelera
+      if (this.page === 1 && nowDataVal.length) {
+        rawDataVal.results = [...(rawDataVal.results || []), ...nowDataVal.filter(n => !(rawDataVal.results||[]).find(r => r.id === n.id))];
+        rawDataVal.total_results = (rawDataVal.total_results || 0) + nowDataVal.length;
+      }
+      const rawDataResolved = rawDataVal;
       this.loading = false;
-      const results = Array.isArray(rawData) ? rawData : (rawData?.results || []);
+      const results = Array.isArray(rawDataResolved) ? rawDataResolved : (rawDataResolved?.results || []);
 
       if (!results || results.length === 0) {
         if (reset) {
@@ -166,7 +178,7 @@ class EstrenosPageController {
         return;
       }
 
-      this.totalPages = rawData?.total_pages || (results.length > 0 ? 5 : 1);
+      this.totalPages = rawDataResolved?.total_pages || (results.length > 0 ? 5 : 1);
       const newItems = results;
 
       if (reset) {
@@ -174,7 +186,7 @@ class EstrenosPageController {
       }
 
       this.results = [...this.results, ...newItems];
-      this.resultsCounter.textContent = `Descubre ${rawData?.total_results || this.results.length} próximos estrenos de cine y series`;
+      this.resultsCounter.textContent = `Descubre ${rawDataResolved?.total_results || this.results.length} próximos estrenos de cine y series`;
 
       if (this.viewMode !== 'calendar') {
         this.renderResults(newItems);

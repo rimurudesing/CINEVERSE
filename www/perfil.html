@@ -24,10 +24,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Chart.js para estadísticas -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
   <!-- Hojas de Estilo -->
   <link rel="stylesheet" href="css/variables.css?v=3.2.2">
   <link rel="stylesheet" href="css/reset.css?v=3.2.2">
@@ -89,8 +85,6 @@
           <h2 id="profile-name" class="profile-hero__name" style="font-size: 2.25rem; font-weight: 700; margin-bottom: 0; cursor: pointer;" data-tooltip="Haz click para editar">Cargando usuario...</h2>
           <!-- Badge premium (oculto por defecto, se muestra por JS) -->
           <span id="profile-premium-badge" style="display: none; background: linear-gradient(135deg, #FFD700, #FF8C00); color: #000; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: var(--radius-full); letter-spacing: 0.05em; text-transform: uppercase;"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5v-2z"/></svg> <span>PREMIUM</span></span>
-          <!-- Badge Crítico Verificado (oculto por defecto) -->
-          <span id="profile-verified-badge" style="display: none; background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid #10B981; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: var(--radius-full); letter-spacing: 0.04em;">✅ Crítico Verificado</span>
         </div>
         <p id="profile-bio" class="profile-hero__bio" style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; cursor: pointer; margin-top: 0.4rem;" data-tooltip="Haz click para editar"></p>
         
@@ -114,10 +108,6 @@
           <span><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> <strong id="stat-favorites" style="color: var(--text-primary);">0</strong> Favoritos</span>
           <span>•</span>
           <span>🕐 <strong id="stat-watchlist" style="color: var(--text-primary);">0</strong> Pendientes</span>
-          <span>•</span>
-          <span><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <strong id="stat-history" style="color: var(--text-primary);">0</strong> Vistos</span>
-          <span>•</span>
-          <span>📝 <strong id="stat-reviews" style="color: var(--text-primary);">0</strong> Reseñas</span>
         </div>
         <!-- Botones de administración y compartir -->
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.25rem; align-items: center;">
@@ -146,12 +136,7 @@
     <div class="flex flex--wrap flex--gap-sm profile-tabs" style="margin-bottom: 2.5rem; justify-content: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
       <button class="pill pill--active profile-tabs__btn" data-tab="favorites"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> <span>Favoritos</span></button>
       <button class="pill profile-tabs__btn" data-tab="watchlist">🕐 Quiero Ver</button>
-      <button class="pill profile-tabs__btn" data-tab="history"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <span>Historial</span></button>
-      <button class="pill profile-tabs__btn" data-tab="ratings">⭐ Mis Notas</button>
-      <button class="pill profile-tabs__btn" data-tab="reviews">📝 Mis Reseñas</button>
-      <button class="pill profile-tabs__btn" data-tab="stats"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> <span>Estadísticas</span></button>
-      <button class="pill profile-tabs__btn" data-tab="achievements"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> <span>Logros</span></button>
-      <button class="pill profile-tabs__btn" data-tab="settings"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> <span>Ajustes</span></button>
+                                    <button class="pill profile-tabs__btn" data-tab="settings"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> <span>Ajustes</span></button>
       <button class="pill profile-tabs__btn" data-tab="premium">⭐ Premium</button>
       <button class="pill profile-tabs__btn" data-tab="requests">📣 Pedidos</button>
       <button class="pill profile-tabs__btn" data-tab="social"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> <span>Social</span></button>
@@ -174,36 +159,6 @@
       <div class="profile-tab-section" id="profile-section-watchlist">
         <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-primary);">Lista de Seguimiento ("Quiero Ver")</h3>
         <div class="grid grid--4" id="profile-watchlist-grid"></div>
-      </div>
-
-      <!-- Pestaña 3: Historial -->
-      <div class="profile-tab-section" id="profile-section-history">
-        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-primary);">Historial de Reproducción</h3>
-        <div id="profile-history-list" style="max-width: 800px; margin: 0 auto;"></div>
-      </div>
-
-      <!-- Pestaña 4: Valoraciones -->
-      <div class="profile-tab-section" id="profile-section-ratings">
-        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-primary);">Mis Puntuaciones Personales</h3>
-        <div class="grid grid--4" id="profile-ratings-grid"></div>
-      </div>
-
-      <!-- Pestaña 5: Reseñas -->
-      <div class="profile-tab-section" id="profile-section-reviews">
-        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-primary);">Mis Reseñas Escritas</h3>
-        <div id="profile-reviews-list" style="max-width: 800px; margin: 0 auto;"></div>
-      </div>
-
-      <!-- Pestaña 6: Estadísticas (Premium) -->
-      <div class="profile-tab-section" id="profile-section-stats">
-        <div id="stats-container"></div>
-      </div>
-
-      <!-- Pestaña 7: Logros -->
-      <div class="profile-tab-section" id="profile-section-achievements">
-        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> <span>Mis Logros</span></h3>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">Desbloquea medallas completando metas en CineVerse.</p>
-        <div id="achievements-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem;"></div>
       </div>
 
       <!-- Pestaña 8: Ajustes / Configuración -->

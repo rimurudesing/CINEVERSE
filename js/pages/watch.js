@@ -87,16 +87,16 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// ── Generadores de URL para los 4 Servidores de Alta Disponibilidad ─────────
+// 🎬🎬 Generadores de URL para los 4 Servidores de Alta Disponibilidad 🎬🎬🎬🎬🎬🎬🎬🎬🎬
 // Servidor 1: VidLink (Principal HD / Anime / Multi-sub)
 function getServer1URL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
   const se = season ? String(season) : '1';
   const ep = episode ? String(episode) : '1';
   if (mediaType === 'movie') {
-    return 'https://vidlink.pro/movie/' + id + '?primaryColor=e50914';
+    return 'https://vidlink.pro/movie/' + id + '?primaryColor=e50914&secondaryColor=ffffff&autoplay=true&title=true&poster=true&nextbutton=true';
   } else {
-    return 'https://vidlink.pro/tv/' + id + '/' + se + '/' + ep + '?primaryColor=e50914';
+    return 'https://vidlink.pro/tv/' + id + '/' + se + '/' + ep + '?primaryColor=e50914&secondaryColor=ffffff&autoplay=true&title=true&poster=true&nextbutton=true';
   }
 }
 
@@ -106,33 +106,33 @@ function getServer2URL(mediaType, tmdbId, season, episode) {
   const se = season ? String(season) : '1';
   const ep = episode ? String(episode) : '1';
   if (mediaType === 'movie') {
-    return 'https://player.videasy.net/movie/' + id + '?color=e50914';
+    return 'https://player.videasy.net/movie/' + id + '?color=e50914&language=es&autoPlay=1';
   } else {
-    return 'https://player.videasy.net/tv/' + id + '/' + se + '/' + ep + '?color=e50914';
+    return 'https://player.videasy.net/tv/' + id + '/' + se + '/' + ep + '?color=e50914&language=es&autoPlay=1';
   }
 }
 
-// Servidor 3: AutoEmbed (Rápido, limpio y compatible)
+// Servidor 3: vidsrc.to (Multi-idioma, subtítulos en español)
 function getServer3URL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
   const se = season ? String(season) : '1';
   const ep = episode ? String(episode) : '1';
   if (mediaType === 'movie') {
-    return 'https://autoembed.co/movie/tmdb/' + id;
+    return 'https://vidsrc.to/embed/movie/' + id;
   } else {
-    return 'https://autoembed.co/tv/tmdb/' + id + '-' + se + '-' + ep;
+    return 'https://vidsrc.to/embed/tv/' + id + '/' + se + '/' + ep;
   }
 }
 
-// Servidor 4: 2Embed (Alta disponibilidad y subtítulos)
+// Servidor 4: embed.su (Multi-audio, subtítulos en español)
 function getServer4URL(mediaType, tmdbId, season, episode) {
   const id = String(tmdbId || '');
   const se = season ? String(season) : '1';
   const ep = episode ? String(episode) : '1';
   if (mediaType === 'movie') {
-    return 'https://www.2embed.cc/embed/' + id;
+    return 'https://embed.su/embed/movie/' + id;
   } else {
-    return 'https://www.2embed.cc/embedtv/' + id + '&s=' + se + '&e=' + ep;
+    return 'https://embed.su/embed/tv/' + id + '/' + se + '/' + ep;
   }
 }
 
@@ -158,7 +158,7 @@ class WatchPageController {
   async init() {
 
     // Preconnect a servidores de video para máxima velocidad de carga
-    ['https://vidlink.pro', 'https://embed.smashystream.com', 'https://www.2embed.cc', 'https://vidsrc.cc', 'https://image.tmdb.org'].forEach(url => {
+    ['https://vidlink.pro', 'https://player.videasy.net', 'https://vidsrc.to', 'https://embed.su'].forEach(url => {
       const link = document.createElement('link');
       link.rel = 'preconnect';
       link.href = url;
