@@ -382,7 +382,6 @@ class WatchPageController {
           allowfullscreen
           referrerpolicy="no-referrer-when-downgrade"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope; clipboard-write; web-share"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-popups-to-escape-sandbox"
         ></iframe>
 
 
