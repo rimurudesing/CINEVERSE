@@ -192,8 +192,8 @@ export async function signOut() {
   if (!client) return;
 
   try {
-    // 2. Invalidar sesión en Supabase a nivel local/global
-    await client.auth.signOut({ scope: 'local' });
+    // 2. Invalidar sesión en Supabase a nivel global (revoca el refresh token en el servidor)
+    await client.auth.signOut({ scope: 'global' });
   } catch (err) {
     console.warn('[CineVerse Auth] Error al revocar sesión en servidor:', err);
   }
