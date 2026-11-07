@@ -434,27 +434,14 @@
               <button class="btn btn--primary" id="activate-trial-btn" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none; padding: 0.6rem 1.5rem; font-weight: 700;">⚡ Activar Mi Prueba Gratis</button>
             </div>
 
-            <div style="text-align: center; margin-bottom: 2rem;">
-              <a href="https://ko-fi.com/cinevers" target="_blank" class="btn-kofi">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;"><path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311zm6.173.478c-.928.116-1.682.028-1.682.028V7.284h1.77s1.971.551 1.971 2.638c0 1.913-.985 2.667-2.059 3.015z"/></svg>
-                ☕ Adquirir Premium en Ko-fi
-              </a>
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem;">Tu código llegará automáticamente. También puedes autodetectarlo abajo.</p>
+            
+            <div style="text-align: center; margin: 1.5rem 0 2rem 0; padding: 1rem; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.2); border-radius: var(--radius-md);">
+              <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; font-weight:700; color:var(--text-primary); font-size:0.95rem;">
+                <span>🔒</span> Pagos 100% Seguros con Stripe
+              </div>
+              <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.4rem;">Aceptamos tarjetas de Crédito, Débito, Apple Pay y Google Pay. Activación instantánea.</p>
             </div>
 
-            <!-- AUTODETECTAR Ko-fi -->
-            <div class="kofi-detect-box">
-              <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
-                <span style="font-size:1.1rem;">🔍</span>
-                <strong style="font-size:0.95rem; color:var(--text-primary);">¿Ya pagaste en Ko-fi?</strong>
-              </div>
-              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">Ingresa el correo que usaste al pagar y detectaremos tu código automáticamente.</p>
-              <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
-                <input type="email" id="kofi-email-input" class="form-input" placeholder="correo@ejemplo.com" style="flex:1; min-width:180px;">
-                <button class="btn btn--outline-red" id="kofi-autodetect-btn" style="white-space:nowrap;">🔍 Buscar mi código</button>
-              </div>
-              <div id="kofi-autodetect-result" style="margin-top:0.75rem; font-size:0.82rem;"></div>
-            </div>
 
             <!-- CANJEAR CÓDIGO -->
             <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.5rem;">

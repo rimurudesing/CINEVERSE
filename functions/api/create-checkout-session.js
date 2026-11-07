@@ -47,8 +47,7 @@ export async function onRequestPost(context) {
     // Parámetros para Stripe Checkout Session
     const params = new URLSearchParams();
     params.append('mode', 'payment');
-    params.append('payment_method_types[0]', 'card');
-    params.append('line_items[0][price]', priceId);
+        params.append('line_items[0][price]', priceId);
     params.append('line_items[0][quantity]', '1');
     params.append('client_reference_id', userId);
     if (userEmail) {

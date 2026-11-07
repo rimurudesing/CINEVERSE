@@ -638,7 +638,7 @@ class ProfilePageController {
       const diffDays   = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
       const alertBanner = diffDays <= 3 ? `
         <div style="background:rgba(229,9,20,0.15);border:1px solid var(--accent-red);color:var(--text-primary);padding:0.75rem 1rem;border-radius:var(--radius-sm);margin-top:1rem;font-size:0.85rem;font-weight:600;">
-          ⚠️ Tu suscripción Premium expira en menos de ${diffDays} día(s). ¡Renueva adquiriendo un nuevo código en nuestra página de Ko-fi!
+          ⚠️ Tu suscripción Premium expira en menos de ${diffDays} día(s). ¡Renueva tu plan con Stripe desde la pestaña Premium!
         </div>` : '';
 
       const displayName = profile.display_name || profile.username || 'VIP MEMBER';
