@@ -64,36 +64,20 @@ export class SecurityShield {
    */
   static protectGlobalScope() {
     try {
-      // Bloquear apertura de nuevas ventanas/pestañas sospechosas desde iframes o scripts inyectados
       if (typeof window !== 'undefined' && !window.__openProtected) {
+        window.__openProtected = true;
         const _origOpen = window.open;
         try {
-          Object.defineProperty(window, 'open', {
-            configurable: false,
-            writable: false,
-            value: function(url, target, features) {
-              if (!url) return null;
-              const u = String(url);
-              // Permitir solo destinos seguros verificados
-              if (u.includes('paypal.me') || u.includes('github.com') || u.includes('ko-fi.com') || u.includes('intent://') || u.includes('wvc-x-callback')) {
-                return _origOpen ? _origOpen.call(window, url, target, features) : null;
-              }
-              console.warn('[Security Shield] Redirección no autorizada bloqueada:', u);
-              return null;
-            }
-          });
-          window.__openProtected = true;
-        } catch (_) {
-          // Fallback seguro si defineProperty está restringido
           window.open = function(url, target, features) {
             if (!url) return null;
             const u = String(url);
-            if (u.includes('paypal.me') || u.includes('github.com') || u.includes('ko-fi.com') || u.includes('intent://')) {
-              return _origOpen.call(window, url, target, features);
+            if (u.includes('paypal.me') || u.includes('github.com') || u.includes('ko-fi.com') || u.includes('intent://') || u.includes('wvc-x-callback')) {
+              return _origOpen ? _origOpen.call(window, url, target, features) : null;
             }
+            console.warn('[Security Shield] Redirección no autorizada bloqueada:', u);
             return null;
           };
-        }
+        } catch (_) {}
       }
     } catch (_) {}
   }

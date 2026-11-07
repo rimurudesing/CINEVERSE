@@ -24,21 +24,18 @@ const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePla
 
 // ── Bloqueo estricto de popups, publicidad y redirecciones ───────────────────
 if (typeof window !== 'undefined') {
-  const _origOpen = window.open;
-  try {
-    Object.defineProperty(window, 'open', {
-      configurable: false,
-      writable: false,
-      value: function(url, target, features) {
-        if (url && (url.includes('paypal.me') || url.includes('github.com') || url.includes('wvc-x-callback') || url.includes('intent://'))) {
+  if (!window.__openProtected) {
+    window.__openProtected = true;
+    const _origOpen = window.open;
+    try {
+      window.open = function(url, target, features) {
+        if (url && (url.includes('paypal.me') || url.includes('github.com') || url.includes('wvc-x-callback') || url.includes('intent://') || url.includes('ko-fi.com'))) {
           return _origOpen ? _origOpen.call(window, url, target, features) : null;
         }
         console.warn('[CineVerse Shield] Popup o anuncio bloqueado:', url);
         return null;
-      }
-    });
-  } catch(e) {
-    window.open = function() { return null; };
+      };
+    } catch (_) {}
   }
 
   // Prevenir que anuncios en el reproductor secuestren o redirijan la ventana
