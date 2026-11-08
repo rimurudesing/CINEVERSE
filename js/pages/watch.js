@@ -134,11 +134,28 @@ function getServer4URL(mediaType, tmdbId, season, episode) {
   }
 }
 
+// Servidor 5: Vimeus (Oficial Premium / Audio Español Latino y Castellano / Multi-sub)
+const VIMEUS_VIEW_KEY = 'DEQSS8_TuPL9sinlFbSMcj4rITXFTOAnoFGFbdbAHro';
+function getServer5URL(mediaType, tmdbId, season, episode, isAnime) {
+  const id = String(tmdbId || '');
+  const se = season ? String(season) : '1';
+  const ep = episode ? String(episode) : '1';
+  const vParams = `view_key=${VIMEUS_VIEW_KEY}&theme=red&loader=v3&font=v3&overlay=v5&selector=v3&playUI=v3&epanel=v3&splash=v3&autoplay=1`;
+  if (isAnime) {
+    return `https://vimeus.net/e/anime?tmdb=${id}&se=${se}&ep=${ep}&${vParams}`;
+  }
+  if (mediaType === 'movie') {
+    return `https://vimeus.net/e/movie?tmdb=${id}&${vParams}`;
+  } else {
+    return `https://vimeus.net/e/serie?tmdb=${id}&se=${se}&ep=${ep}&${vParams}`;
+  }
+}
+
 // Aliases de retrocompatibilidad
 function getVidlinkURL(m, id, s, e) { return getServer1URL(m, id, s, e); }
-function getVimeusURL(m, id, s, e) { return getServer2URL(m, id, s, e); }
 function getMultiembedURL(m, id, s, e) { return getServer2URL(m, id, s, e); }
 function getVideasyURL(m, id, s, e) { return getServer3URL(m, id, s, e); }
+function getVimeusURL(m, id, s, e, a) { return getServer5URL(m, id, s, e, a); }
 
 class WatchPageController {
   constructor() {
@@ -156,7 +173,7 @@ class WatchPageController {
   async init() {
 
     // Preconnect a servidores de video para máxima velocidad de carga
-    ['https://vidlink.pro', 'https://multiembed.mov', 'https://www.2embed.cc', 'https://vidsrc.pm'].forEach(url => {
+    ['https://vidlink.pro', 'https://multiembed.mov', 'https://www.2embed.cc', 'https://vidsrc.pm', 'https://vimeus.net'].forEach(url => {
       const link = document.createElement('link');
       link.rel = 'preconnect';
       link.href = url;
@@ -230,7 +247,7 @@ class WatchPageController {
       const savedServer = localStorage.getItem('cineverse_player_server') || 'server1';
       if (explicitServer) {
         this.currentServer = explicitServer;
-      } else if (['server1', 'server2', 'server3', 'server4'].includes(savedServer)) {
+      } else if (['server1', 'server2', 'server3', 'server4', 'server5'].includes(savedServer)) {
         this.currentServer = savedServer;
       } else {
         this.currentServer = 'server1';
@@ -263,7 +280,7 @@ class WatchPageController {
   getServerURL(serverKey) {
     const s = serverKey || this.currentServer || 'server1';
     // Servidor 2: Multiembed (audio español latino/castellano)
-    if (s === 'server2' || s === 'multiembed' || s === 'vimeus' || s === 'smashy') {
+    if (s === 'server2' || s === 'multiembed' || s === 'smashy') {
       return getServer2URL(this.mediaType, this.mediaId, this.season, this.episode);
     }
     // Servidor 3: 2Embed (multi-servidor / anime)
@@ -274,6 +291,10 @@ class WatchPageController {
     if (s === 'server4' || s === 'vidsrc' || s === 'vidsrcpm') {
       return getServer4URL(this.mediaType, this.mediaId, this.season, this.episode);
     }
+    // Servidor 5: Vimeus (audio español / HD / oficial)
+    if (s === 'server5' || s === 'vimeus') {
+      return getServer5URL(this.mediaType, this.mediaId, this.season, this.episode, this.isAnime);
+    }
     // Predeterminado: Servidor 1 (VidLink)
     return getServer1URL(this.mediaType, this.mediaId, this.season, this.episode);
   }
@@ -281,9 +302,10 @@ class WatchPageController {
   buildServersBar() {
     const s = this.currentServer;
     const isS1 = s === 'server1' || s === 'vidlink' || !s;
-    const isS2 = s === 'server2' || s === 'multiembed' || s === 'vimeus' || s === 'smashy';
+    const isS2 = s === 'server2' || s === 'multiembed' || s === 'smashy';
     const isS3 = s === 'server3' || s === 'autoembed' || s === '2embed' || s === 'espanol' || s === 'videasy';
     const isS4 = s === 'server4' || s === 'vidsrc' || s === 'vidsrcpm';
+    const isS5 = s === 'server5' || s === 'vimeus';
 
     return `
       <div class="player-servers-header" id="player-servers-header">
@@ -308,6 +330,11 @@ class WatchPageController {
             <span class="server-tab__icon">🛡️</span>
             <span class="server-tab__name">Servidor 4</span>
             <span class="server-tab__badge">Fast</span>
+          </button>
+          <button class="server-tab ${isS5 ? 'active' : ''}" data-server="server5" title="Vimeus — Audio Español / Ultra HD">
+            <span class="server-tab__icon">🎬</span>
+            <span class="server-tab__name">Servidor 5</span>
+            <span class="server-tab__badge server-tab__badge--es">Vimeus</span>
           </button>
         </div>
       </div>
@@ -334,7 +361,8 @@ class WatchPageController {
             server1: 'VidLink HD',
             server2: 'Multiembed (Español)',
             server3: '2Embed (Anime)',
-            server4: 'Vidsrc.pm'
+            server4: 'Vidsrc.pm',
+            server5: 'Vimeus (Español)'
           };
           showToast(`Cambiando a ${serverLabels[serverKey] || 'Servidor'}... 🔄`, 'info');
         }
@@ -380,7 +408,7 @@ class WatchPageController {
           src="${initialSrc}"
           style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; display: block;"
           allowfullscreen
-          referrerpolicy="no-referrer-when-downgrade"
+          referrerpolicy="origin"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope; clipboard-write; web-share"
         ></iframe>
 
