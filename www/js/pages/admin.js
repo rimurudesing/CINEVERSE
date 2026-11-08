@@ -231,12 +231,16 @@ class AdminDashboardController {
   async loadUpdateManager() {
     const infoEl    = document.getElementById('update-current-info');
     const urlEl     = document.getElementById('update-download-url');
+    const winUrlEl  = document.getElementById('update-windows-url');
+    const linUrlEl  = document.getElementById('update-linux-url');
     const versionEl = document.getElementById('update-version');
     const changeEl  = document.getElementById('update-changelog');
     try {
       const settings = await getGlobalSettings();
       const version  = settings?.latest_version  || '';
       const url      = settings?.latest_download_url || '';
+      const winUrl   = settings?.windows_download_url || '';
+      const linUrl   = settings?.linux_download_url || '';
       const changelog = settings?.latest_changelog || '';
       if (infoEl) infoEl.textContent = version
         ? `✅ Versión publicada actualmente: v${version}`
@@ -244,6 +248,8 @@ class AdminDashboardController {
       // Pre-rellenar inputs con los valores actuales de la DB
       if (versionEl && !versionEl.value) versionEl.value = version;
       if (urlEl     && !urlEl.value)     urlEl.value     = url;
+      if (winUrlEl  && !winUrlEl.value)  winUrlEl.value  = winUrl;
+      if (linUrlEl  && !linUrlEl.value)  linUrlEl.value  = linUrl;
       if (changeEl  && !changeEl.value)  changeEl.value  = changelog;
     } catch (e) {
       if (infoEl) infoEl.textContent = 'Error al cargar versión.';
@@ -254,6 +260,8 @@ class AdminDashboardController {
     const btn       = document.getElementById('update-publish-btn');
     const versionEl = document.getElementById('update-version');
     const urlEl     = document.getElementById('update-download-url');
+    const winUrlEl  = document.getElementById('update-windows-url');
+    const linUrlEl  = document.getElementById('update-linux-url');
     const changeEl  = document.getElementById('update-changelog');
     const infoEl    = document.getElementById('update-current-info');
     if (!btn) return;
@@ -261,10 +269,12 @@ class AdminDashboardController {
     btn.addEventListener('click', async () => {
       const version   = versionEl?.value?.trim();
       const url       = urlEl?.value?.trim();
+      const winUrl    = winUrlEl?.value?.trim() || '';
+      const linUrl    = linUrlEl?.value?.trim() || '';
       const changelog = changeEl?.value?.trim();
 
-      if (!version) { showToast('Escribe el número de versión (ej: 1.3.0)', 'error'); return; }
-      if (!url)     { showToast('Escribe la URL de descarga de MediaFire', 'error'); return; }
+      if (!version) { showToast('Escribe el número de versión (ej: 3.2.3)', 'error'); return; }
+      if (!url)     { showToast('Escribe la URL de descarga del APK (MediaFire)', 'error'); return; }
 
       btn.disabled = true;
       btn.textContent = 'Publicando...';
@@ -273,17 +283,19 @@ class AdminDashboardController {
         const current = await getGlobalSettings();
         await saveGlobalSettings({
           ...current,
-          latest_version:      version,
-          latest_download_url: url,
-          latest_changelog:    changelog || '',
+          latest_version:       version,
+          latest_download_url:  url,
+          windows_download_url: winUrl,
+          linux_download_url:   linUrl,
+          latest_changelog:     changelog || '',
         });
 
         if (infoEl) infoEl.textContent = `✅ Versión publicada actualmente: v${version}`;
         // Limpiar la sesión para que el checker corra de nuevo en este cliente
         sessionStorage.removeItem('cv_update_checked');
         // Registrar en auditoría
-        await this.logAdminAction('apk_update_publicado', null, { version, url });
-        showToast(`🚀 Versión v${version} publicada. Los usuarios recibirán la notificación.`, 'success');
+        await this.logAdminAction('update_publicado', null, { version, url, winUrl, linUrl });
+        showToast(`🚀 Versión v${version} publicada para Android, Windows y Linux.`, 'success');
       } catch (err) {
         console.error('[Admin] Error publicando actualización:', err);
         showToast('Error al publicar la actualización', 'error');

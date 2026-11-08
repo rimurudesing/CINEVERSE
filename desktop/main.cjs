@@ -97,7 +97,7 @@ async function createWindow() {
   // Inyectar Referer y Origin para VidLink y Vimeus para que nunca rechacen el embed
   ses.webRequest.onBeforeSendHeaders((details, callback) => {
     const url = details.url || '';
-    if (url.includes('vidlink.pro') || url.includes('vimeus.com')) {
+    if (url.includes('vidlink.pro') || url.includes('vimeus.com') || url.includes('vimeus.net')) {
       details.requestHeaders['Referer'] = 'https://cineverse-7u5.pages.dev/';
       details.requestHeaders['Origin'] = 'https://cineverse-7u5.pages.dev';
     }
