@@ -143,3 +143,19 @@
     padding-bottom: 3rem;
   }
 }
+
+
+.adsterra-banner,
+.adsterra-banner--desktop,
+.adsterra-banner--mobile,
+.adsterra-native-container,
+#apk-bottom-banner,
+.cv-ad-banner {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
