@@ -1,3 +1,5 @@
+import '../security.js';
+import './cookieBanner.js';
 
 // ── Iconly Precision Icons ──────────────────────────────────────────────────
 const ICONLY = {
@@ -137,6 +139,36 @@ export function renderNavbar() {
   document.body.classList.remove('menu-open');
   document.body.style.overflow = '';
   document.body.style.touchAction = '';
+  // Inyectar footer legal global si no existe en la página
+  if (!isPlayerPage && !window.location.pathname.includes('admin.html') && !document.getElementById('cv-global-footer')) {
+    const footer = document.createElement('footer');
+    footer.id = 'cv-global-footer';
+    footer.style.cssText = 'background:var(--bg-void,#07070a);border-top:1px solid rgba(255,255,255,0.06);padding:3.5rem 1.5rem 2.5rem;margin-top:5rem;color:var(--text-muted,#888);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center;font-size:0.82rem;position:relative;z-index:10;';
+    footer.innerHTML = `
+      <div style="max-width:860px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:1.25rem;">
+        <div style="display:flex;align-items:center;gap:0.25rem;font-weight:800;font-size:1.15rem;color:#fff;letter-spacing:1px;">
+          CINE<span style="color:#e50914;">VERSE</span>
+        </div>
+        <p style="margin:0;max-width:620px;line-height:1.5;color:var(--text-secondary,#aaa);font-size:0.78rem;">
+          Plataforma de descubrimiento e indexación cinematográfica. CineVerse no aloja, almacena ni sube archivos de vídeo en sus propios servidores; todos los enlaces provienen de plataformas y servidores de terceros independientes.
+        </p>
+        <div style="display:flex;gap:1.25rem;flex-wrap:wrap;justify-content:center;font-size:0.82rem;color:var(--text-muted,#888);">
+          <a href="terminos.html" style="color:var(--text-muted,#888);text-decoration:none;">Términos de Uso</a>
+          <span>•</span>
+          <a href="privacidad.html" style="color:var(--text-muted,#888);text-decoration:none;">Privacidad & Cookies</a>
+          <span>•</span>
+          <a href="dmca.html" style="color:var(--text-muted,#888);text-decoration:none;">Aviso Legal DMCA</a>
+          <span>•</span>
+          <a href="descargar.html" style="color:var(--text-muted,#888);text-decoration:none;">Descargar App</a>
+        </div>
+        <div style="font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:0.5rem;">
+          © 2026 CineVerse Global. Todos los derechos reservados.
+        </div>
+      </div>
+    `;
+    document.body.appendChild(footer);
+  }
+
 
   // ── 1. Control de scroll ──
   const handleScroll = () => {

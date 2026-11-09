@@ -684,11 +684,7 @@ class AdminDashboardController {
           </td>
           <td style="text-align:right;">
             <div style="display:inline-flex; gap:0.35rem; justify-content:flex-end;">
-              ${u.username ? `
-                <a href="publico.html?u=${encodeURIComponent(u.username)}" target="_blank" class="btn btn--secondary active-press" style="padding:0.35rem 0.75rem; font-size:0.75rem; border:none; border-radius:var(--radius-full); display:inline-flex; align-items:center; gap:0.35rem;" title="Ver perfil público">
-                  <svg class="iconly-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <span>Perfil</span>
-                </a>
-              ` : ''}
+              <span style="font-size:0.75rem; color:var(--text-muted); padding:0.35rem 0.75rem;">@${u.username || 'usuario'}</span>
             </div>
           </td>
         </tr>
