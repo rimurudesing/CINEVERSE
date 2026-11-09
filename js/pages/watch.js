@@ -14,7 +14,6 @@ import {
 import { initCustomCursor } from '../cursor.js';
 import '../components/navbar.js';
 
-import { showInterstitialAd } from '../admob.js';
 import { addToHistory } from '../history.js';
 import { getGlobalSettings } from '../settings.js';
 import { detectAdBlock, showAdBlockModal } from '../adblock-detector.js';

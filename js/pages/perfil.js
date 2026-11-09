@@ -1,4 +1,3 @@
-import '../admob.js';
 import { getSupabase, isSupabaseConfigured } from '../supabase.js';
 import { getCurrentUser, signOut, updateProfile } from '../auth.js';
 import { navigateTo, initPageTransition, buildTMDBImageURL, showToast, formatDate, THEME_COLORS, applyUserTheme, sanitizeHTML, isValidUsername} from '../utils.js';

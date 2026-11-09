@@ -1,6 +1,5 @@
 /* ═══ cineverse/js/pages/home.js ═══ */
 
-import '../admob.js';
 import { api } from '../api.js';
 import { HeroSpotlight } from '../components/hero.js';
 import { Carousel } from '../components/carousel.js';

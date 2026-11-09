@@ -17,11 +17,18 @@ import { api } from '../api.js';
 import { navigateTo, buildTMDBImageURL, formatYear, debounce, applyUserTheme, protectWebCode, getThemeMode, cycleThemeMode } from '../utils.js';
 
 // Aplicar tema guardado inmediatamente en la carga de la página
-const savedTheme = localStorage.getItem('cineverse_theme_color') || 'red';
-applyUserTheme(savedTheme);
+let savedTheme = 'red';
+try {
+  savedTheme = localStorage.getItem('cineverse_theme_color') || 'red';
+} catch (_) {}
+try {
+  applyUserTheme(savedTheme);
+} catch (_) {}
 
-// Ejecutar protección de código
-protectWebCode();
+// Ejecutar protección de código de forma segura
+try {
+  protectWebCode();
+} catch (_) {}
 
 // Detectar si se está ejecutando dentro de una aplicación instalada (Android APK, Windows .exe, Linux, Electron, PWA instalada)
 function checkIsInstalledApp() {

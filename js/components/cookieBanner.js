@@ -3,13 +3,16 @@
  * ═══════════════════════════════════════════════════════════ */
 
 export function initCookieBanner() {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
   const CONSENT_KEY = 'cineverse_cookie_consent_v1';
-  if (localStorage.getItem(CONSENT_KEY)) return; // Consentimiento ya otorgado
+  try {
+    if (localStorage.getItem(CONSENT_KEY)) return; // Consentimiento ya otorgado
+  } catch (_) {}
 
   // Evitar duplicados
   if (document.getElementById('cv-cookie-banner')) return;
+  if (!document.body) return;
 
   const banner = document.createElement('div');
   banner.id = 'cv-cookie-banner';
@@ -82,7 +85,9 @@ export function initCookieBanner() {
   });
 
   const dismissBanner = (type) => {
-    localStorage.setItem(CONSENT_KEY, JSON.stringify({ type, date: new Date().toISOString() }));
+    try {
+      localStorage.setItem(CONSENT_KEY, JSON.stringify({ type, date: new Date().toISOString() }));
+    } catch (_) {}
     banner.style.transform = 'translateX(-50%) translateY(130%)';
     setTimeout(() => banner.remove(), 400);
   };

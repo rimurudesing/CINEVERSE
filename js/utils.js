@@ -348,56 +348,41 @@ export function applyUserTheme(themeName) {
  * Evita la inspección de código deshabilitando clic derecho y combinaciones de teclas comunes para DevTools.
  */
 export function protectWebCode() {
-  const isLocal = window.location.hostname === 'localhost' || 
-                  window.location.hostname === '127.0.0.1';
-  
-  const isNativeApp = window.location.protocol === 'file:' ||
-                      (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
-                      navigator.userAgent.includes('Capacitor');
-  
-  if (isLocal || isNativeApp) return;
-
-  // 1. Deshabilitar menú contextual (clic derecho)
-  document.addEventListener('contextmenu', (e) => e.preventDefault());
-
-  // 2. Deshabilitar combinaciones de teclas de DevTools e inspección de código
-  document.addEventListener('keydown', (e) => {
-    // F12
-    if (e.key === 'F12') {
-      e.preventDefault();
-      return false;
-    }
-    // Ctrl+Shift+I, J, C o Ctrl+U, S, P
-    if ((e.ctrlKey || e.metaKey) && (
-      (e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
-      (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's' || e.key === 'P' || e.key === 'p')
-    )) {
-      e.preventDefault();
-      return false;
-    }
-    // Cmd+Alt+I, J, C (Mac)
-    if (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
-      e.preventDefault();
-      return false;
-    }
-  });
-
-  // 3. Bucle anti-debugger para congelar e inhabilitar DevTools abiertas
-  setInterval(() => {
-    const start = Date.now();
-    debugger;
-    const end = Date.now();
+  try {
+    const isLocal = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1';
     
-    // Si la pausa del debugger tarda más de 100ms es porque la consola está abierta
-    if (end - start > 100) {
-      document.body.innerHTML = `
-        <div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#050505;color:#fff;font-family:sans-serif;text-align:center;padding:2rem;">
-          <h1 style="color:#e50914;font-size:2rem;margin-bottom:1rem;font-weight:700;">⚠️ ACCESO RESTRINGIDO</h1>
-          <p style="color:#a0aec0;font-size:0.95rem;max-width:400px;line-height:1.5;">La inspección de código y consola de desarrollador están desactivadas por motivos de seguridad en producción.</p>
-        </div>
-      `;
-    }
-  }, 1000);
+    const isNativeApp = window.location.protocol === 'file:' ||
+                        (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
+                        navigator.userAgent.includes('Capacitor');
+    
+    if (isLocal || isNativeApp) return;
+
+    // 1. Deshabilitar menú contextual (clic derecho)
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // 2. Deshabilitar combinaciones de teclas de DevTools e inspección de código
+    document.addEventListener('keydown', (e) => {
+      // F12
+      if (e.key === 'F12') {
+        e.preventDefault();
+        return false;
+      }
+      // Ctrl+Shift+I, J, C o Ctrl+U, S, P
+      if ((e.ctrlKey || e.metaKey) && (
+        (e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+        (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's' || e.key === 'P' || e.key === 'p')
+      )) {
+        e.preventDefault();
+        return false;
+      }
+      // Cmd+Alt+I, J, C (Mac)
+      if (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
+        e.preventDefault();
+        return false;
+      }
+    });
+  } catch (_) {}
 }
 
 

@@ -66,17 +66,16 @@ export class SecurityShield {
     try {
       if (typeof window !== 'undefined' && !window.__openProtected) {
         window.__openProtected = true;
-        const _origOpen = window.open;
+        // Prevenir clickjacking no autorizado si la app está embebida en un frame malicioso
         try {
-          window.open = function(url, target, features) {
-            if (!url) return null;
-            const u = String(url);
-            if (u.includes('paypal.me') || u.includes('github.com') || u.includes('ko-fi.com') || u.includes('intent://') || u.includes('wvc-x-callback')) {
-              return _origOpen ? _origOpen.call(window, url, target, features) : null;
+          if (window.top !== window.self) {
+            const isSelf = window.location.hostname === 'cineverse-7u5.pages.dev' ||
+                           window.location.hostname === 'localhost' ||
+                           window.location.hostname === '127.0.0.1';
+            if (!isSelf && !document.referrer.includes('cineverse')) {
+              console.warn('[Security Shield] Embedding en marco de terceros detectado.');
             }
-            console.warn('[Security Shield] Redirección no autorizada bloqueada:', u);
-            return null;
-          };
+          }
         } catch (_) {}
       }
     } catch (_) {}

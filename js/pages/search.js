@@ -1,6 +1,5 @@
 /* ═══ cineverse/js/pages/search.js ═══ */
 
-import '../admob.js';
 import { api } from '../api.js';
 import { createMovieCard } from '../components/movieCard.js';
 import { initPageTransition, getCurrentParams, navigateTo, debounce } from '../utils.js';
