@@ -1,5 +1,9 @@
 import '../security.js';
-import './cookieBanner.js';
+
+// Carga asíncrona y segura del aviso de privacidad (si un bloqueador como Brave Shields lo bloquea, jamás afectará la app)
+if (typeof window !== 'undefined') {
+  import('./privacyNotice.js').then(m => m.initPrivacyNotice?.()).catch(() => {});
+}
 
 // ── Iconly Precision Icons ──────────────────────────────────────────────────
 const ICONLY = {

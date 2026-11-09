@@ -1,23 +1,23 @@
-/* ═══ cineverse/js/components/cookieBanner.js ═══
- * Banner de consentimiento de cookies y privacidad conforme a RGPD (GDPR) / CCPA.
+/* ═══ cineverse/js/components/privacyNotice.js ═══
+ * Aviso de consentimiento y privacidad conforme a RGPD / CCPA.
  * ═══════════════════════════════════════════════════════════ */
 
-export function initCookieBanner() {
+export function initPrivacyNotice() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  const CONSENT_KEY = 'cineverse_cookie_consent_v1';
+  const CONSENT_KEY = 'cineverse_privacy_consent_v1';
   try {
-    if (localStorage.getItem(CONSENT_KEY)) return; // Consentimiento ya otorgado
+    if (localStorage.getItem(CONSENT_KEY)) return;
   } catch (_) {}
 
   // Evitar duplicados
-  if (document.getElementById('cv-cookie-banner')) return;
+  if (document.getElementById('cv-privacy-banner')) return;
   if (!document.body) return;
 
   const banner = document.createElement('div');
-  banner.id = 'cv-cookie-banner';
+  banner.id = 'cv-privacy-banner';
   banner.setAttribute('role', 'region');
-  banner.setAttribute('aria-label', 'Aviso de Cookies y Privacidad');
+  banner.setAttribute('aria-label', 'Aviso de Privacidad');
   banner.style.cssText = `
     position: fixed;
     bottom: 1.5rem;
@@ -40,18 +40,18 @@ export function initCookieBanner() {
 
   banner.innerHTML = `
     <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1rem;">
-      <div style="font-size:1.75rem;line-height:1;flex-shrink:0;">🍪</div>
+      <div style="font-size:1.75rem;line-height:1;flex-shrink:0;">🔒</div>
       <div>
-        <h4 style="margin:0 0 0.3rem;font-size:1rem;font-weight:700;color:#fff;">Privacidad y Uso de Cookies</h4>
+        <h4 style="margin:0 0 0.3rem;font-size:1rem;font-weight:700;color:#fff;">Privacidad y Preferencias</h4>
         <p style="margin:0;font-size:0.84rem;line-height:1.5;color:#aaa;">
-          Utilizamos cookies esenciales y almacenamiento local seguro para recordar tus preferencias de tema, guardar tu progreso de reproducción y garantizar la estabilidad del servicio. Al continuar, aceptas nuestras 
+          Utilizamos almacenamiento local seguro para recordar tus preferencias de tema, guardar tu progreso de reproducción y garantizar la estabilidad del servicio. Al continuar, aceptas nuestras 
           <a href="privacidad.html" target="_blank" style="color:#e50914;text-decoration:underline;">Políticas de Privacidad</a> y 
           <a href="terminos.html" target="_blank" style="color:#e50914;text-decoration:underline;">Términos de Uso</a>.
         </p>
       </div>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:0.75rem;flex-wrap:wrap;">
-      <button id="cv-cookie-essential" style="
+      <button id="cv-privacy-essential" style="
         background: transparent;
         border: 1px solid rgba(255,255,255,0.15);
         color: #bbb;
@@ -62,7 +62,7 @@ export function initCookieBanner() {
         cursor: pointer;
         transition: all 0.2s;
       ">Solo Esenciales</button>
-      <button id="cv-cookie-accept" style="
+      <button id="cv-privacy-accept" style="
         background: linear-gradient(135deg, #e50914 0%, #b91c1c 100%);
         border: none;
         color: #fff;
@@ -77,30 +77,29 @@ export function initCookieBanner() {
     </div>
   `;
 
-  document.body.appendChild(banner);
+  try {
+    document.body.appendChild(banner);
+    requestAnimationFrame(() => {
+      banner.style.transform = 'translateX(-50%) translateY(0)';
+    });
 
-  // Animar entrada
-  requestAnimationFrame(() => {
-    banner.style.transform = 'translateX(-50%) translateY(0)';
-  });
+    const dismissBanner = (type) => {
+      try {
+        localStorage.setItem(CONSENT_KEY, JSON.stringify({ type, date: new Date().toISOString() }));
+      } catch (_) {}
+      banner.style.transform = 'translateX(-50%) translateY(130%)';
+      setTimeout(() => banner.remove(), 400);
+    };
 
-  const dismissBanner = (type) => {
-    try {
-      localStorage.setItem(CONSENT_KEY, JSON.stringify({ type, date: new Date().toISOString() }));
-    } catch (_) {}
-    banner.style.transform = 'translateX(-50%) translateY(130%)';
-    setTimeout(() => banner.remove(), 400);
-  };
-
-  banner.querySelector('#cv-cookie-accept')?.addEventListener('click', () => dismissBanner('all'));
-  banner.querySelector('#cv-cookie-essential')?.addEventListener('click', () => dismissBanner('essential'));
+    banner.querySelector('#cv-privacy-accept')?.addEventListener('click', () => dismissBanner('all'));
+    banner.querySelector('#cv-privacy-essential')?.addEventListener('click', () => dismissBanner('essential'));
+  } catch (_) {}
 }
 
-// Auto-inicializar si el documento ya cargó
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => initCookieBanner());
+    document.addEventListener('DOMContentLoaded', () => initPrivacyNotice());
   } else {
-    initCookieBanner();
+    initPrivacyNotice();
   }
 }
