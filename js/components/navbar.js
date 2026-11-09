@@ -21,10 +21,23 @@ applyUserTheme(savedTheme);
 // Ejecutar protección de código
 protectWebCode();
 
-// Detectar si se está ejecutando dentro de la APK nativa (Capacitor)
-const isNativeApp = window.location.protocol === 'file:' ||
-                    (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
-                    navigator.userAgent.includes('Capacitor');
+// Detectar si se está ejecutando dentro de una aplicación instalada (Android APK, Windows .exe, Linux, Electron, PWA instalada)
+function checkIsInstalledApp() {
+  if (typeof window === 'undefined') return false;
+  if (window.location.protocol === 'file:') return true;
+  if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') return true;
+  if (Boolean(window.isCineverseDesktop || window.isNativeApp)) return true;
+  try {
+    if (sessionStorage.getItem('cv_is_installed_app') || localStorage.getItem('cv_is_installed_app')) return true;
+  } catch(e) {}
+  if (Boolean(window.Capacitor?.isNativePlatform?.())) return true;
+  const ua = navigator.userAgent || '';
+  if (ua.includes('Capacitor') || ua.includes('Electron') || ua.includes('CineVerseDesktop')) return true;
+  if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+  if (window.navigator.standalone === true) return true;
+  return false;
+}
+const isNativeApp = checkIsInstalledApp();
 
 
 export function renderNavbar() {

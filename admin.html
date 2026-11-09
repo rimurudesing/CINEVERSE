@@ -488,7 +488,7 @@
     <nav class="dashboard-tabs">
       <button class="dashboard-tab-btn active" data-target="section-licenses"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-1.5 1.5L16 7l-1.5-1.5M16 7l-4 4m0 0l-1.5-1.5L9 11l-1.5-1.5M12 11a5 5 0 1 1-7-7 5 5 0 0 1 7 7z"/></svg> <span>Licencias y APK</span></button>
       <button class="dashboard-tab-btn" data-target="section-online-users"><span style="width:8px;height:8px;background:#10B981;border-radius:50%;display:inline-block;box-shadow:0 0 8px #10B981;"></span> <span>Usuarios Online</span></button>
-      <button class="dashboard-tab-btn" data-target="section-requests"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg> <span>Pedidos</span></button>
+      
       <button class="dashboard-tab-btn" data-target="section-ads"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> <span>Publicidad Dinámica</span></button>
       <button class="dashboard-tab-btn" data-target="section-system"><svg class="iconly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> <span>Configuración Sistema</span></button>
     </nav>
@@ -712,38 +712,6 @@
             </thead>
             <tbody id="online-users-tbody">
               <tr><td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">Cargando usuarios en línea...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════════════ -->
-    <!-- SECCIÓN 2: GESTOR DE PEDIDOS DE PELÍCULAS         -->
-    <!-- ══════════════════════════════════════════════════ -->
-    <div class="admin-panel-section" id="section-requests">
-      <div class="admin-card">
-        <h2 class="admin-subtitle">Cola de Pedidos de Películas</h2>
-        <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
-          Lista de películas y series que los usuarios han solicitado. Los **pedidos prioritarios (Premium)** se colocan arriba automáticamente con una estrella dorada y deben procesarse preferiblemente en menos de 24 horas.
-        </p>
-        
-        <div class="admin-table-container">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Solicitante</th>
-                <th>Título</th>
-                <th>Tipo</th>
-                <th>Año</th>
-                <th>Prioridad</th>
-                <th>Fecha Pedido</th>
-                <th>Estado</th>
-                <th style="text-align: right;">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="requests-list-tbody">
-              <tr><td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">Cargando solicitudes...</td></tr>
             </tbody>
           </table>
         </div>

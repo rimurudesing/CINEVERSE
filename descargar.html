@@ -1627,13 +1627,30 @@
       })();
 
       function launchDownloadProgress(title, sub, destUrl) {
+        // Ejecución de descarga directa garantizada (sin depender de window.open que bloquean los navegadores)
+        const triggerDownload = () => {
+          try {
+            const a = document.createElement('a');
+            a.href = destUrl;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => a.remove(), 2000);
+            window.location.href = destUrl;
+          } catch (e) {
+            window.location.href = destUrl;
+          }
+        };
+
         const overlay = document.createElement('div');
         overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,10,10,0.88);backdrop-filter:blur(15px);display:flex;justify-content:center;align-items:center;z-index:9999;opacity:0;transition:opacity 0.3s ease;';
         
         const modal = document.createElement('div');
-        modal.style.cssText = 'background:linear-gradient(135deg,rgba(20,20,25,0.95)0%,rgba(10,10,12,0.98)100%);border:1px solid rgba(0,120,212,0.3);border-radius:18px;padding:2.5rem;max-width:420px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.7);transform:scale(0.9);transition:transform 0.3s ease;font-family:var(--font-ui);';
+        modal.style.cssText = 'background:linear-gradient(135deg,rgba(20,20,25,0.95)0%,rgba(10,10,12,0.98)100%);border:1px solid rgba(0,120,212,0.3);border-radius:18px;padding:2.5rem 2rem 2rem;max-width:440px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.7);transform:scale(0.9);transition:transform 0.3s ease;font-family:var(--font-ui);position:relative;';
         
         modal.innerHTML = `
+          <button id="cv-dl-close-x" style="position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;transition:background 0.2s;">✕</button>
           <div style="width:60px;height:60px;border-radius:50%;background:rgba(0,120,212,0.15);border:1px solid rgba(0,120,212,0.4);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1.25rem;">
             <svg style="width:30px;height:30px;fill:#0078D4;" viewBox="0 0 24 24">
               <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
@@ -1642,11 +1659,16 @@
           <h3 style="color:#fff;font-size:1.3rem;font-weight:700;margin:0 0 0.5rem;">${title}</h3>
           <p style="color:var(--text-secondary);font-size:0.88rem;margin:0 0 1.5rem;line-height:1.45;">${sub}</p>
           <div style="width:100%;height:6px;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;margin-bottom:1rem;">
-            <div id="dl-prog-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#0078D4,#0050B3);border-radius:10px;transition:width 0.1s linear;"></div>
+            <div id="dl-prog-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#0078D4,#0050B3);border-radius:10px;transition:width 0.08s linear;"></div>
           </div>
-          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-secondary);">
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-secondary);margin-bottom:1rem;">
             <span id="dl-stat-txt">Verificando firma digital...</span>
             <span id="dl-pct-txt">0%</span>
+          </div>
+          <div id="dl-fallback-box" style="display:none;margin-top:1rem;">
+            <a href="${destUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#0078D4;color:#fff;padding:0.7rem 1.25rem;border-radius:10px;font-weight:700;font-size:0.88rem;text-decoration:none;box-shadow:0 4px 15px rgba(0,120,212,0.4);">
+              ¿No inició? Haz clic aquí para descargar
+            </a>
           </div>
         `;
         
@@ -1656,32 +1678,38 @@
         overlay.style.opacity = '1';
         modal.style.transform = 'scale(1)';
         
+        const closeDl = () => {
+          overlay.style.opacity = '0';
+          modal.style.transform = 'scale(0.9)';
+          setTimeout(() => overlay.remove(), 220);
+        };
+        modal.querySelector('#cv-dl-close-x').onclick = closeDl;
+        overlay.onclick = (e) => { if (e.target === overlay) closeDl(); };
+        
         const bar = overlay.querySelector('#dl-prog-bar');
         const st = overlay.querySelector('#dl-stat-txt');
         const pt = overlay.querySelector('#dl-pct-txt');
+        const fallbackBox = overlay.querySelector('#dl-fallback-box');
         
         let p = 0;
         const iv = setInterval(() => {
           if (p < 100) {
-            p += 5;
+            p += 10;
             if (p > 100) p = 100;
             bar.style.width = p + '%';
             pt.textContent = p + '%';
             if (p === 30) st.textContent = 'Conectando con servidores MediaFire...';
-            if (p === 75) st.textContent = 'Preparando descarga segura...';
-            if (p === 100) st.textContent = 'Redirigiendo...';
+            if (p === 70) st.textContent = 'Preparando archivo oficial...';
+            if (p === 100) st.textContent = '¡Iniciando descarga!';
           } else {
             clearInterval(iv);
+            triggerDownload();
+            fallbackBox.style.display = 'block';
             setTimeout(() => {
-              overlay.style.opacity = '0';
-              modal.style.transform = 'scale(0.9)';
-              setTimeout(() => {
-                overlay.remove();
-                window.open(destUrl, '_blank');
-              }, 300);
-            }, 300);
+              closeDl();
+            }, 3500);
           }
-        }, 50);
+        }, 40);
       }
 
       const btnDownloadWin = document.getElementById('btn-download-windows');
@@ -1712,101 +1740,12 @@
 
 
 
-      // Botón de descarga Android (MediaFire con modal progresivo)
+      // Botón de descarga Android (MediaFire con descarga segura garantizada)
       const downloadBtn = document.getElementById('download-btn');
       if (downloadBtn) {
         downloadBtn.addEventListener('click', (e) => {
           e.preventDefault();
-          
-          const overlay = document.createElement('div');
-          overlay.style.position = 'fixed';
-          overlay.style.top = '0';
-          overlay.style.left = '0';
-          overlay.style.width = '100%';
-          overlay.style.height = '100%';
-          overlay.style.backgroundColor = 'rgba(10, 10, 10, 0.85)';
-          overlay.style.backdropFilter = 'blur(15px)';
-          overlay.style.display = 'flex';
-          overlay.style.justifyContent = 'center';
-          overlay.style.alignItems = 'center';
-          overlay.style.zIndex = '9999';
-          overlay.style.opacity = '0';
-          overlay.style.transition = 'opacity 0.3s ease';
-          
-          const modal = document.createElement('div');
-          modal.style.background = 'linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%)';
-          modal.style.border = '1px solid rgba(0, 112, 255, 0.3)';
-          modal.style.borderRadius = '16px';
-          modal.style.padding = '2.5rem';
-          modal.style.maxWidth = '420px';
-          modal.style.width = '90%';
-          modal.style.textAlign = 'center';
-          modal.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 112, 255, 0.15)';
-          modal.style.transform = 'scale(0.9)';
-          modal.style.transition = 'transform 0.3s ease';
-          
-          modal.innerHTML = `
-            <div style="margin-bottom: 1.5rem; display: inline-flex; justify-content: center; align-items: center; width: 60px; height: 60px; border-radius: 50%; background: rgba(0, 112, 255, 0.1); border: 1px solid rgba(0, 112, 255, 0.3);">
-              <svg style="width: 30px; height: 30px; fill: #0070FF;" viewBox="0 0 24 24">
-                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
-              </svg>
-            </div>
-            <h3 style="font-family: var(--font-ui); color: #fff; font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem;">Preparando Descarga Oficial</h3>
-            <p style="font-family: var(--font-ui); color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.4;">Conectando con MediaFire para descargar <strong>Cineverse.apk (10.4 MB)</strong> de forma segura...</p>
-            
-            <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; overflow: hidden; margin-bottom: 1rem;">
-              <div id="download-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #0070FF, #0050B3); border-radius: 10px; transition: width 0.1s linear;"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-family: var(--font-ui); font-size: 0.8rem; color: var(--text-secondary);">
-              <span id="download-status-text">Verificando firma digital...</span>
-              <span id="download-percentage">0%</span>
-            </div>
-          `;
-          
-          overlay.appendChild(modal);
-          document.body.appendChild(overlay);
-          
-          overlay.offsetHeight;
-          overlay.style.opacity = '1';
-          modal.style.transform = 'scale(1)';
-          
-          const progressBar = overlay.querySelector('#download-progress-bar');
-          const statusText = overlay.querySelector('#download-status-text');
-          const percentageText = overlay.querySelector('#download-percentage');
-          
-          const steps = [
-            { progress: 25, text: 'Verificando seguridad y firma...' },
-            { progress: 55, text: 'Conectando con servidores de MediaFire...' },
-            { progress: 85, text: 'Generando enlace directo...' },
-            { progress: 100, text: 'Iniciando descarga...' }
-          ];
-          
-          let currentProgress = 0;
-          let stepIdx = 0;
-          
-          const interval = setInterval(() => {
-            if (currentProgress < 100) {
-              currentProgress += 5;
-              if (currentProgress > 100) currentProgress = 100;
-              progressBar.style.width = currentProgress + '%';
-              percentageText.textContent = currentProgress + '%';
-              
-              if (stepIdx < steps.length && currentProgress >= steps[stepIdx].progress) {
-                statusText.textContent = steps[stepIdx].text;
-                stepIdx++;
-              }
-            } else {
-              clearInterval(interval);
-              setTimeout(() => {
-                overlay.style.opacity = '0';
-                modal.style.transform = 'scale(0.9)';
-                setTimeout(() => {
-                  overlay.remove();
-                  window.open(apkDownloadUrl, '_blank');
-                }, 300);
-              }, 350);
-            }
-          }, 50);
+          launchDownloadProgress('Descargando CineVerse APK', 'Conectando con MediaFire para descargar <strong>Cineverse.apk</strong> de forma segura...', apkDownloadUrl);
         });
       }
     });

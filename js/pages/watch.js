@@ -331,10 +331,9 @@ class WatchPageController {
             <span class="server-tab__name">Servidor 4</span>
             <span class="server-tab__badge">Fast</span>
           </button>
-          <button class="server-tab ${isS5 ? 'active' : ''}" data-server="server5" title="Vimeus — Audio Español / Ultra HD">
+          <button class="server-tab ${isS5 ? 'active' : ''}" data-server="server5" title="Servidor 5">
             <span class="server-tab__icon">🎬</span>
             <span class="server-tab__name">Servidor 5</span>
-            <span class="server-tab__badge server-tab__badge--es">Vimeus</span>
           </button>
         </div>
       </div>
@@ -362,7 +361,7 @@ class WatchPageController {
             server2: 'Multiembed (Español)',
             server3: '2Embed (Anime)',
             server4: 'Vidsrc.pm',
-            server5: 'Vimeus (Español)'
+            server5: 'Servidor 5'
           };
           showToast(`Cambiando a ${serverLabels[serverKey] || 'Servidor'}... 🔄`, 'info');
         }

@@ -383,10 +383,7 @@ class InfoPageController {
         <span>${this.userRating > 0 ? `Mi Nota: ${this.userRating}/10` : 'Valorar con Estrellas'}</span>
       </button>
 
-      <button class="action-btn-secondary" id="btn-recommend-movie">
-        ${ICONS.share}
-        <span>Recomendar a un amigo</span>
-      </button>
+
     `;
   }
 

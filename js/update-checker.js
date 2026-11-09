@@ -12,24 +12,33 @@ import { APP_VERSION } from './config.js';
 // Versión actual del cliente (sincronizada automáticamente desde config.js)
 export const CURRENT_VERSION = APP_VERSION || '3.2.3';
 
-const IS_NATIVE = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
+const IS_NATIVE = typeof window !== 'undefined' && Boolean(
+  window.Capacitor?.isNativePlatform?.() ||
+  window.isCineverseDesktop ||
+  window.isNativeApp ||
+  sessionStorage.getItem('cv_is_installed_app')
+);
 
 /**
  * Detecta la plataforma del usuario (Windows, Linux, Android, etc.)
  */
 function detectPlatform() {
-  const ua = navigator.userAgent || '';
-  if (IS_NATIVE || ua.includes('Android')) {
+  const ua = (navigator.userAgent || '').toLowerCase();
+  const isAndroid = IS_NATIVE || ua.includes('android');
+  const isWin = ua.includes('windows') || window.isCineverseDesktop;
+  const isLin = ua.includes('linux') && !isAndroid;
+
+  if (isAndroid) {
     return {
       os: 'android',
       name: 'Android',
       badge: '🤖 Android APK',
       fileType: 'APK',
       defaultUrl: 'https://www.mediafire.com/file/eud3luzqquidw4n/Cineverse.apk/file',
-      btnLabel: 'Descargar APK (Android)'
+      btnLabel: 'Actualizar APK (Android)'
     };
   }
-  if (ua.includes('Windows')) {
+  if (isWin) {
     return {
       os: 'windows',
       name: 'Windows',
@@ -39,7 +48,7 @@ function detectPlatform() {
       btnLabel: 'Descargar Instalador Windows (.exe)'
     };
   }
-  if (ua.includes('Linux')) {
+  if (isLin) {
     return {
       os: 'linux',
       name: 'Linux',
@@ -65,8 +74,8 @@ function detectPlatform() {
  */
 function isNewerVersion(localVersion, remoteVersion) {
   if (!remoteVersion || remoteVersion === localVersion) return false;
-  const local  = localVersion.split('.').map(Number);
-  const remote = remoteVersion.split('.').map(Number);
+  const local  = String(localVersion).split('.').map(Number);
+  const remote = String(remoteVersion).split('.').map(Number);
   for (let i = 0; i < Math.max(local.length, remote.length); i++) {
     const l = local[i]  ?? 0;
     const r = remote[i] ?? 0;
@@ -84,13 +93,15 @@ export async function checkForUpdates({ force = false } = {}) {
   // No molestar al usuario más de una vez por sesión en el navegador/app
   const sessionKey = 'cv_update_checked';
   if (!force && sessionStorage.getItem(sessionKey)) return;
-  sessionStorage.setItem(sessionKey, '1');
 
   try {
     const settings = await getGlobalSettings();
     const latestVersion = settings?.latest_version;
     if (!latestVersion) return; // Admin aún no ha configurado la versión
     if (!isNewerVersion(CURRENT_VERSION, latestVersion)) return; // Ya está actualizado
+
+    // Marcar como chequeado para esta sesión
+    sessionStorage.setItem(sessionKey, '1');
 
     const platform = detectPlatform();
     let downloadUrl = platform.defaultUrl;
@@ -112,7 +123,7 @@ export async function checkForUpdates({ force = false } = {}) {
 }
 
 /**
- * Renderiza el modal premium de actualización disponible.
+ * Renderiza el modal premium de actualización disponible con botón de cierre garantizado.
  */
 function showUpdateModal({ latestVersion, downloadUrl, changelog, platform }) {
   // Evitar duplicados
@@ -120,43 +131,60 @@ function showUpdateModal({ latestVersion, downloadUrl, changelog, platform }) {
 
   const changelogHtml = changelog
     ? changelog.split('\n').filter(Boolean).map(line =>
-        `<li style="margin-bottom:0.4rem;color:var(--text-secondary);font-size:0.88rem;line-height:1.45;">${line.replace(/^[-•]\s*/, '')}</li>`
+        `<li style="margin-bottom:0.4rem;color:var(--text-secondary,#aaa);font-size:0.88rem;line-height:1.45;">${line.replace(/^[-•]\s*/, '')}</li>`
       ).join('')
     : '';
 
   const overlay = document.createElement('div');
   overlay.id = 'cv-update-modal';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Nueva versión disponible');
   overlay.style.cssText = `
-    position: fixed; inset: 0; z-index: 999999;
+    position: fixed; inset: 0; z-index: 9999999;
     background: rgba(0,0,0,0.88);
     display: flex; align-items: center; justify-content: center;
     padding: 1.5rem;
     backdrop-filter: blur(14px);
-    animation: cvFadeIn 0.3s ease;
+    opacity: 0;
+    transition: opacity 0.25s ease;
   `;
 
   overlay.innerHTML = `
     <style>
-      @keyframes cvFadeIn  { from { opacity:0; transform:scale(0.93); } to { opacity:1; transform:scale(1); } }
-      @keyframes cvPulse   { 0%,100% { box-shadow: 0 0 0 0 rgba(229,9,20,0); } 50% { box-shadow: 0 0 0 10px rgba(229,9,20,0.18); } }
-      #cv-update-modal .update-dl-btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
-      #cv-update-modal .update-dismiss:hover { background: rgba(255,255,255,0.08); }
+      #cv-update-modal .update-dl-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+      #cv-update-modal .update-dismiss:hover { background: rgba(255,255,255,0.08); color: #fff; }
+      #cv-update-modal #cv-update-close-x:hover { background: rgba(255,255,255,0.2) !important; transform: scale(1.1); color: #fff !important; }
     </style>
 
-    <div style="
-      background: linear-gradient(160deg, var(--bg-elevated, #1a1a1a) 0%, #0f0f0f 100%);
-      border: 1px solid rgba(229,9,20,0.35);
+    <div id="cv-update-card" style="
+      background: linear-gradient(160deg, #18181c 0%, #0d0d0f 100%);
+      border: 1px solid rgba(229,9,20,0.4);
       border-radius: 20px;
-      padding: 2rem 1.75rem 1.5rem;
+      padding: 2.25rem 1.75rem 1.5rem;
       max-width: 440px; width: 100%;
-      font-family: var(--font-ui, 'Inter', sans-serif);
-      box-shadow: 0 30px 80px rgba(0,0,0,0.95), 0 0 60px rgba(229,9,20,0.08);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.95), 0 0 50px rgba(229,9,20,0.15);
       position: relative;
-      animation: cvPulse 2.5s ease infinite;
+      transform: scale(0.92);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     ">
 
+      <!-- Botón de Cerrar '✕' Garantizado en la esquina superior derecha -->
+      <button id="cv-update-close-x" type="button" aria-label="Cerrar ventana" style="
+        position: absolute; top: 1rem; right: 1rem;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.15);
+        color: rgba(255,255,255,0.85);
+        width: 34px; height: 34px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; font-weight: 700;
+        cursor: pointer; transition: all 0.2s ease;
+        z-index: 10; line-height: 1; padding: 0;
+      ">✕</button>
+
       <!-- Badge de update -->
-      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;gap:0.85rem;margin-bottom:1.25rem;padding-right:2rem;">
         <div style="
           width:48px;height:48px;border-radius:14px;flex-shrink:0;
           background:linear-gradient(135deg,#e50914,#ff4444);
@@ -174,20 +202,20 @@ function showUpdateModal({ latestVersion, downloadUrl, changelog, platform }) {
           <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:#fff;line-height:1.2;">
             ¡Nueva versión disponible!
           </h3>
-          <p style="margin:0.2rem 0 0 0;font-size:0.78rem;color:var(--text-muted,#888);">
+          <p style="margin:0.25rem 0 0 0;font-size:0.8rem;color:#888;">
             CineVerse <span style="color:#e50914;font-weight:700;">v${latestVersion}</span>
-            &nbsp;·&nbsp; Tienes la <span style="opacity:0.7;">v${CURRENT_VERSION}</span>
+            &nbsp;·&nbsp; Tienes la <span style="opacity:0.8;">v${CURRENT_VERSION}</span>
           </p>
         </div>
       </div>
 
       <!-- Divider -->
-      <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:1.25rem;"></div>
+      <div style="height:1px;background:rgba(255,255,255,0.08);margin-bottom:1.15rem;"></div>
 
       <!-- Changelog -->
       ${changelogHtml ? `
-        <div style="margin-bottom:1.4rem;">
-          <p style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#e50914;margin:0 0 0.65rem;">
+        <div style="margin-bottom:1.35rem;background:rgba(255,255,255,0.03);padding:0.85rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.05);max-height:160px;overflow-y:auto;">
+          <p style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#e50914;margin:0 0 0.5rem;">
             🆕 Novedades de esta versión
           </p>
           <ul style="margin:0;padding:0 0 0 1.1rem;list-style:disc;">
@@ -197,7 +225,7 @@ function showUpdateModal({ latestVersion, downloadUrl, changelog, platform }) {
       ` : ''}
 
       <!-- CTA Principal según plataforma -->
-      <a href="${downloadUrl}" target="_blank" rel="noopener" class="update-dl-btn" style="
+      <a href="${downloadUrl}" target="_blank" rel="noopener noreferrer" class="update-dl-btn" style="
         display:flex;align-items:center;justify-content:center;gap:0.65rem;
         background:linear-gradient(135deg,#e50914 0%,#ff2d3a 100%);
         color:white;text-decoration:none;
@@ -216,18 +244,17 @@ function showUpdateModal({ latestVersion, downloadUrl, changelog, platform }) {
 
       <!-- Link a página de descargas -->
       <div style="text-align:center;margin-bottom:0.85rem;">
-        <a href="descargar.html" style="color:var(--text-muted,#888);font-size:0.76rem;text-decoration:underline;">
+        <a href="descargar.html" style="color:#888;font-size:0.76rem;text-decoration:underline;">
           Ver instaladores para otros sistemas (Windows / Linux / Android)
         </a>
       </div>
 
-      <!-- Dismiss -->
-      <button class="update-dismiss" id="cv-update-dismiss" style="
-        width:100%;background:transparent;border:1px solid rgba(255,255,255,0.08);
-        color:var(--text-muted,#888);border-radius:10px;
-        padding:0.65rem;font-size:0.83rem;font-weight:600;
-        cursor:pointer;transition:background 0.2s;
-        font-family:var(--font-ui,'Inter',sans-serif);
+      <!-- Botón secundario Dismiss -->
+      <button class="update-dismiss" id="cv-update-dismiss" type="button" style="
+        width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);
+        color:#aaa;border-radius:10px;
+        padding:0.65rem;font-size:0.82rem;font-weight:600;
+        cursor:pointer;transition:all 0.2s;
       ">
         Ahora no, continuar con v${CURRENT_VERSION}
       </button>
@@ -237,11 +264,41 @@ function showUpdateModal({ latestVersion, downloadUrl, changelog, platform }) {
 
   document.body.appendChild(overlay);
 
-  document.getElementById('cv-update-dismiss')?.addEventListener('click', () => {
-    overlay.style.animation = 'none';
-    overlay.style.opacity = '0';
-    overlay.style.transform = 'scale(0.95)';
-    overlay.style.transition = 'opacity 0.2s, transform 0.2s';
-    setTimeout(() => overlay.remove(), 220);
+  // Animar entrada
+  requestAnimationFrame(() => {
+    overlay.style.opacity = '1';
+    const card = overlay.querySelector('#cv-update-card');
+    if (card) card.style.transform = 'scale(1)';
   });
+
+  const closeModal = () => {
+    overlay.style.opacity = '0';
+    const card = overlay.querySelector('#cv-update-card');
+    if (card) card.style.transform = 'scale(0.92)';
+    setTimeout(() => {
+      overlay.remove();
+    }, 240);
+  };
+
+  // 1. Clic en botón '✕'
+  const closeBtn = overlay.querySelector('#cv-update-close-x');
+  if (closeBtn) closeBtn.onclick = closeModal;
+
+  // 2. Clic en botón "Ahora no"
+  const dismissBtn = overlay.querySelector('#cv-update-dismiss');
+  if (dismissBtn) dismissBtn.onclick = closeModal;
+
+  // 3. Clic fuera del card (en el fondo oscuro)
+  overlay.onclick = (e) => {
+    if (e.target === overlay) closeModal();
+  };
+
+  // 4. Tecla Escape
+  const keyHandler = (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      window.removeEventListener('keydown', keyHandler);
+    }
+  };
+  window.addEventListener('keydown', keyHandler);
 }

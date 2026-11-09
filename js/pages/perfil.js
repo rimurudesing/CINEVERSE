@@ -50,12 +50,12 @@ class ProfilePageController {
 
     // 6. Cargar pestaña por defecto
     const params = new URLSearchParams(window.location.search);
-    const initialTab = params.get('tab') || 'favorites';
+    let initialTab = params.get('tab') || 'favorites'; if (['requests','social','referrals'].includes(initialTab)) initialTab = 'favorites';
     this.switchTab(initialTab);
 
     // 7. Configurar ajustes de cuenta y solicitudes
     this.setupSettingsForm();
-    this.setupRequestsForm();
+    // this.setupRequestsForm(); (eliminado)
 
     // Configurar botón compartir mi perfil público
     const shareMyProfileBtn = document.getElementById('btn-share-my-profile');
@@ -515,9 +515,9 @@ class ProfilePageController {
     if (tab === 'favorites')    this.loadFavorites();
     if (tab === 'watchlist')    this.loadWatchlist();
     if (tab === 'premium')      this.loadPremium();
-    if (tab === 'requests')     this.loadRequests();
-    if (tab === 'social')       this.loadSocial();
-    if (tab === 'referrals')    this.loadReferrals();
+    // requests removed
+    // social removed
+    // referrals removed
   }
 
   /* ─────────────────────────────────────────────────────────

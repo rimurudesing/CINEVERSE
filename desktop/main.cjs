@@ -124,9 +124,15 @@ async function createWindow() {
 
   mainWindow.webContents.setUserAgent(CHROME_UA);
 
-  // Inyectar polyfill navigator.locks ANTES de que cargue la página
+  // Inyectar polyfill navigator.locks e identificar cliente de escritorio nativo ANTES de que cargue la página
   mainWindow.webContents.on('did-start-navigation', () => {
     mainWindow.webContents.executeJavaScript(`
+      window.isCineverseDesktop = true;
+      window.isNativeApp = true;
+      try {
+        sessionStorage.setItem('cv_is_installed_app', 'true');
+        localStorage.setItem('cv_is_installed_app', 'true');
+      } catch(e) {}
       if (!navigator.locks || !navigator.locks.request) {
         Object.defineProperty(navigator, 'locks', {
           value: {
