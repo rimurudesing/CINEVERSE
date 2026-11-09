@@ -348,41 +348,8 @@ export function applyUserTheme(themeName) {
  * Evita la inspección de código deshabilitando clic derecho y combinaciones de teclas comunes para DevTools.
  */
 export function protectWebCode() {
-  try {
-    const isLocal = window.location.hostname === 'localhost' || 
-                    window.location.hostname === '127.0.0.1';
-    
-    const isNativeApp = window.location.protocol === 'file:' ||
-                        (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
-                        navigator.userAgent.includes('Capacitor');
-    
-    if (isLocal || isNativeApp) return;
-
-    // 1. Deshabilitar menú contextual (clic derecho)
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
-
-    // 2. Deshabilitar combinaciones de teclas de DevTools e inspección de código
-    document.addEventListener('keydown', (e) => {
-      // F12
-      if (e.key === 'F12') {
-        e.preventDefault();
-        return false;
-      }
-      // Ctrl+Shift+I, J, C o Ctrl+U, S, P
-      if ((e.ctrlKey || e.metaKey) && (
-        (e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
-        (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's' || e.key === 'P' || e.key === 'p')
-      )) {
-        e.preventDefault();
-        return false;
-      }
-      // Cmd+Alt+I, J, C (Mac)
-      if (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
-        e.preventDefault();
-        return false;
-      }
-    });
-  } catch (_) {}
+  // Sin bloqueos intrusivos que rompan la navegación o activen bloqueos de Brave Shields
+  return;
 }
 
 
